@@ -1,0 +1,44 @@
+{
+  "name": "expoot-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "prepare": "husky",
+    "lint-staged": "lint-staged",
+    "format": "oxfmt"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
+    "oxfmt": "^0.46.0"
+  },
+  "lint-staged": {
+    "*.{css,html,js,jsx,json,md,ts,tsx}": [
+      "oxfmt"
+    ]
+  },
+  "catalogs": {
+    "base": {
+      "@typescript/native-preview": "^7.0.0-dev.20260425.1",
+      "@types/node": "^24.12.2"
+    },
+    "react-native-81": {
+      "expo": "~54.0.33",
+      "react": "19.1.4",
+      "react-native": "0.81.6",
+      "react-native-macos": "0.81.7",
+      "react-native-windows": "0.81.12"
+    },
+    "react-native-82": {
+      "expo": "~55.0.17",
+      "react": "19.1.1",
+      "react-native": "0.82.1",
+      "react-native-windows": "0.82.5"
+    },
+    "react-native-83": {
+      "expo": "~55.0.17",
+      "react": "19.2.0",
+      "react-native": "0.83.6"
+    }
+  }
+}
