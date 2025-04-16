@@ -1,0 +1,30 @@
+{
+  "name": "@expoot/create-expo",
+  "version": "52.0.1",
+  "author": "Jamie Birch",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shirakaba/expoot.git",
+    "directory": "packages/create-expo"
+  },
+  "main": "bin.mjs",
+  "dependencies": {
+    "create-expo": "^3.2.0",
+    "@tsconfig/node22": "^22.0.0"
+  },
+  "bin": {
+    "create-expoot": "bin.mjs"
+  },
+  "bugs": {
+    "url": "https://github.com/shirakaba/expoot/issues"
+  },
+  "description": "Expoot's wrapper around Create Expo",
+  "homepage": "https://github.com/shirakaba/expoot/tree/main/packages/create-expo",
+  "keywords": [
+    "expoot",
+    "config",
+    "types"
+  ],
+  "license": "MIT",
+  "type": "module"
+}

@@ -1,0 +1,10 @@
+// https://github.com/typescript-eslint/typescript-eslint/blob/958fecaef10a26792dc00e936e98cb19fd26d05f/tsconfig.eslint.json
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": ["@types/node"],
+    "noEmit": true,
+    "allowJs": true
+  },
+  "include": ["src", "eslint.config.mjs", "bin.mjs"]
+}

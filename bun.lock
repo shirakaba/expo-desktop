@@ -85,6 +85,17 @@
         "@expo/config-types": "*",
       },
     },
+    "packages/expoot-create": {
+      "name": "@expoot/create-expo",
+      "version": "52.0.1",
+      "bin": {
+        "create-expoot": "bin.mjs",
+      },
+      "dependencies": {
+        "@tsconfig/node22": "^22.0.0",
+        "create-expo": "^3.2.0",
+      },
+    },
   },
   "packages": {
     "@0no-co/graphql.web": ["@0no-co/graphql.web@1.1.2", "", { "peerDependencies": { "graphql": "^14.0.0 || ^15.0.0 || ^16.0.0" }, "optionalPeers": ["graphql"] }, "sha512-N2NGsU5FLBhT8NZ+3l2YrzZSHITjNXNuDhC4iDiikv0IujaJ0Xc6xIxQZ/Ek3Cb+rgPjnLHYyJm11tInuJn+cw=="],
@@ -236,6 +247,8 @@
     "@expoot/config-plugins": ["@expoot/config-plugins@workspace:packages/expoot-config-plugins"],
 
     "@expoot/config-types": ["@expoot/config-types@workspace:packages/expoot-config-types"],
+
+    "@expoot/create-expo": ["@expoot/create-expo@workspace:packages/expoot-create"],
 
     "@humanfs/core": ["@humanfs/core@0.19.1", "", {}, "sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA=="],
 
@@ -522,6 +535,8 @@
     "connect": ["connect@3.7.0", "", { "dependencies": { "debug": "2.6.9", "finalhandler": "1.1.2", "parseurl": "~1.3.3", "utils-merge": "1.0.1" } }, "sha512-ZqRXc+tZukToSNmh5C2iWMSoV3X1YUcPbqEM4DkEG5tNQXrQUZCNVGGv3IuicnkMtPfGf3Xtp8WCXs295iQ1pQ=="],
 
     "convert-source-map": ["convert-source-map@2.0.0", "", {}, "sha512-Kvp459HrV2FEJ1CAsi1Ku+MY3kasH19TFykTz2xWmMeq6bk2NU3XXvfJ+Q61m0xktWwt+1HSYf3JZsTms3aRJg=="],
+
+    "create-expo": ["create-expo@3.2.0", "", { "bin": { "create-expo": "build/index.js" } }, "sha512-+uNxg4vD/vn0GkV8CLtAvYMe7n06Zg0aB74kU/d3CXyW4ivAN7dxBuEJHPaFgfM5lHS1xbi9BGqZrfZA7Hr0bQ=="],
 
     "cross-spawn": ["cross-spawn@7.0.6", "", { "dependencies": { "path-key": "^3.1.0", "shebang-command": "^2.0.0", "which": "^2.0.1" } }, "sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA=="],
 
