@@ -1,0 +1,19 @@
+{
+  "name": "create-expoot-app",
+  "version": "0.1.0",
+  "files": [
+    "src"
+  ],
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.ts"
+  },
+  "dependencies": {
+    "toml": "^4.1.1"
+  },
+  "devDependencies": {
+    "@tsconfig/node24": "catalog:base",
+    "@types/node": "catalog:base",
+    "@typescript/native-preview": "catalog:base"
+  }
+}

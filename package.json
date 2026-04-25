@@ -2,6 +2,9 @@
   "name": "expoot-monorepo",
   "version": "0.1.0",
   "private": true,
+  "workspaces": [
+    "packages/create-expoot-app"
+  ],
   "scripts": {
     "prepare": "husky",
     "lint-staged": "lint-staged",
@@ -13,14 +16,15 @@
     "oxfmt": "^0.46.0"
   },
   "lint-staged": {
-    "*.{css,html,js,jsx,json,md,ts,tsx}": [
+    "*.{css,html,js,jsx,json,md,toml,ts,tsx}": [
       "oxfmt"
     ]
   },
   "catalogs": {
     "base": {
-      "@typescript/native-preview": "^7.0.0-dev.20260425.1",
-      "@types/node": "^24.12.2"
+      "@tsconfig/node24": "^24.0.4",
+      "@types/node": "^24.12.2",
+      "@typescript/native-preview": "^7.0.0-dev.20260425.1"
     },
     "react-native-81": {
       "expo": "~54.0.33",
