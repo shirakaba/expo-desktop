@@ -1,6 +1,6 @@
-import { defineConfig } from "../define-config.ts";
+import { defineAppConfig } from "../define-config.ts";
 
-export const defaultConfig = defineConfig({
+export const defaultConfig = defineAppConfig({
   name: {
     alphanumeric: "MyApp123",
     display_name: "My App 123",
@@ -10,14 +10,14 @@ export const defaultConfig = defineConfig({
 
 export const badName = {
   alphanumeric: () =>
-    defineConfig({
+    defineAppConfig({
       name: {
         ...defaultConfig.name,
         alphanumeric: "My App",
       },
     }),
   reverse_dns: () =>
-    defineConfig({
+    defineAppConfig({
       name: {
         ...defaultConfig.name,
         reverse_dns: "123com",

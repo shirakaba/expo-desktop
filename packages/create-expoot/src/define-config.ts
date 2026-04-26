@@ -1,9 +1,9 @@
 import { ArkErrors, type } from "arktype";
 import { green, grey, yellow } from "kleur/colors";
 
-import { AppConfig, PartialAppConfig } from "./validate-app-config.ts";
+import { AppConfig, PartialAppConfig } from "./app-config.ts";
 
-export function defineConfig(config: typeof PartialAppConfig.infer) {
+export function defineAppConfig(config: typeof PartialAppConfig.infer) {
   const partial = PartialAppConfig(config);
 
   if (partial instanceof type.errors) {
