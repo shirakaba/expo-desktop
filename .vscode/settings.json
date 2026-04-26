@@ -1,10 +1,10 @@
 {
   // allow autocomplete for ArkType expressions like "string | num"
-  "editor.quickSuggestions": {
-    "strings": "on"
-  },
+  // "editor.quickSuggestions": {
+  //   "strings": "on"
+  // },
   // prioritize ArkType's "type" for autoimports
-  "js/ts.preferences.autoImportSpecifierExcludeRegexes": ["^(node:)?os$"],
+  // "js/ts.preferences.autoImportSpecifierExcludeRegexes": ["^(node:)?os$"],
 
   "js/ts.experimental.useTsgo": true,
   "oxc.fmt.configPath": ".oxfmtrc.json",

@@ -1,7 +1,7 @@
 {
   "extends": "@tsconfig/node24",
   "compilerOptions": {
-    "types": ["node"],
+    "types": ["bun", "node"],
     "noEmit": true,
     "exactOptionalPropertyTypes": true,
     "allowImportingTsExtensions": true

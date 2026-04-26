@@ -18,9 +18,8 @@ export function defineConfig(config: typeof Questionnaire.infer) {
       summary.push(`${yellow(path)} ${problem}`);
     }
 
-    console.log(summary.join("\n"));
-  } else {
-    // hover out to see your validated data
-    console.log(`Hello`, out.name);
+    throw new Error(`Invalid config:\n${summary.join("\n")}`);
   }
+
+  return out;
 }
