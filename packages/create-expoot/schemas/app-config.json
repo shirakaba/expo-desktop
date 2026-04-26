@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "object",
+      "description": "Different formats of the app name for use in different contexts.",
+      "properties": {
+        "alphanumeric": {
+          "type": "string",
+          "description": "A **filesafe name** for the app consisting only of alphanumeric characters (A-z, and 0-9), e.g. 'MyApp123'. Will be used mainly for file names, e.g. 'MyApp123.xcodeproj'.",
+          "pattern": "^[\\dA-Za-z]*$"
+        },
+        "display_name": {
+          "type": "string",
+          "description": "The **display name** of your app, e.g. 'My App 123' or '俺のアプリ'. Accepts any characters. Will be used as the app name on the iOS/Android home screen, in macOS Finder, and in Windows Explorer."
+        },
+        "reverse_dns": {
+          "type": "string",
+          "description": "The **reverse-Domain Name Specifier** for your app, e.g. 'com.example.my-app-123'. Accepts alphanumeric characters (A-z and 0-9), hyphens, and underscores. Will be used to fill in `android.package_namespace`, `android.application_id`, `windows.namespace`, `ios.bundle_identifier`, and `macos.bundle_identifier`. Hyphens and underscores will be sanitised as appropriate for these destinations, so don't worry which you use here.",
+          "pattern": "^[a-zA-Z][\\w\\-]*(?:\\.[a-zA-Z][\\w\\-]*)*$"
+        }
+      },
+      "required": ["alphanumeric", "display_name", "reverse_dns"]
+    },
+    "android": {
+      "type": "object",
+      "description": "Android-specific overrides for the default values (which are based on `name`).",
+      "properties": {
+        "application_id": {
+          "type": "string",
+          "description": "The **application ID** used on the Play Store, e.g. 'com.example.my_app_123'. Accepts only alphanumeric characters (A-z and 0-9), and underscores. Corresponds to `android.defaultConfig.applicationId` in `app/build.gradle`. Recommended to match `android.package_namespace`.",
+          "pattern": "^[a-zA-Z]\\w*(?:\\.[a-zA-Z]\\w*)*$"
+        },
+        "package_namespace": {
+          "type": "string",
+          "description": "The **package namespace**, e.g. 'com.example.my_app_123'. Accepts only alphanumeric characters (A-z and 0-9), and underscores. Corresponds to `android.namespace` in `app/build.gradle`. Recommended to match `android.application_id`.",
+          "pattern": "^[a-zA-Z]\\w*(?:\\.[a-zA-Z]\\w*)*$"
+        },
+        "root_project_name": {
+          "type": "string",
+          "description": "The **display name** of your app, e.g. 'My App 123' or '俺のアプリ'. Accepts any characters. Corresponds to `rootProject.name` in `settings.gradle`. Will be used as the app name on the Android home screen."
+        }
+      }
+    },
+    "ios": {
+      "type": "object",
+      "description": "iOS-specific overrides for the default values (which are based on `name`).",
+      "properties": {
+        "bundle_display_name": {
+          "type": "string",
+          "description": "The **display name** of your app, e.g. 'My App 123' or '俺のアプリ'. Accepts any characters. Corresponds to the `CFBundleDisplayName` key in the `Info.plist` file. Will be used as the app name on the iOS home screen."
+        },
+        "bundle_identifier": {
+          "type": "string",
+          "description": "The **bundle identifier** of your app, e.g. 'com.example.my-app-123'. Accepts only alphanumeric characters (A-z and 0-9), and hyphens. Corresponds to the `PRODUCT_BUNDLE_IDENTIFIER` Xcode build variable, used to fill in the `CFBundleIdentifier` key in the `Info.plist` file.",
+          "pattern": "^[a-zA-Z][a-zA-Z0-9\\-]*(?:\\.[a-zA-Z][a-zA-Z0-9\\-]*)*$"
+        }
+      }
+    },
+    "macos": {
+      "type": "object",
+      "description": "macOS-specific overrides for the default values (which are based on `name`).",
+      "properties": {
+        "bundle_display_name": {
+          "type": "string",
+          "description": "The **display name** of your app, e.g. 'My App 123' or '俺のアプリ'. Accepts any characters. Corresponds to the `PRODUCT_BUNDLE_IDENTIFIER` Xcode build variable, used to fill in the `CFBundleDisplayName` key in the `Info.plist` file. Will be used as the app name in macOS Finder."
+        },
+        "bundle_identifier": {
+          "type": "string",
+          "description": "The **bundle identifier** of your app, e.g. 'com.example.my-app-123'. Accepts only alphanumeric characters (A-z and 0-9), and hyphens. Corresponds to the `PRODUCT_BUNDLE_IDENTIFIER` Xcode build variable, used to fill in the `CFBundleIdentifier` key in the `Info.plist` file.",
+          "pattern": "^[a-zA-Z][a-zA-Z0-9\\-]*(?:\\.[a-zA-Z][a-zA-Z0-9\\-]*)*$"
+        }
+      }
+    },
+    "react_native_version": {
+      "type": "string",
+      "description": "The `{major}.{minor}` version of `react-native` to align to, e.g. '0.82'. Defaults to the highest mutually supported across both `react-native-macos` and `react-native-windows`.",
+      "pattern": "^(\\d+)\\.(\\d+)$"
+    },
+    "windows": {
+      "type": "object",
+      "description": "Windows-specific overrides for the default values (which are based on `name`).",
+      "properties": {
+        "display_name": {
+          "type": "string",
+          "description": "The **display name** of your app, e.g. 'My App 123' or '俺のアプリ'. Accepts any characters. Corresponds to the `ProjectName` value in the `.vcxproj` file. Will be used as the app name in Windows Explorer."
+        },
+        "namespace": {
+          "type": "string",
+          "description": "The WinRT and C++ **namespace**, e.g. 'com.example.myapp123'. Accepts only alphanumeric characters (A-z and 0-9). When used in C++, `.` characters are converted to `::`, e.g. 'com::example::myapp123'.",
+          "pattern": "^[a-zA-Z][a-zA-Z0-9]*(?:\\.[a-zA-Z][a-zA-Z0-9]*)*$"
+        },
+        "project_name": {
+          "type": "string",
+          "description": "A **filesafe name** for the app consisting only of alphanumeric characters (A-z, and 0-9), e.g. 'MyApp123'. Will be used mainly for file names, e.g. 'MyApp123.vcxproj'.",
+          "pattern": "^[\\dA-Za-z]*$"
+        }
+      }
+    }
+  },
+  "required": ["name"]
+}

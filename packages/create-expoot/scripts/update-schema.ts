@@ -1,7 +1,9 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { inspect } from "node:util";
 
 import { PartialAppConfig } from "../src/app-config.ts";
 
-console.log(inspect(PartialAppConfig.toJsonSchema(), { depth: null }));
+await fs.writeFile(
+  path.resolve(import.meta.dirname, "../schemas/app-config.json"),
+  JSON.stringify(PartialAppConfig.toJsonSchema(), null, 2),
+);
