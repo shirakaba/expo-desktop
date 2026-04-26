@@ -8,19 +8,20 @@ react_native_version = "0.81"
 # Comment out this section if you don't want to generate an Android app.
 [android]
 display_name = "example"
-application_id = "com.expoot.example"
+application_id = "com.example.my_app"
+namespace = "com.example.my_app"
 
 
 # Comment out this section if you don't want to generate an iOS app.
 [ios]
 bundle_display_name = "My Application"
-bundle_identifier = "com.expoot.example"
+bundle_identifier = "com.example.my-app"
 
 
 # Comment out this section if you don't want to generate a macOS app.
 [macos]
 bundle_display_name = "My Application"
-bundle_identifier = "com.expoot.example"
+bundle_identifier = "com.example.my-app"
 
 
 # Comment out this section if you don't want to generate a Windows app.
