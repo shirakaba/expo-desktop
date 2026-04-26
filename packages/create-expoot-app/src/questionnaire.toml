@@ -4,16 +4,25 @@
 expoot_schema_version = 1
 react_native_version = "0.81"
 
-project_name = "MyApp123"
+[name]
+alphanumeric = "MyApp123"
+display_name = "My App 123"
+reverse_dns = "com.example.my-app-123"
 
 [android]
-app_id = "com.example.my_app"
+# application_id = #name.reverse_dns
+# package_namespace = #name.reverse_dns
+# root_project_name = #name.display_name
 
 [ios]
-app_id = "com.example.my-app"
+# bundle_identifier = #name.reverse_dns
+# bundle_display_name = #name.display_name
 
 [macos]
-app_id = "com.example.my-app"
+# bundle_identifier = #name.reverse_dns
+# bundle_display_name = #name.display_name
 
 [windows]
-namespace = "com.example.myapp"
+# display_name = #name.display_name
+# namespace = #name.reverse_dns
+# project_name = #name.alphanumeric
