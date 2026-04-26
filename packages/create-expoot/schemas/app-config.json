@@ -13,7 +13,7 @@
         },
         "display_name": {
           "type": "string",
-          "description": "The **display name** of your app, e.g. 'My App 123' or '俺のアプリ'. Accepts any characters. Will be used as the app name on the iOS/Android home screen, in macOS Finder, and in Windows Explorer."
+          "description": "The **display name** of your app, e.g. 'My App 123' or '俺のアプリ'. Accepts any string. Will be used as the app name on the iOS/Android home screen, in macOS Finder, and in Windows Explorer."
         },
         "reverse_dns": {
           "type": "string",
@@ -39,7 +39,7 @@
         },
         "root_project_name": {
           "type": "string",
-          "description": "The **display name** of your app, e.g. 'My App 123' or '俺のアプリ'. Accepts any characters. Corresponds to `rootProject.name` in `settings.gradle`. Will be used as the app name on the Android home screen."
+          "description": "The **display name** of your app, e.g. 'My App 123' or '俺のアプリ'. Accepts any string. Corresponds to `rootProject.name` in `settings.gradle`. Will be used as the app name on the Android home screen."
         }
       }
     },
@@ -49,7 +49,7 @@
       "properties": {
         "bundle_display_name": {
           "type": "string",
-          "description": "The **display name** of your app, e.g. 'My App 123' or '俺のアプリ'. Accepts any characters. Corresponds to the `CFBundleDisplayName` key in the `Info.plist` file. Will be used as the app name on the iOS home screen."
+          "description": "The **display name** of your app, e.g. 'My App 123' or '俺のアプリ'. Accepts any string. Corresponds to the `CFBundleDisplayName` key in the `Info.plist` file. Will be used as the app name on the iOS home screen."
         },
         "bundle_identifier": {
           "type": "string",
@@ -64,7 +64,7 @@
       "properties": {
         "bundle_display_name": {
           "type": "string",
-          "description": "The **display name** of your app, e.g. 'My App 123' or '俺のアプリ'. Accepts any characters. Corresponds to the `PRODUCT_BUNDLE_IDENTIFIER` Xcode build variable, used to fill in the `CFBundleDisplayName` key in the `Info.plist` file. Will be used as the app name in macOS Finder."
+          "description": "The **display name** of your app, e.g. 'My App 123' or '俺のアプリ'. Accepts any string. Corresponds to the `PRODUCT_BUNDLE_IDENTIFIER` Xcode build variable, used to fill in the `CFBundleDisplayName` key in the `Info.plist` file. Will be used as the app name in macOS Finder."
         },
         "bundle_identifier": {
           "type": "string",
@@ -84,7 +84,7 @@
       "properties": {
         "display_name": {
           "type": "string",
-          "description": "The **display name** of your app, e.g. 'My App 123' or '俺のアプリ'. Accepts any characters. Corresponds to the `ProjectName` value in the `.vcxproj` file. Will be used as the app name in Windows Explorer."
+          "description": "The **display name** of your app, e.g. 'My App 123' or '俺のアプリ'. Accepts any string. Corresponds to the `ProjectName` value in the `.vcxproj` file. Will be used as the app name in Windows Explorer."
         },
         "namespace": {
           "type": "string",
