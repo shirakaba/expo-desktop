@@ -16,6 +16,6 @@ const schema = PartialAppConfig.toJsonSchema();
 (schema as typeof schema & { $id: string })["$id"] = "https://json.schemastore.org/expoot-app.json";
 
 await fs.writeFile(
-  path.resolve(import.meta.dirname, "../schemas/app-config.json"),
+  path.resolve(import.meta.dirname, "../schemas/expoot-app-schema.json"),
   JSON.stringify(PartialAppConfig.toJsonSchema(), null, 2),
 );

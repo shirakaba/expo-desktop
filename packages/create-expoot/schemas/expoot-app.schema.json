@@ -21,7 +21,11 @@
           "pattern": "^[a-zA-Z][\\w\\-]*(?:\\.[a-zA-Z][\\w\\-]*)*$"
         }
       },
-      "required": ["alphanumeric", "display_name", "reverse_dns"]
+      "required": [
+        "alphanumeric",
+        "display_name",
+        "reverse_dns"
+      ]
     },
     "android": {
       "type": "object",
@@ -99,5 +103,7 @@
       }
     }
   },
-  "required": ["name"]
+  "required": [
+    "name"
+  ]
 }
