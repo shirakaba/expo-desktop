@@ -22,6 +22,10 @@
     "@typescript/native-preview": "catalog:base"
   },
   "lint-staged": {
+    "scripts/update-schema.ts": [
+      "node --run schema",
+      "oxfmt"
+    ],
     "src/app-config.ts": [
       "node --run schema",
       "oxfmt"
