@@ -1,3 +1,8 @@
 {
-  "recommendations": ["oxc.oxc-vscode", "TypeScriptTeam.native-preview", "expo.vscode-expo-tools"]
+  "recommendations": [
+    "oxc.oxc-vscode",
+    "TypeScriptTeam.native-preview",
+    "expo.vscode-expo-tools",
+    "arktypeio.arkdark"
+  ]
 }

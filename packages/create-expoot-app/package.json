@@ -9,6 +9,7 @@
     "start": "node src/index.ts"
   },
   "dependencies": {
+    "arktype": "^2.2.0",
     "toml": "^4.1.1"
   },
   "devDependencies": {

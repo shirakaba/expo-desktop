@@ -3,6 +3,7 @@
   "compilerOptions": {
     "types": ["node"],
     "noEmit": true,
+    "exactOptionalPropertyTypes": true,
     "allowImportingTsExtensions": true
   },
   "include": ["src"]

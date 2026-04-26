@@ -4,31 +4,16 @@
 expoot_schema_version = 1
 react_native_version = "0.81"
 
+project_name = "MyApp123"
 
-# Comment out this section if you don't want to generate an Android app.
 [android]
-display_name = "example"
-application_id = "com.example.my_app"
-namespace = "com.example.my_app"
+app_id = "com.example.my_app"
 
-
-# Comment out this section if you don't want to generate an iOS app.
 [ios]
-bundle_display_name = "My Application"
-bundle_identifier = "com.example.my-app"
+app_id = "com.example.my-app"
 
-
-# Comment out this section if you don't want to generate a macOS app.
 [macos]
-bundle_display_name = "My Application"
-bundle_identifier = "com.example.my-app"
+app_id = "com.example.my-app"
 
-
-# Comment out this section if you don't want to generate a Windows app.
 [windows]
-namespace = "exampleapp"
-display_name = "Example App"
-publisher_display_name = "Example company"
-project_name = "example.vcxproj"
-root_namespace = "example.vcxproj"
-entry_point_project_unique_name = "example.vcxproj"
+namespace = "com.example.myapp"
