@@ -4,11 +4,10 @@ import { cwd } from "node:process";
 
 // TODO: Use ArkType to generate the JSON schema to upload to schemastore
 await fs.writeFile(
-  path.resolve(cwd(), "create-expoot-config.json"),
+  path.resolve(cwd(), "expoot-app.json"),
   `
 {
-  "$schema": "https://www.schemastore.org/create-expoot-config",
-  "_version": "0.1.0",
+  "$schema": "https://json.schemastore.org/expoot-app.json",
 
   "name": {
     "alphanumeric": "MyApp123",
