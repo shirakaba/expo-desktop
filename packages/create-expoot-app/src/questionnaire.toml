@@ -1,105 +1,33 @@
+# Documented at:
+# https://github.com/shirakaba/expoot/wiki/questionnaire.toml-reference
+
 expoot_schema_version = 1
 react_native_version = "0.81"
 
 
 # Comment out this section if you don't want to generate an Android app.
 [android]
-# The value for rootProject.name in settings.gradle.
-#
-# Validation:
-# - Must not contain any of the following characters:
-#   Name             | Symbol
-#   -----------------|-------
-#   Slashes          | / \
-#   Colons           | :
-#   Comparators      | < >
-#   Quotation marks  | "
-#   Question marks   | ?
-#   Asterisks        | *
-#   Pipes            | |
-# - Must not start or end with a period (.)
-# - Must not be empty.
-# - Source: https://github.com/gradle/gradle/blob/master/subprojects/core/src/main/java/org/gradle/util/internal/NameValidator.java
-root_project_name = "example"
-
-# The value for android.defaultConfig.applicationId in app/build.gradle.
-#
-# Validation:
-# - It must have at least two segments (one or more dots).
-# - Each segment must start with a letter.
-# - All characters must be alphanumeric or an underscore [a-zA-Z0-9_].
-# - Source: https://developer.android.com/build/configure-app-module#set-application-id
+display_name = "example"
 application_id = "com.expoot.example"
 
 
 # Comment out this section if you don't want to generate an iOS app.
 [ios]
-# The value for the PRODUCT_BUNDLE_IDENTIFIER Xcode build variable, used to fill
-# in the CFBundleIdentifier Info.plist key.
-#
-# Validation:
-# - Must contain only alphanumeric characters (A–Z, a–z, and 0–9), hyphens (-),
-#   and periods (.).
-# - Source: https://developer.apple.com/documentation/bundleresources/information-property-list/cfbundleidentifier
+bundle_display_name = "My Application"
 bundle_identifier = "com.expoot.example"
 
 
 # Comment out this section if you don't want to generate a macOS app.
 [macos]
-# The value for the PRODUCT_BUNDLE_IDENTIFIER Xcode build variable, used to fill
-# in the CFBundleIdentifier Info.plist key.
-#
-# Validation:
-# - Must contain only alphanumeric characters (A–Z, a–z, and 0–9), hyphens (-),
-#   and periods (.).
-# - Source: https://developer.apple.com/documentation/bundleresources/information-property-list/cfbundleidentifier
+bundle_display_name = "My Application"
 bundle_identifier = "com.expoot.example"
 
 
 # Comment out this section if you don't want to generate a Windows app.
 [windows]
-# The namespace to use for both WinRT and C++ (e.g. in App.idl and App.h).
-#
-# Validation:
-# - WinRT namespace:
-#   - First character: A Unicode 3.0 letter (Lu, Ll, Lt, Lm, Lo, Nl) or
-#     underscore _ (U+005F)
-#   - Subsequent characters: Any of the above, plus decimal digits (Nd),
-#   connecting characters (Pc, e.g. _), combining characters (Mn/Mc, e.g. accent
-#   marks), or the two formatting characters U+200C/U+200D.
-# - C++ namespace:
-#   - First character: A–Z, a–z, _
-#   - Subsequent characters: A–Z, a–z, 0–9, _
 namespace = "exampleapp"
-
-# The Properties.DisplayName value, and uap:VisualElements DisplayName Value if
-# applicable, in the Package.appxmanifest.
-#
-# Validation:
-# - For localised display names, a string beginning with "ms-resource:",
-#   followed by 1-256 of any character.
-# - For non-localised display names, a string between 1-256 characters that
-#   has no leading nor trailing whitespace.
-# - You should also avoid using the pipe (|) character or the substring "all",
-#   as these are both disallowed by the Windows firewall.
-# - Source: https://github.com/microsoft/msix-packaging/blob/efeb9dad695a200c2beaddcba54a52c8320bd135/resources/AppxPackaging/Manifest/Schema/2015/AppxManifestTypes.xsd#L49-L57
-# - Source: https://learn.microsoft.com/en-us/uwp/schemas/appxpackage/uapmanifestschema/element-displayname
 display_name = "Example App"
-
-# The Properties.PublisherDisplayName value in the Package.appxmanifest.
-# Validation:
-# - Same as `display_name`.
 publisher_display_name = "Example company"
-
-# The ProjectName value in the example.vcxproj file.
-#
-# TODO: Check if this should be shared with namespace for simplicity
 project_name = "example.vcxproj"
-
-# The RootNamespace value in the example.vcxproj file.
-#
-# TODO: Check if this should be shared with namespace for simplicity
 root_namespace = "example.vcxproj"
-
-# The EntryPointProjectUniqueName value in the example.Package.wapproj file.
 entry_point_project_unique_name = "example.vcxproj"
