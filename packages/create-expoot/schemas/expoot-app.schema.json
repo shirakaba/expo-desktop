@@ -105,5 +105,6 @@
   },
   "required": [
     "name"
-  ]
+  ],
+  "$id": "https://json.schemastore.org/expoot-app.json"
 }
