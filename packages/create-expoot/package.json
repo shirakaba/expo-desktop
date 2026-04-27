@@ -7,11 +7,14 @@
   "type": "module",
   "scripts": {
     "start": "node src/index.ts",
+    "cli": "node src/cli.ts",
     "schema": "node scripts/update-schema.ts",
     "test": "bun test"
   },
   "dependencies": {
+    "@clack/prompts": "^1.2.0",
     "arktype": "^2.2.0",
+    "cac": "^7.0.0",
     "kleur": "^4.1.5",
     "toml": "^4.1.1"
   },
