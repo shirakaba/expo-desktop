@@ -14,10 +14,6 @@ function defineAppConfig<Partial extends boolean>({
   partial: Partial;
 }) {
   const optional = <K extends string>(key: K) => (partial ? (`${key}?` as `${K}?`) : (key as K));
-  const describe = <Schema extends { describe: (description: string) => unknown }>(
-    schema: Schema,
-    text: string,
-  ): Schema => (includeDescriptions ? (schema.describe(text) as Schema) : schema);
 
   const description = (text: string) => (includeDescriptions ? { description: text } : {});
 
@@ -27,82 +23,88 @@ function defineAppConfig<Partial extends boolean>({
         "The `{major}.{minor}` version of `react-native` to align to, e.g. '0.82'. Defaults to the highest mutually supported across both `react-native-macos` and `react-native-windows`.",
       ),
     ),
-    name: describe(
-      type({
-        alphanumeric: describe(
-          type("string.alphanumeric"),
+    name: type({
+      alphanumeric: type("string.alphanumeric").configure(
+        description(
           "A **filesafe name** for the app consisting only of alphanumeric characters (A-z, and 0-9), e.g. 'MyApp123'. Will be used mainly for file names, e.g. 'MyApp123.xcodeproj'.",
         ),
-        display_name: describe(
-          type("string"),
+      ),
+      display_name: type("string").configure(
+        description(
           "The **display name** of your app, e.g. 'My App 123' or '俺のアプリ'. Accepts any string. Will be used as the app name on the iOS/Android home screen, in macOS Finder, and in Windows Explorer.",
         ),
-        reverse_dns: describe(
-          UnderscoredOrHyphenatedDns,
+      ),
+      reverse_dns: UnderscoredOrHyphenatedDns.configure(
+        description(
           "The **reverse-Domain Name Specifier** for your app, e.g. 'com.example.my-app-123'. Accepts alphanumeric characters (A-z and 0-9), hyphens, and underscores. Will be used to fill in `android.package_namespace`, `android.application_id`, `windows.namespace`, `ios.bundle_identifier`, and `macos.bundle_identifier`. Hyphens and underscores will be sanitised as appropriate for these destinations, so don't worry which you use here.",
         ),
-      }),
-      "Different formats of the app name for use in different contexts.",
-    ),
-    [optional("android")]: describe(
-      type({
-        [optional("application_id")]: describe(
-          UnderscoredDns,
+      ),
+    }).configure(description("Different formats of the app name for use in different contexts.")),
+    [optional("android")]: type({
+      [optional("application_id")]: UnderscoredDns.configure(
+        description(
           "The **application ID** used on the Play Store, e.g. 'com.example.my_app_123'. Accepts only alphanumeric characters (A-z and 0-9), and underscores. Corresponds to `android.defaultConfig.applicationId` in `app/build.gradle`. Recommended to match `android.package_namespace`.",
         ),
-        [optional("package_namespace")]: describe(
-          UnderscoredDns,
+      ),
+      [optional("package_namespace")]: UnderscoredDns.configure(
+        description(
           "The **package namespace**, e.g. 'com.example.my_app_123'. Accepts only alphanumeric characters (A-z and 0-9), and underscores. Corresponds to `android.namespace` in `app/build.gradle`. Recommended to match `android.application_id`.",
         ),
-        [optional("root_project_name")]: describe(
-          type("string"),
+      ),
+      [optional("root_project_name")]: type("string").configure(
+        description(
           "The **display name** of your app, e.g. 'My App 123' or '俺のアプリ'. Accepts any string. Corresponds to `rootProject.name` in `settings.gradle`. Will be used as the app name on the Android home screen.",
         ),
-      }),
-      "Android-specific overrides for the default values (which are based on `name`).",
+      ),
+    }).configure(
+      description("Android-specific overrides for the default values (which are based on `name`)."),
     ),
-    ["ios?"]: describe(
-      type({
-        [optional("bundle_display_name")]: describe(
-          type("string"),
+    ["ios?"]: type({
+      [optional("bundle_display_name")]: type("string").configure(
+        description(
           "The **display name** of your app, e.g. 'My App 123' or '俺のアプリ'. Accepts any string. Corresponds to the `CFBundleDisplayName` key in the `Info.plist` file. Will be used as the app name on the iOS home screen.",
         ),
-        [optional("bundle_identifier")]: describe(
-          HyphenatedDns,
+      ),
+      [optional("bundle_identifier")]: HyphenatedDns.configure(
+        description(
           "The **bundle identifier** of your app, e.g. 'com.example.my-app-123'. Accepts only alphanumeric characters (A-z and 0-9), and hyphens. Corresponds to the `PRODUCT_BUNDLE_IDENTIFIER` Xcode build variable, used to fill in the `CFBundleIdentifier` key in the `Info.plist` file.",
         ),
-      }),
-      "iOS-specific overrides for the default values (which are based on `name`).",
+      ),
+    }).configure(
+      description("iOS-specific overrides for the default values (which are based on `name`)."),
     ),
-    ["macos?"]: describe(
-      type({
-        [optional("bundle_display_name")]: describe(
-          type("string"),
+    ["macos?"]: type({
+      [optional("bundle_display_name")]: type("string").configure(
+        description(
           "The **display name** of your app, e.g. 'My App 123' or '俺のアプリ'. Accepts any string. Corresponds to the `PRODUCT_BUNDLE_IDENTIFIER` Xcode build variable, used to fill in the `CFBundleDisplayName` key in the `Info.plist` file. Will be used as the app name in macOS Finder.",
         ),
-        [optional("bundle_identifier")]: describe(
-          HyphenatedDns,
+      ),
+      [optional("bundle_identifier")]: HyphenatedDns.configure(
+        description(
           "The **bundle identifier** of your app, e.g. 'com.example.my-app-123'. Accepts only alphanumeric characters (A-z and 0-9), and hyphens. Corresponds to the `PRODUCT_BUNDLE_IDENTIFIER` Xcode build variable, used to fill in the `CFBundleIdentifier` key in the `Info.plist` file.",
         ),
-      }),
-      "macOS-specific overrides for the default values (which are based on `name`).",
+      ),
+    }).configure(
+      description("macOS-specific overrides for the default values (which are based on `name`)."),
     ),
-    ["windows?"]: describe(
-      type({
-        [optional("display_name")]: describe(
-          type("string"),
+    ["windows?"]: type({
+      [optional("display_name")]: type("string").configure(
+        description(
           "The **display name** of your app, e.g. 'My App 123' or '俺のアプリ'. Accepts any string. Corresponds to the `ProjectName` value in the `.vcxproj` file. Will be used as the app name in Windows Explorer.",
         ),
-        [optional("namespace")]: describe(
-          Dns,
+      ),
+      [optional("namespace")]: Dns.configure(
+        description(
           "The WinRT and C++ **namespace**, e.g. 'com.example.myapp123'. Accepts only alphanumeric characters (A-z and 0-9). When used in C++, `.` characters are converted to `::`, e.g. 'com::example::myapp123'.",
         ),
-        [optional("project_name")]: describe(
-          type("string.alphanumeric"),
+      ),
+      [optional("project_name")]: type("string.alphanumeric").configure(
+        description(
           "A **filesafe name** for the app consisting only of alphanumeric characters (A-z, and 0-9), e.g. 'MyApp123'. Will be used mainly for file names, e.g. 'MyApp123.vcxproj'.",
         ),
-      }),
-      "Windows-specific overrides for the default values (which are based on `name`).",
+      ),
+    }).configure(
+      description("Windows-specific overrides for the default values (which are based on `name`)."),
     ),
   });
 }
