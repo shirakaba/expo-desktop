@@ -101,13 +101,14 @@ function defineAppConfig({ includeDescriptions }: { includeDescriptions: boolean
   });
 }
 
-export const PartialAppConfig = defineAppConfig({
-  includeDescriptions: false,
-});
+export const PartialAppConfig = defineAppConfig({ includeDescriptions: false });
 
-export const PartialAppConfigForJsonSchema = defineAppConfig({
-  includeDescriptions: true,
-});
-type PartialAppConfigType = typeof PartialAppConfig.infer;
+export const PartialAppConfigForJsonSchema = defineAppConfig({ includeDescriptions: true });
 
-export const AppConfig = defineAppConfig({ includeDescriptions: false });
+const RequiredTopLevelAppConfig = type.keywords.Required(PartialAppConfig);
+export const AppConfig = type.merge(RequiredTopLevelAppConfig, {
+  android: RequiredTopLevelAppConfig.get("android").required(),
+  ios: RequiredTopLevelAppConfig.get("ios").required(),
+  macos: RequiredTopLevelAppConfig.get("macos").required(),
+  windows: RequiredTopLevelAppConfig.get("windows").required(),
+});
