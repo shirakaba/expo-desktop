@@ -7,6 +7,7 @@ export function defineAppConfig(config: typeof PartialAppConfig.infer) {
   const partial = PartialAppConfig(config);
 
   if (partial instanceof type.errors) {
+    // console.log(`Invalid config:\n${makePrettySummary(partial).join("\n")}`);
     throw new Error(`Invalid config:\n${makePrettySummary(partial).join("\n")}`);
   }
 
