@@ -19,10 +19,13 @@ function defineAppConfig<Partial extends boolean>({
     text: string,
   ): Schema => (includeDescriptions ? (schema.describe(text) as Schema) : schema);
 
+  const description = (text: string) => (includeDescriptions ? { description: text } : {});
+
   return type({
-    [optional("react_native_version")]: describe(
-      SemverMajorMinorOnly,
-      "The `{major}.{minor}` version of `react-native` to align to, e.g. '0.82'. Defaults to the highest mutually supported across both `react-native-macos` and `react-native-windows`.",
+    [optional("react_native_version")]: SemverMajorMinorOnly.configure(
+      description(
+        "The `{major}.{minor}` version of `react-native` to align to, e.g. '0.82'. Defaults to the highest mutually supported across both `react-native-macos` and `react-native-windows`.",
+      ),
     ),
     name: describe(
       type({
