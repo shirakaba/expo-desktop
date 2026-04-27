@@ -6,19 +6,11 @@ export const UnderscoredDns = type("/^[a-zA-Z]\\w*(?:\\.[a-zA-Z]\\w*)*$/");
 export const HyphenatedDns = type("/^[a-zA-Z][a-zA-Z0-9\\-]*(?:\\.[a-zA-Z][a-zA-Z0-9\\-]*)*$/");
 export const UnderscoredOrHyphenatedDns = type("/^[a-zA-Z][\\w\\-]*(?:\\.[a-zA-Z][\\w\\-]*)*$/");
 
-function defineAppConfig<Partial extends boolean>({
-  includeDescriptions,
-  partial,
-}: {
-  includeDescriptions: boolean;
-  partial: Partial;
-}) {
-  const optional = <K extends string>(key: K) => (partial ? (`${key}?` as `${K}?`) : (key as K));
-
+function defineAppConfig({ includeDescriptions }: { includeDescriptions: boolean }) {
   const description = (text: string) => (includeDescriptions ? { description: text } : {});
 
   return type({
-    [optional("react_native_version")]: SemverMajorMinorOnly.configure(
+    ["react_native_version?"]: SemverMajorMinorOnly.configure(
       description(
         "The `{major}.{minor}` version of `react-native` to align to, e.g. '0.82'. Defaults to the highest mutually supported across both `react-native-macos` and `react-native-windows`.",
       ),
@@ -40,18 +32,18 @@ function defineAppConfig<Partial extends boolean>({
         ),
       ),
     }).configure(description("Different formats of the app name for use in different contexts.")),
-    [optional("android")]: type({
-      [optional("application_id")]: UnderscoredDns.configure(
+    ["android?"]: type({
+      ["application_id?"]: UnderscoredDns.configure(
         description(
           "The **application ID** used on the Play Store, e.g. 'com.example.my_app_123'. Accepts only alphanumeric characters (A-z and 0-9), and underscores. Corresponds to `android.defaultConfig.applicationId` in `app/build.gradle`. Recommended to match `android.package_namespace`.",
         ),
       ),
-      [optional("package_namespace")]: UnderscoredDns.configure(
+      ["package_namespace?"]: UnderscoredDns.configure(
         description(
           "The **package namespace**, e.g. 'com.example.my_app_123'. Accepts only alphanumeric characters (A-z and 0-9), and underscores. Corresponds to `android.namespace` in `app/build.gradle`. Recommended to match `android.application_id`.",
         ),
       ),
-      [optional("root_project_name")]: type("string").configure(
+      ["root_project_name?"]: type("string").configure(
         description(
           "The **display name** of your app, e.g. 'My App 123' or '俺のアプリ'. Accepts any string. Corresponds to `rootProject.name` in `settings.gradle`. Will be used as the app name on the Android home screen.",
         ),
@@ -60,12 +52,12 @@ function defineAppConfig<Partial extends boolean>({
       description("Android-specific overrides for the default values (which are based on `name`)."),
     ),
     ["ios?"]: type({
-      [optional("bundle_display_name")]: type("string").configure(
+      ["bundle_display_name?"]: type("string").configure(
         description(
           "The **display name** of your app, e.g. 'My App 123' or '俺のアプリ'. Accepts any string. Corresponds to the `CFBundleDisplayName` key in the `Info.plist` file. Will be used as the app name on the iOS home screen.",
         ),
       ),
-      [optional("bundle_identifier")]: HyphenatedDns.configure(
+      ["bundle_identifier?"]: HyphenatedDns.configure(
         description(
           "The **bundle identifier** of your app, e.g. 'com.example.my-app-123'. Accepts only alphanumeric characters (A-z and 0-9), and hyphens. Corresponds to the `PRODUCT_BUNDLE_IDENTIFIER` Xcode build variable, used to fill in the `CFBundleIdentifier` key in the `Info.plist` file.",
         ),
@@ -74,12 +66,12 @@ function defineAppConfig<Partial extends boolean>({
       description("iOS-specific overrides for the default values (which are based on `name`)."),
     ),
     ["macos?"]: type({
-      [optional("bundle_display_name")]: type("string").configure(
+      ["bundle_display_name?"]: type("string").configure(
         description(
           "The **display name** of your app, e.g. 'My App 123' or '俺のアプリ'. Accepts any string. Corresponds to the `PRODUCT_BUNDLE_IDENTIFIER` Xcode build variable, used to fill in the `CFBundleDisplayName` key in the `Info.plist` file. Will be used as the app name in macOS Finder.",
         ),
       ),
-      [optional("bundle_identifier")]: HyphenatedDns.configure(
+      ["bundle_identifier?"]: HyphenatedDns.configure(
         description(
           "The **bundle identifier** of your app, e.g. 'com.example.my-app-123'. Accepts only alphanumeric characters (A-z and 0-9), and hyphens. Corresponds to the `PRODUCT_BUNDLE_IDENTIFIER` Xcode build variable, used to fill in the `CFBundleIdentifier` key in the `Info.plist` file.",
         ),
@@ -88,17 +80,17 @@ function defineAppConfig<Partial extends boolean>({
       description("macOS-specific overrides for the default values (which are based on `name`)."),
     ),
     ["windows?"]: type({
-      [optional("display_name")]: type("string").configure(
+      ["display_name?"]: type("string").configure(
         description(
           "The **display name** of your app, e.g. 'My App 123' or '俺のアプリ'. Accepts any string. Corresponds to the `ProjectName` value in the `.vcxproj` file. Will be used as the app name in Windows Explorer.",
         ),
       ),
-      [optional("namespace")]: Dns.configure(
+      ["namespace?"]: Dns.configure(
         description(
           "The WinRT and C++ **namespace**, e.g. 'com.example.myapp123'. Accepts only alphanumeric characters (A-z and 0-9). When used in C++, `.` characters are converted to `::`, e.g. 'com::example::myapp123'.",
         ),
       ),
-      [optional("project_name")]: type("string.alphanumeric").configure(
+      ["project_name?"]: type("string.alphanumeric").configure(
         description(
           "A **filesafe name** for the app consisting only of alphanumeric characters (A-z, and 0-9), e.g. 'MyApp123'. Will be used mainly for file names, e.g. 'MyApp123.vcxproj'.",
         ),
@@ -111,13 +103,11 @@ function defineAppConfig<Partial extends boolean>({
 
 export const PartialAppConfig = defineAppConfig({
   includeDescriptions: false,
-  partial: true,
 });
 
 export const PartialAppConfigForJsonSchema = defineAppConfig({
   includeDescriptions: true,
-  partial: true,
 });
 type PartialAppConfigType = typeof PartialAppConfig.infer;
 
-export const AppConfig = defineAppConfig({ includeDescriptions: false, partial: false });
+export const AppConfig = defineAppConfig({ includeDescriptions: false });
