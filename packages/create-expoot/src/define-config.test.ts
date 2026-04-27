@@ -3,8 +3,8 @@ import { expect, test } from "bun:test";
 import { badName, defaultConfig } from "./fixtures/configs.ts";
 
 test("performs pattern validation on strings", () => {
-  expect(badName.alphanumeric).toThrow();
-  expect(badName.reverse_dns).toThrow();
+  expect(badName.alphanumeric).toThrow(/name\.alphanumeric must be only letters and digits 0-9/);
+  expect(badName.reverse_dns).toThrow(/name\.reverse_dns must be matched by/);
 });
 
 test("fills in partial config", () => {

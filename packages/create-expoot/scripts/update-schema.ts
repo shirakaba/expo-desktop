@@ -1,9 +1,9 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
-import { PartialAppConfig } from "../src/app-config.ts";
+import { PartialAppConfigForJsonSchema } from "../src/app-config.ts";
 
-const schema = PartialAppConfig.toJsonSchema();
+const schema = PartialAppConfigForJsonSchema.toJsonSchema();
 
 // Some examples, with and without $id:
 // - With:
@@ -16,6 +16,6 @@ const schema = PartialAppConfig.toJsonSchema();
 (schema as typeof schema & { $id: string })["$id"] = "https://json.schemastore.org/expoot-app.json";
 
 await fs.writeFile(
-  path.resolve(import.meta.dirname, "../schemas/expoot-app-schema.json"),
-  JSON.stringify(PartialAppConfig.toJsonSchema(), null, 2),
+  path.resolve(import.meta.dirname, "../schemas/expoot-app.schema.json"),
+  JSON.stringify(schema, null, 2),
 );
