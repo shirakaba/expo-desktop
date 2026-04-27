@@ -1,9 +1,17 @@
+#!/usr/bin/env node
+
 import { defineCommand, runMain } from "citty";
 import { default as kleur } from "kleur";
 import { grey } from "kleur/colors";
 
+import packageJson from "../package.json" with { type: "json" };
+
 const main = defineCommand({
-  meta: { name: "expoot", version: "1.0.0", description: "My Awesome CLI App" },
+  meta: {
+    name: "expoot",
+    version: packageJson.version,
+    description: "Out-of-tree support for Expo",
+  },
   subCommands: {
     "create-app": defineCommand({
       meta: { name: "create-app", description: "Create a new Expo Desktop project" },

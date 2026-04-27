@@ -2,7 +2,6 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { cwd } from "node:process";
 
-// TODO: Use ArkType to generate the JSON schema to upload to schemastore
 await fs.writeFile(
   path.resolve(cwd(), "expoot-app.json"),
   `

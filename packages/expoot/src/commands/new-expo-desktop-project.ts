@@ -1,6 +1,6 @@
 import { isCancel, text, log } from "@clack/prompts";
 import { default as kleur } from "kleur";
-import { grey, yellow } from "kleur/colors";
+import { grey } from "kleur/colors";
 
 export async function newExpoDesktopProject(args: {
   alphanumeric: string | undefined;

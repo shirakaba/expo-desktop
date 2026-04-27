@@ -1,0 +1,10 @@
+{
+  "name": "demo-expoot",
+  "version": "0.1.0",
+  "scripts": {
+    "start": "expoot"
+  },
+  "dependencies": {
+    "expoot": "workspace:"
+  }
+}

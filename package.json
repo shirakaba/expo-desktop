@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "workspaces": [
-    "packages/expoot"
+    "packages/expoot",
+    "packages/demo-expoot"
   ],
   "scripts": {
     "prepare": "husky",
