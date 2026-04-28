@@ -31,6 +31,11 @@ const main = defineCommand({
           description: `The ${kleur.bold("reverse DNS")} for the app ${grey("(Example: 'com.example.my-app-123')")}`,
           valueHint: "name",
         },
+        version: {
+          type: "string",
+          description: `The ${kleur.bold("minor version")} of React Native to align on ${grey("(Examples: '0.80', 'latest')")}`,
+          valueHint: "version",
+        },
       },
       async run({ args }) {
         (await import("./commands/new-expo-desktop-project.ts")).newExpoDesktopProject(args);
