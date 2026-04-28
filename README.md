@@ -1,4 +1,6 @@
-<h1 align="center">Exp<ins>oot</ins> 🌲</h2>
+<h1 align="center">expo-<ins>oot</ins> 🌲</h2>
+
+_It was going to be called <code>expoot</code>, but npm forbid that package name :(_
 
 # About
 

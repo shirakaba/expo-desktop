@@ -14,11 +14,11 @@
       "name": "demo-expoot",
       "version": "0.1.0",
       "dependencies": {
-        "expoot": "workspace:",
+        "expo-oot": "workspace:",
       },
     },
     "packages/expoot": {
-      "name": "expoot",
+      "name": "expo-oot",
       "version": "0.1.0",
       "bin": "src/cli.ts",
       "dependencies": {
@@ -160,7 +160,7 @@
 
     "eventemitter3": ["eventemitter3@5.0.4", "", {}, "sha512-mlsTRyGaPBjPedk6Bvw+aqbsXDtoAyAzm5MO7JgU+yVRyMQ5O8bD4Kcci7BS85f93veegeCPkL8R4GLClnjLFw=="],
 
-    "expoot": ["expoot@workspace:packages/expoot"],
+    "expo-oot": ["expo-oot@workspace:packages/expoot"],
 
     "fast-string-truncated-width": ["fast-string-truncated-width@1.2.1", "", {}, "sha512-Q9acT/+Uu3GwGj+5w/zsGuQjh9O1TyywhIwAxHudtWrgF09nHOPrvTLhQevPbttcxjr/SNN7mJmfOw/B1bXgow=="],
 

@@ -2,9 +2,9 @@
   "name": "demo-expoot",
   "version": "0.1.0",
   "scripts": {
-    "start": "expoot"
+    "start": "expo-oot"
   },
   "dependencies": {
-    "expoot": "workspace:"
+    "expo-oot": "workspace:"
   }
 }
