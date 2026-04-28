@@ -1,10 +1,10 @@
 {
-  "name": "expoot-monorepo",
+  "name": "expo-desktop-monorepo",
   "version": "0.1.0",
   "private": true,
   "workspaces": [
-    "packages/expoot",
-    "packages/demo-expoot"
+    "packages/expo-desktop",
+    "packages/demo-expo-desktop"
   ],
   "scripts": {
     "prepare": "husky",
@@ -14,7 +14,7 @@
   "devDependencies": {
     "husky": "^9.1.7",
     "lint-staged": "^16.4.0",
-    "oxfmt": "^0.46.0"
+    "oxfmt": "^0.47.0"
   },
   "lint-staged": {
     "*.{css,html,js,jsx,json,md,toml,ts,tsx}": [

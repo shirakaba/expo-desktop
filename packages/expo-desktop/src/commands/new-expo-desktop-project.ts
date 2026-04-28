@@ -8,7 +8,7 @@ export async function newExpoDesktopProject(args: {
   rdns: string | undefined;
 }) {
   log.info(
-    `🏎️  Running ${kleur.yellow("expoot create-app")}. Let's create a new Expo Desktop app in a subfolder!`,
+    `🏎️  Running ${kleur.yellow("expo-desktop create-app")}. Let's create a new Expo Desktop app in a subfolder!`,
     { withGuide: false },
   );
 

@@ -8,9 +8,9 @@ import packageJson from "../package.json" with { type: "json" };
 
 const main = defineCommand({
   meta: {
-    name: "expoot",
+    name: "expo-desktop",
     version: packageJson.version,
-    description: "Out-of-tree support for Expo",
+    description: "Best-effort desktop support for Expo",
   },
   subCommands: {
     "create-app": defineCommand({

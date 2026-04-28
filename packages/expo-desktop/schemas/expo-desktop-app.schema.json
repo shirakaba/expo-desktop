@@ -106,5 +106,5 @@
   "required": [
     "name"
   ],
-  "$id": "https://json.schemastore.org/expoot-app.json"
+  "$id": "https://json.schemastore.org/expo-desktop-app.json"
 }

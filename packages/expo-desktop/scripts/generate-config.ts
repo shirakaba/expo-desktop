@@ -3,10 +3,10 @@ import path from "node:path";
 import { cwd } from "node:process";
 
 await fs.writeFile(
-  path.resolve(cwd(), "expoot-app.json"),
+  path.resolve(cwd(), "expo-desktop-app.json"),
   `
 {
-  "$schema": "https://json.schemastore.org/expoot-app.json",
+  "$schema": "https://json.schemastore.org/expo-desktop-app.json",
 
   "name": {
     "alphanumeric": "MyApp123",

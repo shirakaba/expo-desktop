@@ -1,7 +1,7 @@
 {
-  "name": "expoot",
+  "name": "expo-desktop",
   "version": "0.1.0",
-  "description": "Best-effort out-of-tree support for Expo",
+  "description": "Best-effort desktop support for Expo",
   "keywords": [
     "android",
     "expo",
@@ -11,17 +11,19 @@
     "react native desktop",
     "windows"
   ],
-  "homepage": "https://github.com/shirakaba/expoot#readme",
+  "homepage": "https://github.com/shirakaba/expo-desktop/tree/main/packages/expo-desktop",
   "bugs": {
-    "url": "https://github.com/shirakaba/expoot/issues"
+    "url": "https://github.com/shirakaba/expo-desktop/issues"
   },
   "license": "MIT",
   "author": "Jamie Birch <14055146+shirakaba@users.noreply.github.com> (https://github.com/shirakaba)",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/shirakaba/expoot.git"
+    "url": "git+https://github.com/shirakaba/expo-desktop.git"
   },
-  "bin": "src/cli.ts",
+  "bin": {
+    "expo-desktop": "src/cli.ts"
+  },
   "files": [
     "src",
     "!src/fixtures",

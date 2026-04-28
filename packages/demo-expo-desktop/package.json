@@ -1,0 +1,10 @@
+{
+  "name": "demo-expo-desktop",
+  "version": "0.1.0",
+  "scripts": {
+    "start": "expo-desktop"
+  },
+  "dependencies": {
+    "expo-desktop": "workspace:"
+  }
+}

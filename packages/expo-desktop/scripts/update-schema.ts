@@ -13,9 +13,10 @@ const schema = PartialAppConfigForJsonSchema.toJsonSchema();
 //   - https://github.com/SchemaStore/schemastore/blob/master/src/schemas/json/clang-format.json
 // - Without:
 //   - https://github.com/SchemaStore/schemastore/blob/master/src/schemas/json/tsconfig.json
-(schema as typeof schema & { $id: string })["$id"] = "https://json.schemastore.org/expoot-app.json";
+(schema as typeof schema & { $id: string })["$id"] =
+  "https://json.schemastore.org/expo-desktop-app.json";
 
 await fs.writeFile(
-  path.resolve(import.meta.dirname, "../schemas/expoot-app.schema.json"),
+  path.resolve(import.meta.dirname, "../schemas/expo-desktop-app.schema.json"),
   JSON.stringify(schema, null, 2),
 );
