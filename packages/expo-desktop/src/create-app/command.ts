@@ -12,6 +12,22 @@ export async function newExpoDesktopProject(args: {
   rdns: string | undefined;
   version: string | undefined;
 }) {
+  // A dev-time switch for skipping the questions
+  const skip = false;
+  if (skip) {
+    await initApp({
+      name: { displayName: "My App", filesafeName: "MyApp", rdns: "com.example.my-app" },
+      packageManager: "bun",
+      versions: {
+        expo: "54.0.34",
+        minor: 81,
+        mobile: "0.81.6",
+        windows: "0.81.15",
+        macos: "0.81.7",
+      },
+    });
+  }
+
   log.info(
     `🏎️  Running ${kleur.yellow("expo-desktop create-app")}. Let's create a new Expo Desktop app!`,
     { withGuide: false },
