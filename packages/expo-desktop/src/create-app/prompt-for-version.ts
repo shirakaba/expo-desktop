@@ -138,6 +138,8 @@ export async function promptForVersion(desiredMinorVersion?: string) {
         );
       }
 
+      const expoMajor = expo.split(".").slice(0, 1);
+
       return {
         value: {
           minor: minorInt,
@@ -148,14 +150,14 @@ export async function promptForVersion(desiredMinorVersion?: string) {
         },
         label:
           minorInt === highestCommonMinor
-            ? `${major}.${minor} - Expo ${expo} (recommended)`
-            : `${major}.${minor} - Expo ${expo}`,
+            ? `${major}.${minor} (Expo ${expoMajor}; recommended)`
+            : `${major}.${minor} (Expo ${expoMajor})`,
       };
     }),
   ];
 
   const chosenVersion = await select({
-    message: `Which ${kleur.bold("common version")} of ${kleur.bold("react-native")}, ${kleur.bold("react-native-macos")}, ${kleur.bold("react-native-windows")} shall we install?`,
+    message: `Which ${kleur.bold("common version")} of ${kleur.bold("react-native")}, ${kleur.bold("react-native-macos")}, and ${kleur.bold("react-native-windows")} shall we install?`,
     options,
     initialValue: options.find(({ value }) => value.minor === highestCommonMinor)!.value,
   });
