@@ -16,7 +16,7 @@ const main = defineCommand({
     "create-app": defineCommand({
       meta: { name: "create-app", description: "Create a new Expo Desktop project" },
       args: {
-        alphanumeric: {
+        "filesafe-name": {
           type: "string",
           description: `The ${kleur.bold("filesafe name")} for the app in alphanumeric format ${grey("(Example: 'MyApp123')")}`,
           valueHint: "name",

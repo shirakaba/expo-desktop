@@ -1,6 +1,6 @@
-import { isCancel, select, tasks, text, log, type Option } from "@clack/prompts";
+import { confirm, isCancel, select, tasks, text, log, type Option } from "@clack/prompts";
 import { default as kleur } from "kleur";
-import { green, grey } from "kleur/colors";
+import { blue, green, grey, yellow } from "kleur/colors";
 
 import {
   filterVersions,
@@ -11,7 +11,7 @@ import {
 } from "../npm.ts";
 
 export async function newExpoDesktopProject(args: {
-  alphanumeric: string | undefined;
+  "filesafe-name": string | undefined;
   "display-name": string | undefined;
   rdns: string | undefined;
   version: string | undefined;
@@ -26,11 +26,11 @@ export async function newExpoDesktopProject(args: {
     `Will use versions: ${green(`react-native@${versions.mobile}`)}, ${green(`react-native-macos@${versions.macos}`)}, and ${green(`react-native-windows@${versions.windows}`)}.`,
   );
 
-  log.info(kleur.bold(kleur.inverse("  Configuring app name  ")), { withGuide: false });
+  title("Configuring app name");
 
-  let alphanumeric: Arg = args.alphanumeric;
-  if (!alphanumeric) {
-    alphanumeric = await text({
+  let filesafeName: Arg = args["filesafe-name"];
+  if (!filesafeName) {
+    filesafeName = await text({
       message: `Please provide the ${kleur.bold("filesafe name")} for the app in ${kleur.bold("alphanumeric")} format. ${grey("(Example: 'MyApp123')")}`,
       placeholder: "MyApp",
       initialValue: "MyApp",
@@ -41,7 +41,7 @@ export async function newExpoDesktopProject(args: {
       },
     });
   }
-  if (isCancel(alphanumeric)) {
+  if (isCancel(filesafeName)) {
     process.exit(0);
   }
 
@@ -78,6 +78,23 @@ export async function newExpoDesktopProject(args: {
   if (isCancel(rdns)) {
     process.exit(0);
   }
+
+  const structureIsOkay = await confirm({
+    message: `Will create an Expo app with the following structure. Does this look okay?\n\n${previewFileTree({ filesafeName, rdns })}\n`,
+    initialValue: true,
+  });
+  if (isCancel(structureIsOkay)) {
+    process.exit(0);
+  }
+  if (!structureIsOkay) {
+    // TODO: loop
+  }
+
+  // TODO: ask which package manager to use to install deps
+}
+
+function title(text: string) {
+  log.info(kleur.bold(kleur.inverse(`  ${text}  `)), { withGuide: false });
 }
 
 type Arg = string | symbol | undefined;
@@ -257,15 +274,6 @@ async function getHighestCommonMinor({
     .sort((a, b) => b - a)
     .at(0);
 
-  // console.log(inspect(macosVersions, { depth: null }));
-  // console.log(inspect(getHighestStableMinors(macosVersions.map), { depth: null }));
-
-  // console.log(inspect(windowsVersions, { depth: null }));
-  // console.log(inspect(getHighestStableMinors(windowsVersions.map), { depth: null }));
-
-  // console.log(commonMinors);
-  // console.log(highestCommonMinor);
-
   return {
     mobile: mobileMinorsForMajor,
     windows: windowsMinorsForMajor,
@@ -273,4 +281,53 @@ async function getHighestCommonMinor({
     highestCommonMinor,
     commonMinors,
   };
+}
+
+function previewFileTree({ filesafeName, rdns }: { filesafeName: string; rdns: string }) {
+  const colouredFilesafeName = yellow(filesafeName);
+
+  return `
+${colouredFilesafeName}
+├── …
+├── ${blue("android")}
+│   ├── …
+│   └── app
+│       ├── …
+│       └── src
+│           └── main
+│               ├── …
+│               └── java
+${`${rdns}.…`
+  .split(".")
+  .map((segment, i, arr) => {
+    return `│                  ${new Array(i * 4).fill(" ").join("")} └── ${i === arr.length - 1 ? segment : yellow(segment)}`;
+  })
+  .join("\n")}
+├── ${blue("ios")}
+│   ├── …
+│   ├── ${colouredFilesafeName}
+│   │   └── …
+│   ├── ${colouredFilesafeName}.xcodeproj
+│   └── ${colouredFilesafeName}.xcworkspace
+├── ${blue("macos")}
+│   ├── …
+│   ├── ${colouredFilesafeName}-macOS
+│   │   └── …
+│   ├── ${colouredFilesafeName}.xcodeproj
+│   └── ${colouredFilesafeName}.xcworkspace
+└── ${blue("windows")}
+    ├── …
+    ├── ${colouredFilesafeName}
+    │   ├── …
+    │   ├── ${colouredFilesafeName}.cpp
+    │   ├── ${colouredFilesafeName}.h
+    │   ├── ${colouredFilesafeName}.ico
+    │   ├── ${colouredFilesafeName}.rc
+    │   ├── ${colouredFilesafeName}.vcxproj
+    │   └── ${colouredFilesafeName}.vcxproj.filters
+    ├── ${colouredFilesafeName}.Package
+    │   ├── …
+    │   └── ${colouredFilesafeName}.Package.wapproj
+    └── ${colouredFilesafeName}.sln
+`.trim();
 }
