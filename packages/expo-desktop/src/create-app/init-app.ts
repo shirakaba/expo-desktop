@@ -52,21 +52,20 @@ export async function initApp({
             .on("line", (line) => text(`${red("[stderr]")} ${line}`));
         }
 
-        let error: Error | null = null;
-        cp.on("error", (e) => {
-          if (!error) {
-            error = e;
+        let cpError: Error | null = null;
+        cp.on("error", (error) => {
+          if (!cpError) {
+            cpError = error;
           }
         });
 
         cp.on("close", (code, signal) => {
-          if (error) {
-            reject(error);
-            return;
-          }
-
-          if (code !== 0) {
-            reject(new Error(`Child process exited with code ${code} and signal ${signal}`));
+          if (cpError || code !== 0) {
+            reject(
+              new Error(`Child process exited with code ${code} and signal ${signal}`, {
+                cause: cpError,
+              }),
+            );
             return;
           }
 
