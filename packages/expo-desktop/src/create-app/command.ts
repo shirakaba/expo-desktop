@@ -24,10 +24,10 @@ export async function newExpoDesktopProject(args: {
 
   const versions = await promptForVersion(args.version);
   log.info(
-    `Will use versions: ${green(`react-native@${versions.mobile}`)}, ${green(`react-native-macos@${versions.macos}`)}, and ${green(`react-native-windows@${versions.windows}`)}.`,
+    `Will use versions: ${green(`react-native@${versions.mobile}`)}, ${green(`react-native-macos@${versions.macos}`)}, and ${green(`react-native-windows@${versions.windows}`)}, with ${green(`expo@${versions.expo}`)}.`,
   );
 
-  const packageManager = await select({
+  const packageManager = await select<"npm" | "bun" | "pnpm" | "yarn">({
     message: "What package manager shall we install with?",
     options: [
       { value: "npm", label: "npm" },
@@ -37,6 +37,11 @@ export async function newExpoDesktopProject(args: {
     ],
     initialValue: "bun",
   });
+  if (isCancel(packageManager)) {
+    process.exit(0);
+  }
+
+  // packageManager;
 }
 
 function title(text: string) {
