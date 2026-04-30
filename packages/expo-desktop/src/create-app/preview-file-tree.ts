@@ -14,7 +14,7 @@ ${colouredFilesafeName}
 │           └── main
 │               ├── …
 │               └── java
-${`${rdns}.…`
+${`${rdns.replaceAll("-", "_")}.…`
   .split(".")
   .map((segment, i, arr) => {
     return `│                  ${new Array(i * 4).fill(" ").join("")} └── ${i === arr.length - 1 ? segment : yellow(segment)}`;
