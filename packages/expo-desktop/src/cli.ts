@@ -38,7 +38,7 @@ const main = defineCommand({
         },
       },
       async run({ args }) {
-        (await import("./commands/new-expo-desktop-project.ts")).newExpoDesktopProject(args);
+        (await import("./create-app/command.ts")).newExpoDesktopProject(args);
       },
     }),
   },
