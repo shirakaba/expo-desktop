@@ -1,4 +1,4 @@
-import { confirm, isCancel, text, log } from "@clack/prompts";
+import { confirm, isCancel, text, log, select } from "@clack/prompts";
 import { default as kleur } from "kleur";
 import { green, grey } from "kleur/colors";
 
@@ -16,16 +16,27 @@ export async function newExpoDesktopProject(args: {
     { withGuide: false },
   );
 
+  title("Configuring app name");
+
+  const { filesafeName, displayName, rdns } = await configureAppName(args);
+
+  title("Configuring installation");
+
   const versions = await promptForVersion(args.version);
   log.info(
     `Will use versions: ${green(`react-native@${versions.mobile}`)}, ${green(`react-native-macos@${versions.macos}`)}, and ${green(`react-native-windows@${versions.windows}`)}.`,
   );
 
-  title("Configuring app name");
-
-  const { filesafeName, displayName, rdns } = await configureAppName(args);
-
-  // TODO: ask which package manager to use to install deps
+  const packageManager = await select({
+    message: "What package manager shall we install with?",
+    options: [
+      { value: "npm", label: "npm" },
+      { value: "bun", label: "Bun (recommended)" },
+      { value: "pnpm", label: "pnpm" },
+      { value: "yarn", label: "yarn" },
+    ],
+    initialValue: "bun",
+  });
 }
 
 function title(text: string) {
@@ -43,6 +54,9 @@ async function configureAppName(args: {
   initialRdns?: string;
 }) {
   const { initialFilesafeName, initialDisplayName, initialRdns } = args;
+
+  // TODO: Upon any cancel, provide the CLI command to get back to the cancelled
+  //       step.
 
   let filesafeName: Arg = args["filesafe-name"];
   if (!filesafeName) {
