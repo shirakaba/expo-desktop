@@ -2,6 +2,7 @@ import { confirm, isCancel, text, log, select } from "@clack/prompts";
 import { default as kleur } from "kleur";
 import { green, grey } from "kleur/colors";
 
+import { initApp } from "./init-app.ts";
 import { previewFileTree } from "./preview-file-tree.ts";
 import { promptForVersion } from "./prompt-for-version.ts";
 
@@ -18,7 +19,7 @@ export async function newExpoDesktopProject(args: {
 
   title("Configuring app name");
 
-  const { filesafeName, displayName, rdns } = await configureAppName(args);
+  const name = await configureAppName(args);
 
   title("Configuring installation");
 
@@ -41,7 +42,7 @@ export async function newExpoDesktopProject(args: {
     process.exit(0);
   }
 
-  // packageManager;
+  await initApp({ name, packageManager, versions });
 }
 
 function title(text: string) {
