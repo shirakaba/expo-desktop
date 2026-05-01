@@ -395,6 +395,10 @@ function getMacOSTargetName(project) {
  * runs evalModsAsync().
  * @see https://github.com/expo/expo/blob/15d35298c9a397c23bcbf6b20e2b9761564acbc4/packages/%40expo/cli/src/prebuild/configureProjectAsync.ts#L50
  * @see https://github.com/expo/expo/blob/15d35298c9a397c23bcbf6b20e2b9761564acbc4/packages/%40expo/config-plugins/src/plugins/mod-compiler.ts#L69
+ *
+ * See also how Tommy used compileModsAsync() > evalModsAsync()
+ * @see https://github.com/microsoft/react-native-test-app/blob/0951cf5a3727c01d2ef25540eb796eb56b14ae04/packages/app/scripts/config-plugins/apply.mjs#L12
+ * @see https://github.com/microsoft/react-native-test-app/blob/0951cf5a3727c01d2ef25540eb796eb56b14ae04/packages/app/scripts/config-plugins/plugins/mod-compiler.mjs#L28
  */
 function withMacosBaseMods(config, { providers, ...props } = {}) {
   return withGeneratedBaseMods(config, {

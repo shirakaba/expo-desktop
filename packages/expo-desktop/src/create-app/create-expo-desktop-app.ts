@@ -10,6 +10,7 @@ import { makePrettySummary } from "../common/arktype.ts";
 import { promisifiedSpawn } from "../common/child-process.ts";
 import { title } from "../common/clack.ts";
 import { packageManagerExec } from "../common/npm.ts";
+import { badName } from "../fixtures/configs.ts";
 
 export async function createExpoDesktopApp({
   name,
@@ -37,7 +38,7 @@ export async function createExpoDesktopApp({
   await updateAppJson({ name, projectPath });
 
   title("Altering package.json…", { spacing: 1 });
-  await updatePackageJson({ projectPath, versions });
+  await updatePackageJson({ name, projectPath, versions });
 
   title("Installing dependencies…", { spacing: 1 });
   await npmInstall({ cwd: projectPath, packageManager });
@@ -48,15 +49,23 @@ export async function createExpoDesktopApp({
   title("Adding the macOS app…", { spacing: 1 });
   await addDesktopApp({ cwd: projectPath, name, packageManager, type: "macos", versions });
 
+  // TODO: Set 'name' field in package.json back to lowercase (we only made it
+  //       case-sensitive temporarily as a react-native-macos-init workaround).
+  //
+  //       Would be good to have a Config Plugin to rename the app - whether
+  //       based on anything from RNTA, or rolling something myself.
+  // https://github.com/shirakaba/fiddle-template/tree/config-plugins/plugins/macos
+  // https://github.com/microsoft/react-native-test-app/blob/trunk/packages/app/plugins/macos.js
+  // https://github.com/microsoft/react-native-test-app/blob/trunk/packages/app/scripts/apply-config-plugins.mjs
+  // https://github.com/microsoft/react-native-test-app/blob/0951cf5a3727c01d2ef25540eb796eb56b14ae04/packages/app/scripts/config-plugins/apply.mjs#L12
+
   title("Running Expo Prebuild for the mobile apps…", { spacing: 1 });
   await runPrebuildMobile({ packageManager, projectPath });
 
+  // TODO: Run Prebuild for macOS (once we've invented it)
+
   title("Improving the macOS app's gitignore file…", { spacing: 1 });
   await improveMacosGitignore({ projectPath });
-
-  // TODO: Config Plugin to customise macOS file name, etc. - may be able to use
-  //       RNTA's, or just my own.
-  // https://github.com/shirakaba/fiddle-template/tree/config-plugins/plugins/macos
 
   title("Installing Cocoapods for the iOS app…", { spacing: 1 });
   await podInstall({ projectPath, type: "ios" });
@@ -198,9 +207,15 @@ async function updateAppJson({
 }
 
 async function updatePackageJson({
+  name,
   projectPath,
   versions,
 }: {
+  name: {
+    displayName: string;
+    filesafeName: string;
+    rdns: string;
+  };
   projectPath: string;
   versions: {
     minor: number;
@@ -224,6 +239,20 @@ async function updatePackageJson({
   if (packageJson instanceof type.errors) {
     throw new Error(`Invalid config:\n${makePrettySummary(packageJson).join("\n")}`);
   }
+
+  // create-expo-app shifts this to lowercase as per package.json rules, and
+  // then react-native-macos-init maddeningly uses it in preference over the
+  // app.json "name" value.
+  // https://github.com/microsoft/react-native-macos/blob/eb3bccb6e738650d617945770ec1319d5880084b/packages/react-native-macos-init/src/cli.ts#L74-L75
+  //
+  // If only the underlying generateMacOS() / copyProjectTemplateAndReplace()
+  // were exposed, we could just pass the name needed.
+  // https://github.com/microsoft/react-native-macos/blob/eb3bccb6e738650d617945770ec1319d5880084b/packages/react-native-macos-init/src/cli.ts#L398
+  // https://github.com/microsoft/react-native-macos/blob/eb3bccb6e738650d617945770ec1319d5880084b/packages/react-native/local-cli/generate-macos.js#L18
+  //
+  // But as it's not, our best option is to just write an invalid name into the
+  // package.json temporarily. We can set it back to lower case later.
+  packageJson.name = name.filesafeName;
 
   if (!packageJson.scripts) {
     packageJson.scripts = {};
