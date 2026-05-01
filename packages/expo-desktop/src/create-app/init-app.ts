@@ -6,7 +6,7 @@ import path from "node:path";
 import process from "node:process";
 
 import { makePrettySummary } from "../arktype.ts";
-import { EnhancedAppJson } from "../common/app-json.ts";
+import { EnhancedAppJson, PackageJson } from "../common/app-json.ts";
 import { promisifiedSpawn } from "../common/child-process.ts";
 
 export async function initApp({
@@ -29,8 +29,35 @@ export async function initApp({
     macos: string;
   };
 }) {
-  let command = packageManager;
-  let args = [
+  const { projectPath } = await createExpoApp({ name, packageManager, versions });
+
+  await updateAppJson({ name, projectPath });
+
+  await updatePackageJson({ projectPath });
+}
+
+async function createExpoApp({
+  name,
+  packageManager,
+  versions,
+}: {
+  name: {
+    displayName: string;
+    filesafeName: string;
+    rdns: string;
+  };
+  packageManager: "npm" | "bun" | "pnpm" | "yarn";
+  versions: {
+    minor: number;
+    expoMajor: number;
+    expoBlankTypeScript: string;
+    mobile: string;
+    windows: string;
+    macos: string;
+  };
+}) {
+  const command = packageManager;
+  const args = [
     "create",
     "expo-app",
     name.filesafeName,
@@ -50,9 +77,50 @@ export async function initApp({
     process.exit(1);
   }
 
-  // No point altering app.json until we've run the prebuild.
-  const project = path.resolve(process.cwd(), name.filesafeName);
-  const appJsonPath = path.resolve(project, "app.json");
+  const projectPath = path.resolve(process.cwd(), name.filesafeName);
+
+  return { projectPath };
+}
+
+async function updatePackageJson({ projectPath }: { projectPath: string }) {
+  const packageJsonPath = path.resolve(projectPath, "package.json");
+
+  let packageJson: ReturnType<typeof PackageJson>;
+  try {
+    const contents = await fs.readFile(packageJsonPath, "utf-8");
+    packageJson = PackageJson(JSON.parse(contents));
+  } catch (cause) {
+    throw new Error(`Error reading ${yellow("package.json")}`, { cause });
+  }
+
+  if (packageJson instanceof type.errors) {
+    throw new Error(`Invalid config:\n${makePrettySummary(packageJson).join("\n")}`);
+  }
+
+  if (!packageJson.dependencies) {
+    packageJson.dependencies = {};
+  }
+  packageJson.dependencies["expo-desktop-config-plugins"] = ">=0.1.0";
+
+  try {
+    await fs.writeFile(packageJsonPath, JSON.stringify(packageJson, null, 2), "utf-8");
+  } catch (cause) {
+    throw new Error(`Error writing updated ${yellow("package.json")}`, { cause });
+  }
+}
+
+async function updateAppJson({
+  name,
+  projectPath,
+}: {
+  name: {
+    displayName: string;
+    filesafeName: string;
+    rdns: string;
+  };
+  projectPath: string;
+}) {
+  const appJsonPath = path.resolve(projectPath, "app.json");
 
   let appJson: ReturnType<typeof EnhancedAppJson>;
   try {
@@ -63,7 +131,6 @@ export async function initApp({
   }
 
   if (appJson instanceof type.errors) {
-    // console.log(`Invalid config:\n${makePrettySummary(partial).join("\n")}`);
     throw new Error(`Invalid config:\n${makePrettySummary(appJson).join("\n")}`);
   }
 
@@ -113,23 +180,9 @@ export async function initApp({
     ["expo-desktop-config-plugins/withDisplayName", name.displayName],
   ];
 
-  // TODO: add COnfig Plugins for
-
   try {
-    fs.writeFile(appJsonPath, JSON.stringify(appJson, null, 2), "utf-8");
+    await fs.writeFile(appJsonPath, JSON.stringify(appJson, null, 2), "utf-8");
   } catch (cause) {
     throw new Error(`Error writing updated ${yellow("app.json")}`, { cause });
   }
-
-  // command = packageManager;
-  // args = [
-  //   "create",
-  //   "expo-app",
-  //   name.filesafeName,
-  //   "--template",
-  //   `blank-typescript@${versions.expoBlankTypeScript}`,
-  //   "--no-install",
-  // ];
-
-  // console.log(`└  ⏳ Running: ${yellow(`${command} ${args.join(" ")}`)}\n`);
 }

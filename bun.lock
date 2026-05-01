@@ -42,6 +42,9 @@
       "version": "0.1.0",
       "devDependencies": {
         "@expo/config-plugins": "catalog:react-native-81",
+        "@tsconfig/node24": "catalog:base",
+        "@types/node": "catalog:base",
+        "@typescript/native-preview": "catalog:base",
       },
       "peerDependencies": {
         "@expo/config-plugins": ">=54.0.0",

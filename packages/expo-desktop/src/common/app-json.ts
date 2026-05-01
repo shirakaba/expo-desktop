@@ -41,3 +41,9 @@ export const EnhancedAppJson = type({
   "expo?": ExpoConfig,
   "expo-desktop?": ExpoDesktopConfig,
 });
+
+export const PackageJson = type({
+  "dependencies?": "Record<string, string>",
+  "devDependencies?": "Record<string, string>",
+  "peerDependencies?": "Record<string, string>",
+});
