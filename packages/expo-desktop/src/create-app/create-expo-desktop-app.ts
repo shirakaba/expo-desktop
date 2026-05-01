@@ -51,6 +51,9 @@ export async function createExpoDesktopApp({
   title("Running Expo Prebuild for the mobile apps…", { spacing: 1 });
   await runPrebuildMobile({ packageManager, projectPath });
 
+  title("Improving the macOS app's gitignore file…", { spacing: 1 });
+  await improveMacosGitignore({ projectPath });
+
   // TODO: Config Plugin to customise macOS file name, etc. - may be able to use
   //       RNTA's, or just my own.
   // https://github.com/shirakaba/fiddle-template/tree/config-plugins/plugins/macos
@@ -354,6 +357,59 @@ async function runPrebuildMobile({
   }
 
   console.log(`\n${green("◆")}  Ran Expo Prebuild for the mobile apps.\n`);
+}
+
+async function improveMacosGitignore({ projectPath }: { projectPath: string }) {
+  const macosGitignorePath = path.resolve(projectPath, "macos/.gitignore");
+
+  console.log(`${cyan("◆")}  Overwriting macos/.gitignore…\n`);
+
+  try {
+    await fs.writeFile(
+      macosGitignorePath,
+      `
+# OSX
+#
+.DS_Store
+
+# Xcode
+#
+build/
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+xcuserdata
+*.xccheckout
+*.moved-aside
+DerivedData
+*.hmap
+*.ipa
+*.xcuserstate
+project.xcworkspace
+.xcode.env.local
+
+# Bundle artifacts
+*.jsbundle
+
+# CocoaPods
+/Pods/
+
+    `.trim(),
+      "utf-8",
+    );
+  } catch (error) {
+    log.error(
+      `Error improving ${yellow("macos/.gitignore")} file${error instanceof Error ? `: ${error.message}` : "."}`,
+    );
+    process.exit(1);
+  }
+
+  console.log(`\n${green("◆")}  Overwrote macos/.gitignore.\n`);
 }
 
 async function podInstall({ projectPath, type }: { projectPath: string; type: "ios" | "macos" }) {
