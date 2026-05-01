@@ -1,6 +1,6 @@
-import { log, tasks } from "@clack/prompts";
-import { cyan, red, yellow } from "kleur/colors";
-import { spawn } from "node:child_process";
+import { log } from "@clack/prompts";
+import { yellow } from "kleur/colors";
+import { spawn, type StdioOptions } from "node:child_process";
 import { env } from "node:process";
 import readline from "node:readline";
 
@@ -34,49 +34,55 @@ export async function initApp({
     "--no-install",
   ];
 
-  await tasks([
-    {
-      title: `⏳ Running: ${yellow(`${command} ${args.join(" ")}`)}`,
-      task: async (text) => {
-        const cp = spawn(command, args, { env });
-        const { promise, resolve, reject } = Promise.withResolvers<void>();
+  console.log(`└  ⏳ Running: ${yellow(`${command} ${args.join(" ")}`)}\n`);
 
-        const { stdout, stderr } = cp;
-        if (stdout) {
-          readline
-            .createInterface({ input: stdout })
-            .on("line", (line) => log.message(`${cyan("[stdout]")} ${line}`));
-        }
-        if (stderr) {
-          readline
-            .createInterface({ input: stderr })
-            .on("line", (line) => log.message(`${red("[stderr]")} ${line}`));
-        }
+  const stdio: StdioOptions = "inherit";
+  const cp = spawn(command, args, {
+    env,
+    stdio,
+  });
 
-        let cpError: Error | null = null;
-        cp.on("error", (error) => {
-          if (!cpError) {
-            cpError = error;
-          }
-        });
+  if (stdio !== "inherit") {
+    const { stdout, stderr } = cp;
+    if (stdout) {
+      readline
+        .createInterface({ input: stdout })
+        .on("line", (line) => log.message(line, { spacing: 0 }));
+    }
+    if (stderr) {
+      readline
+        .createInterface({ input: stderr })
+        .on("line", (line) => log.message(line, { spacing: 0 }));
+    }
+  }
 
-        cp.on("close", (code, signal) => {
-          if (cpError || code !== 0) {
-            reject(
-              new Error(`Child process exited with code ${code} and signal ${signal}`, {
-                cause: cpError,
-              }),
-            );
-            return;
-          }
+  let cpError: Error | null = null;
+  cp.on("error", (error) => {
+    if (!cpError) {
+      cpError = error;
+    }
+  });
 
-          resolve();
-        });
+  const { promise, resolve, reject } = Promise.withResolvers<void>();
+  cp.on("close", (code, signal) => {
+    if (cpError || code !== 0) {
+      reject(
+        new Error(`Exited with code ${code} (signal ${signal})`, cpError ? { cause: cpError } : {}),
+      );
+      return;
+    }
 
-        await promise;
+    resolve();
+  });
 
-        return `⏳ Ran: ${yellow(`${command} ${args.join(" ")}`)}`;
-      },
-    },
-  ]);
+  try {
+    await promise;
+  } catch (error) {
+    log.error(
+      `Error running ${yellow("create expo-app")}${error instanceof Error ? `: ${error.message}` : "."}`,
+    );
+    process.exit(1);
+  }
+
+  log.message(`⏳ Ran: ${yellow(`${command} ${args.join(" ")}`)}`);
 }
