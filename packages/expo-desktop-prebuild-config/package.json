@@ -22,7 +22,6 @@
     "url": "git+https://github.com/shirakaba/expo-desktop.git"
   },
   "files": [
-    "app.plugin.js",
     "LICENCE-expo.txt",
     "src"
   ],
