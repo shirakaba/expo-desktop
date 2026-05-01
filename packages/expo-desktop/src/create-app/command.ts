@@ -46,13 +46,12 @@ export async function newExpoDesktopProject(args: {
     `Will use versions: ${green(`react-native@${versions.mobile}`)}, ${green(`react-native-macos@${versions.macos}`)}, and ${green(`react-native-windows@${versions.windows}`)}, with ${green(`Expo ${versions.expoMajor}`)}.`,
   );
 
-  const packageManager = await select<"npm" | "bun" | "pnpm" | "yarn">({
+  const packageManager = await select<"npm" | "bun" | "pnpm">({
     message: "What package manager shall we install with?",
     options: [
       { value: "npm", label: "npm" },
       { value: "bun", label: "Bun (recommended)" },
       { value: "pnpm", label: "pnpm" },
-      { value: "yarn", label: "yarn" },
     ],
     initialValue: "bun",
   });

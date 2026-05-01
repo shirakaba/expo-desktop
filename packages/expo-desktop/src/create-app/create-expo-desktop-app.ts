@@ -19,7 +19,7 @@ export async function createExpoDesktopApp({
     filesafeName: string;
     rdns: string;
   };
-  packageManager: "npm" | "bun" | "pnpm" | "yarn";
+  packageManager: "npm" | "bun" | "pnpm";
   versions: {
     minor: number;
     expoMajor: number;
@@ -33,7 +33,12 @@ export async function createExpoDesktopApp({
 
   await updateAppJson({ name, projectPath });
 
-  await updatePackageJson({ projectPath });
+  await updatePackageJson({ projectPath, versions });
+
+  await npmInstall({ cwd: projectPath, packageManager });
+
+  await addDesktopApp({ name, packageManager, type: "windows", versions });
+  await addDesktopApp({ name, packageManager, type: "macos", versions });
 }
 
 async function createExpoApp({
@@ -46,7 +51,7 @@ async function createExpoApp({
     filesafeName: string;
     rdns: string;
   };
-  packageManager: "npm" | "bun" | "pnpm" | "yarn";
+  packageManager: "npm" | "bun" | "pnpm";
   versions: {
     minor: number;
     expoMajor: number;
@@ -160,7 +165,20 @@ async function updateAppJson({
   }
 }
 
-async function updatePackageJson({ projectPath }: { projectPath: string }) {
+async function updatePackageJson({
+  projectPath,
+  versions,
+}: {
+  projectPath: string;
+  versions: {
+    minor: number;
+    expoMajor: number;
+    expoBlankTypeScript: string;
+    mobile: string;
+    windows: string;
+    macos: string;
+  };
+}) {
   const packageJsonPath = path.resolve(projectPath, "package.json");
 
   let packageJson: ReturnType<typeof PackageJson>;
@@ -179,10 +197,93 @@ async function updatePackageJson({ projectPath }: { projectPath: string }) {
     packageJson.dependencies = {};
   }
   packageJson.dependencies["expo-desktop-config-plugins"] = "^1.0.0";
+  packageJson.dependencies["react-native-macos"] = versions.macos;
+  packageJson.dependencies["react-native-windows"] = versions.windows;
 
   try {
     await fs.writeFile(packageJsonPath, JSON.stringify(packageJson, null, 2), "utf-8");
   } catch (cause) {
     throw new Error(`Error writing updated ${yellow("package.json")}`, { cause });
+  }
+}
+
+async function npmInstall({
+  cwd,
+  packageManager,
+}: {
+  cwd?: string;
+  packageManager: "npm" | "bun" | "pnpm";
+}) {
+  const command = packageManager;
+  const args = ["install"];
+
+  console.log(`└  ⏳ Running: ${yellow(`${command} ${args.join(" ")}`)}\n`);
+
+  try {
+    await promisifiedSpawn({ command, args, options: { cwd, stdio: "inherit" } });
+  } catch (error) {
+    log.error(
+      `Error running ${yellow(`${packageManager} install`)}${error instanceof Error ? `: ${error.message}` : "."}`,
+    );
+    process.exit(1);
+  }
+}
+
+async function addDesktopApp({
+  name,
+  packageManager,
+  versions,
+  type,
+}: {
+  name: {
+    displayName: string;
+    filesafeName: string;
+    rdns: string;
+  };
+  packageManager: "npm" | "bun" | "pnpm";
+  type: "macos" | "windows";
+  versions: {
+    minor: number;
+    expoMajor: number;
+    expoBlankTypeScript: string;
+    mobile: string;
+    windows: string;
+    macos: string;
+  };
+}) {
+  const args = new Array<string>();
+
+  let command: string;
+  switch (packageManager) {
+    case "bun":
+      command = "bunx";
+      break;
+    case "npm":
+      command = "npm";
+      args.push("dlx");
+      break;
+    case "pnpm":
+      command = "pnpm";
+      args.push("dlx");
+  }
+
+  switch (type) {
+    case "macos":
+      args.push("react-native-macos-init", "--help");
+      break;
+    case "windows":
+      args.push("react-native", "init-windows", "--help");
+      break;
+  }
+
+  console.log(`└  ⏳ Running: ${yellow(`${command} ${args.join(" ")}`)}\n`);
+
+  try {
+    await promisifiedSpawn({ command, args, options: { stdio: "inherit" } });
+  } catch (error) {
+    log.error(
+      `Error running ${yellow("create expo-app")}${error instanceof Error ? `: ${error.message}` : "."}`,
+    );
+    process.exit(1);
   }
 }
