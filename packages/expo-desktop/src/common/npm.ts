@@ -1,6 +1,6 @@
 import { type } from "arktype";
 
-import { makePrettySummary } from "./arktype.ts";
+import { makePrettySummary } from "../arktype.ts";
 
 export async function getPackageInfo(packageName: string) {
   const res = await fetch(`https://registry.npmjs.org/${packageName}`);
@@ -178,3 +178,22 @@ export type NpmResponseType = typeof NpmResponse.inferOut;
  */
 export const semverMatcher =
   /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[A-Za-z-][\dA-Za-z-]*)(?:\.(?:0|[1-9]\d*|\d*[A-Za-z-][\dA-Za-z-]*))*))?(?:\+([\dA-Za-z-]+(?:\.[\dA-Za-z-]+)*))?$/;
+
+export function packageManagerExec(packageManager: "npm" | "bun" | "pnpm") {
+  const args = new Array<string>();
+  let command: string;
+  switch (packageManager) {
+    case "bun":
+      command = "bunx";
+      break;
+    case "npm":
+      command = "npm";
+      args.push("dlx");
+      break;
+    case "pnpm":
+      command = "pnpm";
+      args.push("dlx");
+  }
+
+  return { args, command };
+}

@@ -9,6 +9,7 @@ import { makePrettySummary } from "../arktype.ts";
 import { EnhancedAppJson, PackageJson } from "../common/app-json.ts";
 import { promisifiedSpawn } from "../common/child-process.ts";
 import { title } from "../common/clack.ts";
+import { packageManagerExec } from "../common/npm.ts";
 
 export async function createExpoDesktopApp({
   name,
@@ -41,13 +42,24 @@ export async function createExpoDesktopApp({
   title("Installing dependencies…", { spacing: 1 });
   await npmInstall({ cwd: projectPath, packageManager });
 
-  title("Adding the windows app…", { spacing: 1 });
+  title("Adding the Windows app…", { spacing: 1 });
   await addDesktopApp({ cwd: projectPath, name, packageManager, type: "windows", versions });
 
-  title("Adding the macos app…", { spacing: 1 });
+  title("Adding the macOS app…", { spacing: 1 });
   await addDesktopApp({ cwd: projectPath, name, packageManager, type: "macos", versions });
 
-  // TODO: pod install for both iOS and macOS
+  title("Running Expo Prebuild for the mobile apps…", { spacing: 1 });
+  await runPrebuildMobile({ packageManager, projectPath });
+
+  // TODO: Config Plugin to customise macOS file name, etc. - may be able to use
+  //       RNTA's, or just my own.
+  // https://github.com/shirakaba/fiddle-template/tree/config-plugins/plugins/macos
+
+  title("Installing Cocoapods for the iOS app…", { spacing: 1 });
+  await podInstall({ projectPath, type: "ios" });
+
+  title("Installing Cocoapods for the macOS app…", { spacing: 1 });
+  await podInstall({ projectPath, type: "macos" });
 }
 
 async function createExpoApp({
@@ -279,21 +291,7 @@ async function addDesktopApp({
   };
   cwd?: string;
 }) {
-  const args = new Array<string>();
-
-  let command: string;
-  switch (packageManager) {
-    case "bun":
-      command = "bunx";
-      break;
-    case "npm":
-      command = "npm";
-      args.push("dlx");
-      break;
-    case "pnpm":
-      command = "pnpm";
-      args.push("dlx");
-  }
+  const { args, command } = packageManagerExec(packageManager);
 
   switch (type) {
     case "macos":
@@ -313,16 +311,72 @@ async function addDesktopApp({
       break;
   }
 
-  console.log(`${cyan("◆")}  Running: ${yellow(`${command} ${args.join(" ")}`)}\n`);
+  const printedCommand = `${command} ${args.join(" ")}`;
+  console.log(`${cyan("◆")}  Running: ${yellow(printedCommand)}\n`);
 
   try {
     await promisifiedSpawn({ command, args, options: { cwd, stdio: "inherit" } });
   } catch (error) {
     log.error(
-      `Error running ${yellow("create expo-app")}${error instanceof Error ? `: ${error.message}` : "."}`,
+      `Error running ${yellow(printedCommand)}${error instanceof Error ? `: ${error.message}` : "."}`,
     );
     process.exit(1);
   }
 
   console.log(`${green("◆")}  Added ${yellow(type)} app.\n`);
+}
+
+async function runPrebuildMobile({
+  packageManager,
+  projectPath,
+}: {
+  packageManager: "npm" | "bun" | "pnpm";
+  projectPath: string;
+}) {
+  const { args, command } = packageManagerExec(packageManager);
+
+  args.push("expo", "prebuild", "--no-install");
+
+  const printedCommand = `${command} ${args.join(" ")}`;
+  console.log(`${cyan("◆")}  Running: ${yellow(printedCommand)}\n`);
+
+  try {
+    await promisifiedSpawn({
+      command,
+      args,
+      options: { cwd: projectPath, stdio: "inherit" },
+    });
+  } catch (error) {
+    log.error(
+      `Error running ${yellow(printedCommand)}${error instanceof Error ? `: ${error.message}` : "."}`,
+    );
+    process.exit(1);
+  }
+
+  console.log(`\n${green("◆")}  Ran Expo Prebuild for the mobile apps.\n`);
+}
+
+async function podInstall({ projectPath, type }: { projectPath: string; type: "ios" | "macos" }) {
+  const command = "pod";
+  const args = ["install"];
+
+  const printedCommand = `${command} ${args.join(" ")}`;
+  console.log(`${cyan("◆")}  Running: ${yellow(printedCommand)}\n`);
+
+  try {
+    await promisifiedSpawn({
+      command,
+      args,
+      options: { cwd: path.resolve(projectPath, type), stdio: "inherit" },
+    });
+  } catch (error) {
+    log.error(
+      `Error running ${yellow(printedCommand)}${error instanceof Error ? `: ${error.message}` : "."}`,
+    );
+    process.exit(1);
+  }
+
+  console.log(
+    `\n${green("◆")}  Installed Cocoapods for the ${type === "ios" ? "iOS" : "macOS"} app.\n`,
+  );
 }

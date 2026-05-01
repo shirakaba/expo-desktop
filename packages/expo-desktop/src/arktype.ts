@@ -1,4 +1,5 @@
-import { ArkErrors } from "arktype";
+import type { ArkErrors } from "arktype";
+
 import { green, grey, yellow } from "kleur/colors";
 
 export function makePrettySummary({ byPath }: ArkErrors) {

@@ -7,7 +7,7 @@ import {
   getPackageInfo,
   type NpmResponseType,
   semverMatcher,
-} from "../npm.ts";
+} from "../common/npm.ts";
 
 export async function promptForVersion(desiredMinorVersion?: string) {
   let packageInfos: [
