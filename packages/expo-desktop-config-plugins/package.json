@@ -1,0 +1,40 @@
+{
+  "name": "expo-desktop-config-plugins",
+  "version": "0.1.0",
+  "description": "Desktop-friendly Expo config plugins",
+  "keywords": [
+    "android",
+    "expo",
+    "ios",
+    "macos",
+    "react native",
+    "react native desktop",
+    "windows"
+  ],
+  "homepage": "https://github.com/shirakaba/expo-desktop/tree/main/packages/expo-desktop-config-plugins",
+  "bugs": {
+    "url": "https://github.com/shirakaba/expo-desktop/issues"
+  },
+  "license": "MIT",
+  "author": "Jamie Birch <14055146+shirakaba@users.noreply.github.com> (https://github.com/shirakaba)",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shirakaba/expo-desktop.git"
+  },
+  "files": [
+    "app.plugin.js",
+    "src"
+  ],
+  "type": "commonjs",
+  "exports": {
+    "./app.plugin": "./app.plugin.js",
+    "./app.plugin.js": "./app.plugin.js",
+    "./package.json": "./package.json"
+  },
+  "devDependencies": {
+    "@expo/config-plugins": "catalog:react-native-81"
+  },
+  "peerDependencies": {
+    "@expo/config-plugins": ">=54.0.0"
+  }
+}

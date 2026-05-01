@@ -13,10 +13,10 @@ export async function newExpoDesktopProject(args: {
   version: string | undefined;
 }) {
   // A dev-time switch for skipping the questions
-  const skip = false;
+  const skip = true;
   if (skip) {
     await initApp({
-      name: { displayName: "My App", filesafeName: "MyApp", rdns: "com.example.my-app" },
+      name: { displayName: "My App", filesafeName: "MyApp3", rdns: "com.example.my-app" },
       packageManager: "bun",
       versions: {
         expoMajor: 54,

@@ -5,6 +5,7 @@
   "workspaces": [
     "packages/expo-desktop",
     "packages/expo-desktop/scripts",
+    "packages/expo-desktop-config-plugins",
     "packages/demo-expo-desktop"
   ],
   "scripts": {
@@ -29,6 +30,7 @@
       "@typescript/native-preview": "^7.0.0-dev.20260425.1"
     },
     "react-native-81": {
+      "@expo/config-plugins": "~54.0.4",
       "expo": "~54.0.33",
       "react": "19.1.4",
       "react-native": "0.81.6",
@@ -36,12 +38,14 @@
       "react-native-windows": "0.81.12"
     },
     "react-native-82": {
+      "@expo/config-plugins": "~55.0.8",
       "expo": "~55.0.17",
       "react": "19.1.1",
       "react-native": "0.82.1",
       "react-native-windows": "0.82.5"
     },
     "react-native-83": {
+      "@expo/config-plugins": "~55.0.8",
       "expo": "~55.0.17",
       "react": "19.2.0",
       "react-native": "0.83.6"
