@@ -38,7 +38,12 @@ export async function createExpoDesktopApp({
   await updateAppJson({ name, projectPath });
 
   title("Altering package.json…", { spacing: 1 });
-  await updatePackageJson({ name, projectPath, versions });
+  const { name: packageJsonName } = await updatePackageJson({
+    name,
+    projectPath,
+    versions,
+    task: { type: "create" },
+  });
 
   title("Installing dependencies…", { spacing: 1 });
   await npmInstall({ cwd: projectPath, packageManager });
@@ -47,12 +52,16 @@ export async function createExpoDesktopApp({
   await addDesktopApp({ cwd: projectPath, name, packageManager, type: "windows", versions });
 
   title("Adding the macOS app…", { spacing: 1 });
+  await updatePackageJson({ name, projectPath, versions, task: { type: "set-name-for-macos" } });
   await addDesktopApp({ cwd: projectPath, name, packageManager, type: "macos", versions });
+  await updatePackageJson({
+    name,
+    projectPath,
+    versions,
+    task: { type: "restore-name-for-macos", name: packageJsonName },
+  });
 
-  // TODO: Set 'name' field in package.json back to lowercase (we only made it
-  //       case-sensitive temporarily as a react-native-macos-init workaround).
-  //
-  //       Would be good to have a Config Plugin to rename the app - whether
+  // TODO: Would be good to have a Config Plugin to rename the app - whether
   //       based on anything from RNTA, or rolling something myself.
   // https://github.com/shirakaba/fiddle-template/tree/config-plugins/plugins/macos
   // https://github.com/microsoft/react-native-test-app/blob/trunk/packages/app/plugins/macos.js
@@ -209,6 +218,7 @@ async function updateAppJson({
 async function updatePackageJson({
   name,
   projectPath,
+  task,
   versions,
 }: {
   name: {
@@ -217,6 +227,10 @@ async function updatePackageJson({
     rdns: string;
   };
   projectPath: string;
+  task:
+    | { type: "create" }
+    | { type: "set-name-for-macos" }
+    | { type: "restore-name-for-macos"; name: string | undefined };
   versions: {
     minor: number;
     expoMajor: number;
@@ -240,45 +254,58 @@ async function updatePackageJson({
     throw new Error(`Invalid config:\n${makePrettySummary(packageJson).join("\n")}`);
   }
 
-  // create-expo-app shifts this to lowercase as per package.json rules, and
-  // then react-native-macos-init maddeningly uses it in preference over the
-  // app.json "name" value.
-  // https://github.com/microsoft/react-native-macos/blob/eb3bccb6e738650d617945770ec1319d5880084b/packages/react-native-macos-init/src/cli.ts#L74-L75
-  //
-  // If only the underlying generateMacOS() / copyProjectTemplateAndReplace()
-  // were exposed, we could just pass the name needed.
-  // https://github.com/microsoft/react-native-macos/blob/eb3bccb6e738650d617945770ec1319d5880084b/packages/react-native-macos-init/src/cli.ts#L398
-  // https://github.com/microsoft/react-native-macos/blob/eb3bccb6e738650d617945770ec1319d5880084b/packages/react-native/local-cli/generate-macos.js#L18
-  //
-  // But as it's not, our best option is to just write an invalid name into the
-  // package.json temporarily. We can set it back to lower case later.
-  packageJson.name = name.filesafeName;
+  const nameBefore = packageJson.name;
 
-  if (!packageJson.scripts) {
-    packageJson.scripts = {};
-  }
-  packageJson.scripts.macos = "rnc-cli run-macos";
-  packageJson.scripts.windows = "rnc-cli run-windows";
+  if (task.type === "set-name-for-macos") {
+    // create-expo-app shifts this to lowercase as per package.json rules, and
+    // then react-native-macos-init maddeningly uses it in preference over the
+    // app.json "name" value.
+    // https://github.com/microsoft/react-native-macos/blob/eb3bccb6e738650d617945770ec1319d5880084b/packages/react-native-macos-init/src/cli.ts#L74-L75
+    //
+    // If only the underlying generateMacOS() / copyProjectTemplateAndReplace()
+    // were exposed, we could just pass the name needed.
+    // https://github.com/microsoft/react-native-macos/blob/eb3bccb6e738650d617945770ec1319d5880084b/packages/react-native-macos-init/src/cli.ts#L398
+    // https://github.com/microsoft/react-native-macos/blob/eb3bccb6e738650d617945770ec1319d5880084b/packages/react-native/local-cli/generate-macos.js#L18
+    //
+    // But as it's not, our best option is to just write an invalid name into
+    // the package.json temporarily (or remove it altogether). We'll set it
+    // back to lower case later in the "restore-name" task.
+    packageJson.name = name.filesafeName;
+  } else if (task.type === "restore-name-for-macos") {
+    if (task.name) {
+      packageJson.name = task.name;
+    } else {
+      delete packageJson.name;
+    }
+  } else {
+    if (!packageJson.scripts) {
+      packageJson.scripts = {};
+    }
+    packageJson.scripts.macos = "rnc-cli run-macos";
+    packageJson.scripts.windows = "rnc-cli run-windows";
 
-  if (!packageJson.dependencies) {
-    packageJson.dependencies = {};
-  }
-  packageJson.dependencies["expo-desktop-config-plugins"] = "^1.0.0";
-  packageJson.dependencies["react-native-macos"] = versions.macos;
-  packageJson.dependencies["react-native-windows"] = versions.windows;
+    if (!packageJson.dependencies) {
+      packageJson.dependencies = {};
+    }
+    packageJson.dependencies["expo-desktop-config-plugins"] = "^1.0.0";
+    packageJson.dependencies["react-native-macos"] = versions.macos;
+    packageJson.dependencies["react-native-windows"] = versions.windows;
 
-  if (!packageJson.devDependencies) {
-    packageJson.devDependencies = {};
-  }
-  packageJson.devDependencies["@react-native-community/cli"] = "latest";
+    if (!packageJson.devDependencies) {
+      packageJson.devDependencies = {};
+    }
+    packageJson.devDependencies["@react-native-community/cli"] = "latest";
 
-  try {
-    await fs.writeFile(packageJsonPath, JSON.stringify(packageJson, null, 2), "utf-8");
-  } catch (cause) {
-    throw new Error(`Error writing updated ${yellow("package.json")}`, { cause });
+    try {
+      await fs.writeFile(packageJsonPath, JSON.stringify(packageJson, null, 2), "utf-8");
+    } catch (cause) {
+      throw new Error(`Error writing updated ${yellow("package.json")}`, { cause });
+    }
   }
 
   console.log(`${green("◆")}  Altered package.json.\n`);
+
+  return { name: nameBefore };
 }
 
 async function npmInstall({
