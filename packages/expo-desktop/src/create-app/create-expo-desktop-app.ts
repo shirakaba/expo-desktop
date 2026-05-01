@@ -82,33 +82,6 @@ async function createExpoApp({
   return { projectPath };
 }
 
-async function updatePackageJson({ projectPath }: { projectPath: string }) {
-  const packageJsonPath = path.resolve(projectPath, "package.json");
-
-  let packageJson: ReturnType<typeof PackageJson>;
-  try {
-    const contents = await fs.readFile(packageJsonPath, "utf-8");
-    packageJson = PackageJson(JSON.parse(contents));
-  } catch (cause) {
-    throw new Error(`Error reading ${yellow("package.json")}`, { cause });
-  }
-
-  if (packageJson instanceof type.errors) {
-    throw new Error(`Invalid config:\n${makePrettySummary(packageJson).join("\n")}`);
-  }
-
-  if (!packageJson.dependencies) {
-    packageJson.dependencies = {};
-  }
-  packageJson.dependencies["expo-desktop-config-plugins"] = ">=0.1.0";
-
-  try {
-    await fs.writeFile(packageJsonPath, JSON.stringify(packageJson, null, 2), "utf-8");
-  } catch (cause) {
-    throw new Error(`Error writing updated ${yellow("package.json")}`, { cause });
-  }
-}
-
 async function updateAppJson({
   name,
   projectPath,
@@ -177,12 +150,39 @@ async function updateAppJson({
   }
   appJson.expo.plugins = [
     ...appJson.expo.plugins,
-    ["expo-desktop-config-plugins/withDisplayName", name.displayName],
+    ["expo-desktop-config-plugins", { displayName: name.displayName }],
   ];
 
   try {
     await fs.writeFile(appJsonPath, JSON.stringify(appJson, null, 2), "utf-8");
   } catch (cause) {
     throw new Error(`Error writing updated ${yellow("app.json")}`, { cause });
+  }
+}
+
+async function updatePackageJson({ projectPath }: { projectPath: string }) {
+  const packageJsonPath = path.resolve(projectPath, "package.json");
+
+  let packageJson: ReturnType<typeof PackageJson>;
+  try {
+    const contents = await fs.readFile(packageJsonPath, "utf-8");
+    packageJson = PackageJson(JSON.parse(contents));
+  } catch (cause) {
+    throw new Error(`Error reading ${yellow("package.json")}`, { cause });
+  }
+
+  if (packageJson instanceof type.errors) {
+    throw new Error(`Invalid config:\n${makePrettySummary(packageJson).join("\n")}`);
+  }
+
+  if (!packageJson.dependencies) {
+    packageJson.dependencies = {};
+  }
+  packageJson.dependencies["expo-desktop-config-plugins"] = "^1.0.0";
+
+  try {
+    await fs.writeFile(packageJsonPath, JSON.stringify(packageJson, null, 2), "utf-8");
+  } catch (cause) {
+    throw new Error(`Error writing updated ${yellow("package.json")}`, { cause });
   }
 }

@@ -1,6 +1,6 @@
 {
   "name": "expo-desktop-config-plugins",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Desktop-friendly Expo config plugins",
   "keywords": [
     "android",
