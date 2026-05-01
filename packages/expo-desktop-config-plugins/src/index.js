@@ -21,3 +21,9 @@ module.exports = function withExpoDesktop(config, props) {
 
   return config;
 };
+
+// TODO: Decide how to restructure this package.
+//       Right now, it's just concerned with exporting a Config Plugin that
+//       updates the display name. But the real @expo/config-plugins isn't a
+//       Config Plugin at all, just a library of Config Plugins.
+// https://github.com/expo/expo/blob/main/packages/%40expo/config-plugins/src/index.ts
