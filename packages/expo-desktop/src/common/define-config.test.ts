@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 
-import { badName, defaultConfig } from "./fixtures/configs.ts";
+import { badName, defaultConfig } from "../fixtures/configs.ts";
 
 test("performs pattern validation on strings", () => {
   expect(badName.alphanumeric).toThrow();

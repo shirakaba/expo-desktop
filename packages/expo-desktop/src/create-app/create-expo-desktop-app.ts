@@ -5,8 +5,8 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
 
-import { makePrettySummary } from "../arktype.ts";
 import { EnhancedAppJson, PackageJson } from "../common/app-json.ts";
+import { makePrettySummary } from "../common/arktype.ts";
 import { promisifiedSpawn } from "../common/child-process.ts";
 import { title } from "../common/clack.ts";
 import { packageManagerExec } from "../common/npm.ts";

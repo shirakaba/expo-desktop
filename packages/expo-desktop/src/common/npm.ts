@@ -1,6 +1,6 @@
 import { type } from "arktype";
 
-import { makePrettySummary } from "../arktype.ts";
+import { makePrettySummary } from "./arktype.ts";
 
 export async function getPackageInfo(packageName: string) {
   const res = await fetch(`https://registry.npmjs.org/${packageName}`);

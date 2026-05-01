@@ -1,4 +1,4 @@
-import { defineAppConfig } from "../define-config.ts";
+import { defineAppConfig } from "../common/define-config.ts";
 
 export const defaultConfig = defineAppConfig({
   name: {
