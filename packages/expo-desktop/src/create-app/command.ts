@@ -16,7 +16,11 @@ export async function newExpoDesktopProject(args: {
   const skip = true;
   if (skip) {
     await createExpoDesktopApp({
-      name: { displayName: "My App", filesafeName: "MyApp3", rdns: "com.example.my-app" },
+      name: {
+        displayName: "My App Display Name",
+        filesafeName: "MyApp1",
+        rdns: "com.example.my-app-123",
+      },
       packageManager: "bun",
       versions: {
         expoMajor: 54,
