@@ -179,7 +179,13 @@ async function updateAppJson({
   }
   appJson.expo.plugins = [
     ...appJson.expo.plugins,
-    ["expo-desktop-config-plugins", { displayName: name.displayName }],
+    [
+      "expo-desktop-config-plugins",
+      {
+        displayName: name.displayName,
+        bundleIdentifier: name.rdns.replaceAll("_", "-"),
+      },
+    ],
   ];
 
   try {

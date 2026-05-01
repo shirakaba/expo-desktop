@@ -32,6 +32,15 @@
     "./app.plugin.js": "./app.plugin.js",
     "./package.json": "./package.json"
   },
+  "dependencies": {
+    "@expo/json-file": "^9.1.5",
+    "@expo/plist": "^0.4.8",
+    "chalk": "^4.1.2",
+    "glob": "^10.5.0",
+    "slash": "^3.0.0",
+    "slugify": "^1.6.6",
+    "xcode": "^3.0.1"
+  },
   "devDependencies": {
     "@expo/config-plugins": "catalog:react-native-81",
     "@tsconfig/node24": "catalog:base",
