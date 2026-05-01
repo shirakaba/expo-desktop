@@ -81,6 +81,9 @@ export async function createExpoDesktopApp({
 
   title("Installing Cocoapods for the macOS app…", { spacing: 1 });
   await podInstall({ projectPath, type: "macos" });
+
+  title("Improving Metro config…", { spacing: 1 });
+  await improveMetroConfig({ projectPath });
 }
 
 async function createExpoApp({
@@ -295,6 +298,7 @@ async function updatePackageJson({
       packageJson.devDependencies = {};
     }
     packageJson.devDependencies["@react-native-community/cli"] = "latest";
+    packageJson.devDependencies["@rnx-kit/metro-config"] = "latest";
 
     try {
       await fs.writeFile(packageJsonPath, JSON.stringify(packageJson, null, 2), "utf-8");
@@ -460,8 +464,7 @@ project.xcworkspace
 
 # CocoaPods
 /Pods/
-
-    `.trim(),
+    `.trim() + "\n",
       "utf-8",
     );
   } catch (error) {
@@ -497,4 +500,31 @@ async function podInstall({ projectPath, type }: { projectPath: string; type: "i
   console.log(
     `\n${green("◆")}  Installed Cocoapods for the ${type === "ios" ? "iOS" : "macOS"} app.\n`,
   );
+}
+
+async function improveMetroConfig({ projectPath }: { projectPath: string }) {
+  const metroConfigPath = path.resolve(projectPath, "metro.config.js");
+
+  console.log(`${cyan("◆")}  Overwriting metro.config.js…\n`);
+
+  try {
+    await fs.writeFile(
+      metroConfigPath,
+      `
+const { getDefaultConfig } = require("@expo/metro-config");
+const { makeMetroConfig } = require("@rnx-kit/metro-config");
+
+const config = makeMetroConfig(getDefaultConfig(__dirname));
+module.exports = config;
+    `.trim() + "\n",
+      "utf-8",
+    );
+  } catch (error) {
+    log.error(
+      `Error improving ${yellow("metro.config.js")} file${error instanceof Error ? `: ${error.message}` : "."}`,
+    );
+    process.exit(1);
+  }
+
+  console.log(`\n${green("◆")}  Overwrote metro.config.js.\n`);
 }
