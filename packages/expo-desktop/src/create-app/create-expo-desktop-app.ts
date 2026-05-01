@@ -1,6 +1,6 @@
 import { log } from "@clack/prompts";
 import { type } from "arktype";
-import { yellow } from "kleur/colors";
+import { cyan, green, yellow } from "kleur/colors";
 import fs from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
@@ -8,6 +8,7 @@ import process from "node:process";
 import { makePrettySummary } from "../arktype.ts";
 import { EnhancedAppJson, PackageJson } from "../common/app-json.ts";
 import { promisifiedSpawn } from "../common/child-process.ts";
+import { title } from "../common/clack.ts";
 
 export async function createExpoDesktopApp({
   name,
@@ -31,14 +32,22 @@ export async function createExpoDesktopApp({
 }) {
   const { projectPath } = await createExpoApp({ name, packageManager, versions });
 
+  title("Altering app.json…", { spacing: 1 });
   await updateAppJson({ name, projectPath });
 
+  title("Altering package.json…", { spacing: 1 });
   await updatePackageJson({ projectPath, versions });
 
+  title("Installing dependencies…", { spacing: 1 });
   await npmInstall({ cwd: projectPath, packageManager });
 
-  await addDesktopApp({ name, packageManager, type: "windows", versions });
-  await addDesktopApp({ name, packageManager, type: "macos", versions });
+  title("Adding the windows app…", { spacing: 1 });
+  await addDesktopApp({ cwd: projectPath, name, packageManager, type: "windows", versions });
+
+  title("Adding the macos app…", { spacing: 1 });
+  await addDesktopApp({ cwd: projectPath, name, packageManager, type: "macos", versions });
+
+  // TODO: pod install for both iOS and macOS
 }
 
 async function createExpoApp({
@@ -71,7 +80,7 @@ async function createExpoApp({
     "--no-install",
   ];
 
-  console.log(`└  ⏳ Running: ${yellow(`${command} ${args.join(" ")}`)}\n`);
+  console.log(`${cyan("◆")}  Running: ${yellow(`${command} ${args.join(" ")}`)}\n`);
 
   try {
     await promisifiedSpawn({ command, args, options: { stdio: "inherit" } });
@@ -163,6 +172,8 @@ async function updateAppJson({
   } catch (cause) {
     throw new Error(`Error writing updated ${yellow("app.json")}`, { cause });
   }
+
+  console.log(`${green("◆")}  Altered app.json.\n`);
 }
 
 async function updatePackageJson({
@@ -193,6 +204,12 @@ async function updatePackageJson({
     throw new Error(`Invalid config:\n${makePrettySummary(packageJson).join("\n")}`);
   }
 
+  if (!packageJson.scripts) {
+    packageJson.scripts = {};
+  }
+  packageJson.scripts.macos = "rnc-cli run-macos";
+  packageJson.scripts.windows = "rnc-cli run-windows";
+
   if (!packageJson.dependencies) {
     packageJson.dependencies = {};
   }
@@ -200,11 +217,18 @@ async function updatePackageJson({
   packageJson.dependencies["react-native-macos"] = versions.macos;
   packageJson.dependencies["react-native-windows"] = versions.windows;
 
+  if (!packageJson.devDependencies) {
+    packageJson.devDependencies = {};
+  }
+  packageJson.devDependencies["@react-native-community/cli"] = "latest";
+
   try {
     await fs.writeFile(packageJsonPath, JSON.stringify(packageJson, null, 2), "utf-8");
   } catch (cause) {
     throw new Error(`Error writing updated ${yellow("package.json")}`, { cause });
   }
+
+  console.log(`${green("◆")}  Altered package.json.\n`);
 }
 
 async function npmInstall({
@@ -217,7 +241,7 @@ async function npmInstall({
   const command = packageManager;
   const args = ["install"];
 
-  console.log(`└  ⏳ Running: ${yellow(`${command} ${args.join(" ")}`)}\n`);
+  console.log(`${cyan("◆")}  Running: ${yellow(`${command} ${args.join(" ")}`)}\n`);
 
   try {
     await promisifiedSpawn({ command, args, options: { cwd, stdio: "inherit" } });
@@ -227,6 +251,8 @@ async function npmInstall({
     );
     process.exit(1);
   }
+
+  console.log(`\n${green("◆")}  Installed dependencies.\n`);
 }
 
 async function addDesktopApp({
@@ -234,6 +260,7 @@ async function addDesktopApp({
   packageManager,
   versions,
   type,
+  cwd,
 }: {
   name: {
     displayName: string;
@@ -250,6 +277,7 @@ async function addDesktopApp({
     windows: string;
     macos: string;
   };
+  cwd?: string;
 }) {
   const args = new Array<string>();
 
@@ -269,21 +297,32 @@ async function addDesktopApp({
 
   switch (type) {
     case "macos":
-      args.push("react-native-macos-init", "--help");
+      args.push("react-native-macos-init", "--version", versions.macos);
       break;
     case "windows":
-      args.push("react-native", "init-windows", "--help");
+      args.push(
+        "react-native",
+        "init-windows",
+        "--template",
+        "cpp-app",
+        "--namespace",
+        name.rdns.replaceAll(/[-_]/g, ""),
+        "--name",
+        name.filesafeName,
+      );
       break;
   }
 
-  console.log(`└  ⏳ Running: ${yellow(`${command} ${args.join(" ")}`)}\n`);
+  console.log(`${cyan("◆")}  Running: ${yellow(`${command} ${args.join(" ")}`)}\n`);
 
   try {
-    await promisifiedSpawn({ command, args, options: { stdio: "inherit" } });
+    await promisifiedSpawn({ command, args, options: { cwd, stdio: "inherit" } });
   } catch (error) {
     log.error(
       `Error running ${yellow("create expo-app")}${error instanceof Error ? `: ${error.message}` : "."}`,
     );
     process.exit(1);
   }
+
+  console.log(`${green("◆")}  Added ${yellow(type)} app.\n`);
 }

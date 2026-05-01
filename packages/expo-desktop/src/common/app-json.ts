@@ -43,6 +43,7 @@ export const EnhancedAppJson = type({
 });
 
 export const PackageJson = type({
+  "scripts?": "Record<string, string>",
   "dependencies?": "Record<string, string>",
   "devDependencies?": "Record<string, string>",
   "peerDependencies?": "Record<string, string>",
