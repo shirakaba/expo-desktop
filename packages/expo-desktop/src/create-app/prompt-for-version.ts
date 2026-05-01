@@ -61,19 +61,24 @@ export async function promptForVersion(desiredMinorVersion?: string) {
           );
         }
 
-        const expo = getExpoForRNVersion({
-          npmInfo: packageInfos![0],
+        const expoBlankTypeScript = getExpoBlankTypeScriptForRNVersion({
           major,
           minor: desiredMinorInt,
         });
-        if (!expo) {
+
+        const expoMajor = expoBlankTypeScript?.split(".").at(0);
+        log.info(
+          `Only one common minor version available, '0.${desiredMinorInt}' (Expo ${expoMajor}). Choosing that.`,
+        );
+        if (!expoBlankTypeScript || !expoMajor) {
           throw new Error(
-            `Unclear what Expo version corresponds to the React Native version ${major}.${desiredMinorInt}.`,
+            `Unclear what Expo blank-typescript template version corresponds to the React Native version ${major}.${desiredMinorInt}.`,
           );
         }
 
         return {
-          expo,
+          expoMajor: parseInt(expoMajor),
+          expoBlankTypeScript,
           minor: desiredMinorInt,
           mobile: mobileVersion,
           windows: windowsVersion,
@@ -92,22 +97,24 @@ export async function promptForVersion(desiredMinorVersion?: string) {
   }
 
   if (commonMinors.size === 1) {
-    const expo = getExpoForRNVersion({
-      npmInfo: packageInfos![0],
+    const expoBlankTypeScript = getExpoBlankTypeScriptForRNVersion({
       major,
       minor: highestCommonMinor,
     });
+
+    const expoMajor = expoBlankTypeScript?.split(".").at(0);
     log.info(
-      `Only one common minor version available, '0.${highestCommonMinor}' (Expo ${expo}). Choosing that.`,
+      `Only one common minor version available, '0.${highestCommonMinor}' (Expo ${expoMajor}). Choosing that.`,
     );
-    if (!expo) {
+    if (!expoBlankTypeScript || !expoMajor) {
       throw new Error(
-        `Unclear what Expo version corresponds to the React Native version ${major}.${highestCommonMinor}.`,
+        `Unclear what Expo blank-typescript template version corresponds to the React Native version ${major}.${highestCommonMinor}.`,
       );
     }
 
     return {
-      expo,
+      expoMajor: parseInt(expoMajor),
+      expoBlankTypeScript,
       minor: highestCommonMinor,
       mobile: mobile[highestCommonMinor],
       macos: macos[highestCommonMinor],
@@ -118,7 +125,8 @@ export async function promptForVersion(desiredMinorVersion?: string) {
   const options: Array<
     Option<{
       minor: number;
-      expo: string;
+      expoBlankTypeScript: string;
+      expoMajor: number;
       mobile: string;
       macos: string;
       windows: string;
@@ -127,23 +135,20 @@ export async function promptForVersion(desiredMinorVersion?: string) {
     ...[...commonMinors].map((minor) => {
       const minorInt = parseInt(minor);
 
-      const expo = getExpoForRNVersion({
-        npmInfo: packageInfos![0],
-        major,
-        minor: minorInt,
-      });
-      if (!expo) {
+      const expoBlankTypeScript = getExpoBlankTypeScriptForRNVersion({ major, minor: minorInt });
+      if (!expoBlankTypeScript) {
         throw new Error(
-          `Unclear what Expo version corresponds to the React Native version ${major}.${minorInt}.`,
+          `Unclear what Expo blank-typescript template version corresponds to the React Native version ${major}.${minorInt}.`,
         );
       }
 
-      const expoMajor = expo.split(".").slice(0, 1);
+      const expoMajor = parseInt(expoBlankTypeScript.split(".")[0]);
 
       return {
         value: {
           minor: minorInt,
-          expo,
+          expoMajor,
+          expoBlankTypeScript,
           mobile: mobile[minorInt],
           macos: macos[minorInt],
           windows: windows[minorInt],
@@ -252,7 +257,10 @@ export const blankTypeScriptMap: {
 
 const expoMap = {
   0: {
-    // react-native@0.80.0 and 0.80.1 were both supported on expo@~53.0.11:
+    // react-native@0.80.0 and 0.80.1 were both referenced in
+    // bare-minimum@53.0.31 (expo@~53.0.11) but these commits were never
+    // published to npm, so bare-minimum@53.0.31 still gives
+    // react-native@0.79.3:
     // - 0.80.0: https://github.com/expo/expo/blob/338ef55c67074ffbf8b105ab8860e33cbb99317c/templates/expo-template-bare-minimum/package.json
     // - 0.80.1: https://github.com/expo/expo/blob/e1cb6c541ae0b077c415401f814e054d612100ad/templates/expo-template-bare-minimum/package.json
     80: 53,
@@ -269,7 +277,8 @@ const expoMap = {
     // - 0.81.4: https://github.com/expo/expo/blob/06bbeea8d35fb86e059afaaf9db11079313569b0/templates/expo-template-bare-minimum/package.json
     81: 54,
 
-    // react-native@0.82.1 was supported from expo@~54.0.8:
+    // react-native@0.82.1 was supported from expo@~54.0.8
+    // (bare-minimum@54.0.25):
     // - 0.82.1: https://github.com/expo/expo/blob/7ae5b031363fc01c36a3f779f2ae2cd0baa6d9d1/templates/expo-template-bare-minimum/package.json
     82: 55,
 
@@ -435,4 +444,22 @@ function getExpoForRNVersion({
   }
 
   return expo;
+}
+
+function getExpoBlankTypeScriptForRNVersion({ major, minor }: { major: number; minor: number }) {
+  const patches = blankTypeScriptMap[major][minor];
+  if (!patches) {
+    return;
+  }
+
+  const highestPatch = Object.keys(patches)
+    .map((patch) => parseInt(patch))
+    .sort((a, b) => b - a)
+    .at(0);
+
+  if (!highestPatch) {
+    return;
+  }
+
+  return `${major}.${minor}.${highestPatch}`;
 }

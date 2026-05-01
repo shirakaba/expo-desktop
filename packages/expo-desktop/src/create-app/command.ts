@@ -19,7 +19,8 @@ export async function newExpoDesktopProject(args: {
       name: { displayName: "My App", filesafeName: "MyApp", rdns: "com.example.my-app" },
       packageManager: "bun",
       versions: {
-        expo: "54.0.34",
+        expoMajor: 54,
+        expoBlankTypeScript: "54.0.45",
         minor: 81,
         mobile: "0.81.6",
         windows: "0.81.15",
@@ -42,7 +43,7 @@ export async function newExpoDesktopProject(args: {
 
   const versions = await promptForVersion(args.version);
   log.info(
-    `Will use versions: ${green(`react-native@${versions.mobile}`)}, ${green(`react-native-macos@${versions.macos}`)}, and ${green(`react-native-windows@${versions.windows}`)}, with ${green(`expo@${versions.expo}`)}.`,
+    `Will use versions: ${green(`react-native@${versions.mobile}`)}, ${green(`react-native-macos@${versions.macos}`)}, and ${green(`react-native-windows@${versions.windows}`)}, with ${green(`Expo ${versions.expoMajor}`)}.`,
   );
 
   const packageManager = await select<"npm" | "bun" | "pnpm" | "yarn">({

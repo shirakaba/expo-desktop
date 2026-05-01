@@ -17,7 +17,8 @@ export async function initApp({
   packageManager: "npm" | "bun" | "pnpm" | "yarn";
   versions: {
     minor: number;
-    expo: string;
+    expoMajor: number;
+    expoBlankTypeScript: string;
     mobile: string;
     windows: string;
     macos: string;
@@ -29,10 +30,8 @@ export async function initApp({
     "expo-app",
     name.filesafeName,
     "--template",
-    "blank-typescript@50.0.0",
+    `blank-typescript@${versions.expoBlankTypeScript}`,
     "--no-install",
-    // "--version",
-    // versions.expo,
   ];
 
   await tasks([
