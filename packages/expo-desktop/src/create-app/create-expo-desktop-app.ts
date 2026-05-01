@@ -9,7 +9,7 @@ import { makePrettySummary } from "../arktype.ts";
 import { EnhancedAppJson, PackageJson } from "../common/app-json.ts";
 import { promisifiedSpawn } from "../common/child-process.ts";
 
-export async function initApp({
+export async function createExpoDesktopApp({
   name,
   packageManager,
   versions,

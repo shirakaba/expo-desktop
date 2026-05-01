@@ -2,7 +2,7 @@ import { confirm, isCancel, text, log, select } from "@clack/prompts";
 import { default as kleur } from "kleur";
 import { green, grey } from "kleur/colors";
 
-import { initApp } from "./init-app.ts";
+import { createExpoDesktopApp } from "./create-expo-desktop-app.ts";
 import { previewFileTree } from "./preview-file-tree.ts";
 import { promptForVersion } from "./prompt-for-version.ts";
 
@@ -15,7 +15,7 @@ export async function newExpoDesktopProject(args: {
   // A dev-time switch for skipping the questions
   const skip = true;
   if (skip) {
-    await initApp({
+    await createExpoDesktopApp({
       name: { displayName: "My App", filesafeName: "MyApp3", rdns: "com.example.my-app" },
       packageManager: "bun",
       versions: {
@@ -60,7 +60,7 @@ export async function newExpoDesktopProject(args: {
     process.exit(0);
   }
 
-  await initApp({ name, packageManager, versions });
+  await createExpoDesktopApp({ name, packageManager, versions });
 }
 
 function title(text: string) {
