@@ -2,7 +2,6 @@ const fs = require("fs");
 const path = require("path");
 const { withPlugins } = require("@expo/config-plugins");
 const { withAssociatedDomains } = require("./Entitlements");
-const { withMacosBaseMods } = require("./withMacosBaseMods");
 const { withMacosDisplayName } = require("./name");
 const { withMacosJsEnginePodfileProps } = require("./withMacosJsEnginePodfileProps");
 
@@ -40,8 +39,7 @@ function withMacosExpoPlugins(config, props = {}) {
     [withMacosDisplayName, props],
     withAssociatedDomains,
     withMacosJsEnginePodfileProps,
-    withMacosBaseMods,
   ]);
 }
 
-module.exports = { withMacosExpoPlugins };
+module.exports = { projectHasMacosNativeTree, withMacosExpoPlugins };

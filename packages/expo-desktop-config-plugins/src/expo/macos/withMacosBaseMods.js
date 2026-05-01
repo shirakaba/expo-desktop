@@ -369,6 +369,32 @@ function getMacOSTargetName(project) {
 /**
  * A port of withIosBaseMods() to macOS.
  * @see https://github.com/expo/expo/blob/870dcba2ade9572fc279f0a47bfbdd78af4a236d/packages/%40expo/config-plugins/src/plugins/withIosBaseMods.ts#L321
+ *
+ * Used by the Expo CLI to get the ProjectConfig (the top level of the app.json)
+ * @see https://github.com/expo/expo/blob/b7362a90eb6a28eb56ab4880248690c61bac01ed/packages/%40expo/cli/src/config/configAsync.ts#L58
+ *
+ * This unit test shows that it, being a base mod, should be added after plugins
+ * like withEntitlementsPlist(), and then evalModsAsync() should be called on
+ * it:
+ * @see https://github.com/expo/expo/blob/b7362a90eb6a28eb56ab4880248690c61bac01ed/packages/%40expo/config-plugins/src/plugins/__tests__/withIosBaseMods-test.ts#L28
+ *
+ * It should be possible to run `npx expo config` to trigger configAsync() which
+ * calls getPrebuildConfigAsync() under-the-hood.
+ * @see https://github.com/expo/expo/blob/15d35298c9a397c23bcbf6b20e2b9761564acbc4/packages/%40expo/cli/src/config/index.ts#L44
+ *
+ * The actual entrypoint for `npx expo prebuild` is here:
+ * [@expo/cli/src/prebuild/configureProjectAsync.ts] configureProjectAsync() >
+ * [@expo/prebuild-config/src/getPrebuildConfig.ts] getPrebuildConfigAsync() >
+ * [@expo/prebuild-config/src/getPrebuildConfig.ts] getPrebuildConfig() >
+ * [@expo/prebuild-config/src/plugins/withDefaultPlugins.ts] withIosExpoPlugins()
+ * @see https://github.com/expo/expo/blob/15d35298c9a397c23bcbf6b20e2b9761564acbc4/packages/%40expo/cli/src/prebuild/configureProjectAsync.ts#L37
+ *
+ * After getting the prebuildConfig via getPrebuildConfig() as described above,
+ * the next step of `npx expo prebuild` is to run compileModsSync(), which then
+ * runs withDefaultBaseMods() > withIosBaseMods() to update the config, then
+ * runs evalModsAsync().
+ * @see https://github.com/expo/expo/blob/15d35298c9a397c23bcbf6b20e2b9761564acbc4/packages/%40expo/cli/src/prebuild/configureProjectAsync.ts#L50
+ * @see https://github.com/expo/expo/blob/15d35298c9a397c23bcbf6b20e2b9761564acbc4/packages/%40expo/config-plugins/src/plugins/mod-compiler.ts#L69
  */
 function withMacosBaseMods(config, { providers, ...props } = {}) {
   return withGeneratedBaseMods(config, {
