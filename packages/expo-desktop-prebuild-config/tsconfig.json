@@ -1,0 +1,10 @@
+{
+  "extends": "@tsconfig/node24",
+  "compilerOptions": {
+    "types": ["bun", "node"],
+    "noEmit": true,
+    "exactOptionalPropertyTypes": true,
+    "allowImportingTsExtensions": true
+  },
+  "include": ["app.plugin.js", "src"]
+}

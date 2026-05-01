@@ -1,7 +1,7 @@
 {
-  "name": "expo-desktop-config-plugins",
+  "name": "expo-desktop-prebuild-config",
   "version": "1.0.0",
-  "description": "Desktop-friendly Expo config plugins",
+  "description": "Desktop-friendly Expo prebuild config",
   "keywords": [
     "android",
     "expo",
@@ -11,7 +11,7 @@
     "react native desktop",
     "windows"
   ],
-  "homepage": "https://github.com/shirakaba/expo-desktop/tree/main/packages/expo-desktop-config-plugins",
+  "homepage": "https://github.com/shirakaba/expo-desktop/tree/main/packages/expo-desktop-prebuild-config",
   "bugs": {
     "url": "https://github.com/shirakaba/expo-desktop/issues"
   },
@@ -28,33 +28,23 @@
   ],
   "type": "commonjs",
   "exports": {
-    "./app.plugin": "./app.plugin.js",
-    "./app.plugin.js": "./app.plugin.js",
-    "./plugins": "./src/plugins/index.js",
-    "./plugins/android": "./src/plugins/android/index.js",
-    "./plugins/android/*": "./src/plugins/android/*.js",
-    "./plugins/ios": "./src/plugins/ios/index.js",
-    "./plugins/ios/*": "./src/plugins/ios/*.js",
-    "./plugins/macos": "./src/plugins/macos/index.js",
-    "./plugins/macos/*": "./src/plugins/macos/*.js",
+    ".": "./src/index.js",
     "./package.json": "./package.json"
   },
   "dependencies": {
-    "@expo/json-file": "^9.1.5",
-    "@expo/plist": "^0.4.8",
-    "chalk": "^4.1.2",
-    "glob": "^10.5.0",
-    "slash": "^3.0.0",
-    "slugify": "^1.6.6",
-    "xcode": "^3.0.1"
+    "expo-desktop-config-plugins": "workspace:"
   },
   "devDependencies": {
+    "@expo/config": "catalog:react-native-81",
     "@expo/config-plugins": "catalog:react-native-81",
+    "@expo/prebuild-config": "catalog:react-native-81",
     "@tsconfig/node24": "catalog:base",
     "@types/node": "catalog:base",
     "@typescript/native-preview": "catalog:base"
   },
   "peerDependencies": {
-    "@expo/config-plugins": ">=54.0.0"
+    "@expo/config": ">=12.0.0",
+    "@expo/config-plugins": ">=54.0.0",
+    "@expo/prebuild-config": ">=54.0.0"
   }
 }
