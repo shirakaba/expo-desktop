@@ -4,6 +4,7 @@
   "private": true,
   "workspaces": [
     "packages/expo-desktop",
+    "packages/expo-desktop/scripts",
     "packages/demo-expo-desktop"
   ],
   "scripts": {

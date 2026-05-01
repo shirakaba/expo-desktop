@@ -168,6 +168,88 @@ export async function promptForVersion(desiredMinorVersion?: string) {
   return chosenVersion;
 }
 
+export const blankTypeScriptMap: {
+  [reactNativeMajor: number]: {
+    [reactNativeMinor: number]: {
+      /**
+       * The version number of expo-template-blank-typescript.
+       */
+      [reactNativePatch: number]: string;
+    };
+  };
+} = {
+  0: {
+    79: {
+      // expo@~53.0.0-preview.7
+      0: "53.0.11",
+
+      // expo@~53.0.4
+      1: "53.0.20",
+
+      // expo@~53.0.9
+      2: "53.0.28",
+
+      // expo@~53.0.11
+      3: "53.0.32",
+
+      // expo@~53.0.15
+      4: "53.0.35",
+
+      // expo@~53.0.20
+      5: "53.0.38",
+
+      // expo@~53.0.27
+      6: "53.0.42",
+    },
+    80: {
+      // React Native 0.80 is supported in the Expo SDK 54 canary. So let's just
+      // point at the latest blank-typescript template from SDK 54.
+      // https://expo.dev/changelog/react-native-80
+
+      // expo@~54.0.34
+      0: "54.0.45",
+      1: "54.0.45",
+      2: "54.0.45",
+      3: "54.0.45",
+    },
+    81: {
+      // expo@~54.0.0-preview.8
+      0: "54.0.9",
+
+      // expo@~54.0.0-preview.15
+      1: "54.0.14",
+
+      // expo@~54.0.17
+      4: "54.0.29",
+
+      // expo@~54.0.34
+      5: "54.0.45",
+    },
+    82: {
+      // React Native 0.82 is supported in the Expo SDK 55 canary. So let's just
+      // point at the latest blank-typescript template from SDK 55.
+      // https://reactnative.dev/blog/2025/10/08/react-native-0.82
+
+      // expo@~55.0.18
+      0: "55.1.25",
+      1: "55.1.25",
+    },
+    83: {
+      // expo@~55.0.0-preview.10
+      1: "55.1.4",
+
+      // expo@~55.0.8
+      2: "55.1.15",
+
+      // expo@~55.0.15
+      4: "55.1.22",
+
+      // expo@~55.0.18
+      6: "55.1.25",
+    },
+  },
+};
+
 const expoMap = {
   0: {
     // react-native@0.80.0 and 0.80.1 were both supported on expo@~53.0.11:

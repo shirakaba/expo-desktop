@@ -1,0 +1,8 @@
+{
+  "name": "expo-desktop-scripts",
+  "version": "0.1.0",
+  "type": "module",
+  "devDependencies": {
+    "compare-versions": "^6.1.1"
+  }
+}

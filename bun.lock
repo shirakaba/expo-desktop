@@ -37,6 +37,13 @@
         "@typescript/native-preview": "catalog:base",
       },
     },
+    "packages/expo-desktop/scripts": {
+      "name": "expo-desktop-scripts",
+      "version": "0.1.0",
+      "devDependencies": {
+        "compare-versions": "^6.1.1",
+      },
+    },
   },
   "catalogs": {
     "base": {
@@ -154,6 +161,8 @@
 
     "commander": ["commander@14.0.3", "", {}, "sha512-H+y0Jo/T1RZ9qPP4Eh1pkcQcLRglraJaSLoyOtHxu6AapkjWVCy2Sit1QQ4x3Dng8qDlSsZEet7g5Pq06MvTgw=="],
 
+    "compare-versions": ["compare-versions@6.1.1", "", {}, "sha512-4hm4VPpIecmlg59CHXnRDnqGplJFrbLG4aFEl5vl6cK1u76ws3LLvX7ikFnTDl5vo39sjWD6AaDPYodJp/NNHg=="],
+
     "demo-expo-desktop": ["demo-expo-desktop@workspace:packages/demo-expo-desktop"],
 
     "emoji-regex": ["emoji-regex@10.6.0", "", {}, "sha512-toUI84YS5YmxW219erniWD0CIVOo46xGKColeNQRgOzDorgBi1v4D71/OFzgD9GO2UGKIv1C3Sp8DAn0+j5w7A=="],
@@ -163,6 +172,8 @@
     "eventemitter3": ["eventemitter3@5.0.4", "", {}, "sha512-mlsTRyGaPBjPedk6Bvw+aqbsXDtoAyAzm5MO7JgU+yVRyMQ5O8bD4Kcci7BS85f93veegeCPkL8R4GLClnjLFw=="],
 
     "expo-desktop": ["expo-desktop@workspace:packages/expo-desktop"],
+
+    "expo-desktop-scripts": ["expo-desktop-scripts@workspace:packages/expo-desktop/scripts"],
 
     "fast-string-truncated-width": ["fast-string-truncated-width@1.2.1", "", {}, "sha512-Q9acT/+Uu3GwGj+5w/zsGuQjh9O1TyywhIwAxHudtWrgF09nHOPrvTLhQevPbttcxjr/SNN7mJmfOw/B1bXgow=="],
 

@@ -26,6 +26,7 @@ export async function newExpoDesktopProject(args: {
         macos: "0.81.7",
       },
     });
+    return;
   }
 
   log.info(

@@ -1,13 +1,13 @@
-import { tasks } from "@clack/prompts";
+import { log, tasks } from "@clack/prompts";
 import { cyan, red, yellow } from "kleur/colors";
 import { spawn } from "node:child_process";
 import { env } from "node:process";
 import readline from "node:readline";
 
 export async function initApp({
-  name: { displayName, filesafeName, rdns },
+  name,
   packageManager,
-  versions: { expo, minor, mobile, windows, macos },
+  versions,
 }: {
   name: {
     displayName: string;
@@ -27,10 +27,12 @@ export async function initApp({
   const args = [
     "create",
     "expo-app",
+    name.filesafeName,
     "--template",
-    "blank-typescript",
+    "blank-typescript@50.0.0",
     "--no-install",
-    "--version",
+    // "--version",
+    // versions.expo,
   ];
 
   await tasks([
@@ -44,12 +46,12 @@ export async function initApp({
         if (stdout) {
           readline
             .createInterface({ input: stdout })
-            .on("line", (line) => text(`${cyan("[stdout]")} ${line}`));
+            .on("line", (line) => log.message(`${cyan("[stdout]")} ${line}`));
         }
         if (stderr) {
           readline
             .createInterface({ input: stderr })
-            .on("line", (line) => text(`${red("[stderr]")} ${line}`));
+            .on("line", (line) => log.message(`${red("[stderr]")} ${line}`));
         }
 
         let cpError: Error | null = null;
@@ -74,7 +76,7 @@ export async function initApp({
 
         await promise;
 
-        return "⌛️ Ran command.";
+        return `⏳ Ran: ${yellow(`${command} ${args.join(" ")}`)}`;
       },
     },
   ]);
