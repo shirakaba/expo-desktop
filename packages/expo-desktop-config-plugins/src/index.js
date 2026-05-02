@@ -1,11 +1,4 @@
-const {
-  withRunOnce,
-  createRunOncePlugin,
-} = require("@expo/config-plugins/build/plugins/withRunOnce");
-
-const { withDangerousMod } = require("@expo/config-plugins/build/plugins/withDangerousMod");
-const { withFinalizedMod } = require("@expo/config-plugins/build/plugins/withFinalizedMod");
-const { withMod, withBaseMod } = require("@expo/config-plugins/build/plugins/withMod");
+const expoConfigPluginsModule = require("@expo/config-plugins");
 
 const {
   withAppDelegate,
@@ -17,21 +10,6 @@ const {
   withPodfileProperties,
 } = require("./plugins/macos/macos-plugins");
 
-const {
-  withAndroidManifest,
-  withStringsXml,
-  withAndroidColors,
-  withAndroidColorsNight,
-  withAndroidStyles,
-  withMainActivity,
-  withMainApplication,
-  withProjectBuildGradle,
-  withAppBuildGradle,
-  withSettingsGradle,
-  withGradleProperties,
-} = require("@expo/config-plugins/build/plugins/android-plugins");
-
-// @ts-ignore Cache issue since I renamed "name.js" to "Name.js"
 const { withNameSettingsGradle } = require("./plugins/android/Name");
 const { withDisplayName } = require("./plugins/ios/Name");
 const { withExpoAppDelegate } = require("./plugins/macos/withExpoAppDelegate");
@@ -39,23 +17,12 @@ const { withExpoXcodeBuildPhase } = require("./plugins/macos/withExpoXcodeBuildP
 
 const { compileModsAsync, withDefaultBaseMods, evalModsAsync } = require("./plugins/mod-compiler");
 
-const { withMacosBaseMods } = require("./plugins/macos/withMacosBaseMods");
+const {
+  getMacosModFileProviders,
+  withMacosBaseMods,
+} = require("./plugins/macos/withMacosBaseMods");
 const { withMacosJsEnginePodfileProps } = require("./plugins/macos/withMacosJsEnginePodfileProps");
 const withWindowSize = require("./plugins/macos/withWindowSize");
-
-const expoConfigPlugins = require("@expo/config-plugins");
-const {
-  BaseMods: OriginalBaseMods,
-  assertValidAndroidAssetName,
-  PluginError,
-  withStaticPlugin,
-  isValidAndroidAssetName,
-} = expoConfigPlugins;
-
-const BaseMods = {
-  ...OriginalBaseMods,
-  withMacosBaseMods,
-};
 
 const MacOSConfig = {
   Entitlements: require("./plugins/macos/Entitlements"),
@@ -65,16 +32,9 @@ const MacOSConfig = {
 };
 
 module.exports = {
-  ...expoConfigPlugins,
+  ...expoConfigPluginsModule,
 
   MacOSConfig,
-
-  withRunOnce,
-  createRunOncePlugin,
-  withDangerousMod,
-  withFinalizedMod,
-  withMod,
-  withBaseMod,
 
   withAppDelegate,
   withInfoPlist,
@@ -83,22 +43,6 @@ module.exports = {
   withXcodeProject,
   withPodfile,
   withPodfileProperties,
-
-  withAndroidManifest,
-  withStringsXml,
-  withAndroidColors,
-  withAndroidColorsNight,
-  withAndroidStyles,
-  withMainActivity,
-  withMainApplication,
-  withProjectBuildGradle,
-  withAppBuildGradle,
-  withSettingsGradle,
-  withGradleProperties,
-
-  isValidAndroidAssetName,
-  assertValidAndroidAssetName,
-  withStaticPlugin,
 
   withNameSettingsGradle,
   withDisplayName,
@@ -111,6 +55,9 @@ module.exports = {
   withDefaultBaseMods,
   evalModsAsync,
 
-  PluginError,
-  BaseMods,
+  BaseMods: {
+    ...expoConfigPluginsModule.BaseMods,
+    withMacosBaseMods,
+    getMacosModFileProviders,
+  },
 };
