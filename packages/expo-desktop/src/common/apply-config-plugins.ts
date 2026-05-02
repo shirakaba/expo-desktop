@@ -1,8 +1,11 @@
-import { withPlugins } from "@expo/config-plugins";
-import { BaseMods, compileModsAsync, evalModsAsync } from "expo-desktop-config-plugins";
 import * as fs from "node:fs";
+import { createRequire } from "node:module";
 
 import type { ProjectInfo } from "./apply-config-plugins-types.ts";
+
+const require = createRequire(import.meta.url);
+const { withPlugins } = require("@expo/config-plugins");
+const { compileModsAsync } = require("expo-desktop-config-plugins");
 
 /**
  * Applies config plugins.
