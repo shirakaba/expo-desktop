@@ -31,19 +31,14 @@
     "./package.json": "./package.json"
   },
   "dependencies": {
+    "@expo/config": ">=12.0.0",
+    "@expo/config-plugins": ">=54.0.0",
+    "@expo/prebuild-config": ">=54.0.0",
     "expo-desktop-config-plugins": "workspace:"
   },
   "devDependencies": {
-    "@expo/config": "catalog:react-native-81",
-    "@expo/config-plugins": "catalog:react-native-81",
-    "@expo/prebuild-config": "catalog:react-native-81",
     "@tsconfig/node24": "catalog:base",
     "@types/node": "catalog:base",
     "@typescript/native-preview": "catalog:base"
-  },
-  "peerDependencies": {
-    "@expo/config": ">=12.0.0",
-    "@expo/config-plugins": ">=54.0.0",
-    "@expo/prebuild-config": ">=54.0.0"
   }
 }

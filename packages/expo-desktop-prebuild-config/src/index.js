@@ -1,7 +1,7 @@
 const { getAutolinkedPackagesAsync } = require("./getAutolinkedPackages");
 module.exports.getAutolinkedPackagesAsync = getAutolinkedPackagesAsync;
 
-const { getPrebuildConfigAsync } = require("./getPrebuildConfig");
+const { getConfig, getPrebuildConfigAsync } = require("./getPrebuildConfig");
 module.exports.getPrebuildConfigAsync = getPrebuildConfigAsync;
 
 const {

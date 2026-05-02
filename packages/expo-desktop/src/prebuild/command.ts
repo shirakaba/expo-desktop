@@ -1,7 +1,9 @@
 import { log } from "@clack/prompts";
+import {} from "@expo/config";
 import { default as kleur } from "kleur";
 import { exit } from "node:process";
 
+import { prebuildAsync } from "./prebuild-async.ts";
 import { resolvePackageManagerOptions } from "./resolve-options.ts";
 
 /**
@@ -71,6 +73,8 @@ export async function prebuild({
   if (!platforms.length) {
     throw new Error("At least one platform must be enabled when syncing");
   }
+
+  prebuildAsync();
 
   // TODO:
   // - prebuildAsync()

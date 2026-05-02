@@ -41,15 +41,25 @@
   },
   "dependencies": {
     "@clack/prompts": "^1.2.0",
+    "@expo/config": ">=12.0.0",
+    "@expo/env": "^2.1.1",
+    "@expo/spawn-async": "^1.7.2",
+    "arg": "^5.0.2",
     "arktype": "^2.2.0",
+    "chalk": "*",
     "citty": "^0.2.2",
+    "expo-desktop-prebuild-config": "workspace:",
+    "getenv": "^2.0.0",
     "kleur": "^4.1.5",
+    "prompts": "^2.3.2",
     "toml": "^4.1.1"
   },
   "devDependencies": {
     "@tsconfig/node24": "catalog:base",
     "@types/bun": "^1.3.13",
+    "@types/getenv": "^1.0.0",
     "@types/node": "catalog:base",
+    "@types/prompts": "^2.0.6",
     "@typescript/native-preview": "catalog:base"
   },
   "lint-staged": {
