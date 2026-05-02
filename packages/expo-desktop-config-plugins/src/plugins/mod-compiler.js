@@ -103,6 +103,26 @@ function getRawClone({ mods, ...config }) {
   return Object.freeze(JSON.parse(JSON.stringify(config)));
 }
 
+/** @type {Record<string, Record<string, number>>} */
+const precedences = {
+  ios: {
+    // dangerous runs first
+    dangerous: -2,
+    // run the XcodeProject mod second because many plugins attempt to read from it.
+    xcodeproj: -1,
+    // put the finalized mod at the last
+    finalized: 1,
+  },
+  macos: {
+    // dangerous runs first
+    dangerous: -2,
+    // run the XcodeProject mod second because many plugins attempt to read from it.
+    xcodeproj: -1,
+    // put the finalized mod at the last
+    finalized: 1,
+  },
+};
+
 /**
  * @param {import("@expo/config-plugins").ExportedConfig} config
  * @param {{ projectRoot: string; platforms?: Array<import("@expo/config-plugins").ModPlatform>; introspect?: boolean; assertMissingModProviders?: boolean; ignoreExistingNativeFiles?: boolean; }} props
