@@ -4,6 +4,8 @@ const { withDisplayName } = require("./plugins/ios/Name");
 const { withExpoAppDelegate } = require("./plugins/macos/withExpoAppDelegate");
 const { withExpoXcodeBuildPhase } = require("./plugins/macos/withExpoXcodeBuildPhase");
 
+// export { compileModsAsync, withDefaultBaseMods, evalModsAsync } from './plugins/mod-compiler';
+
 /**
  * @type {import("@expo/config-plugins").ConfigPlugin<{ displayName: string; bundleIdentifier?: string }>}
  */
