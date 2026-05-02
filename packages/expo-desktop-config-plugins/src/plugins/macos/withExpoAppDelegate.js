@@ -12,6 +12,25 @@ function withExpoAppDelegate(config, props) {
     config.modResults.contents = setBundleRoot(config, {
       bundleRoot: ".expo/.virtual-metro-entry",
     }).contents;
+
+    // TODO:
+    // Also adjust the moduleName in AppDelegate.mm to "main", as expected by
+    // Expo's registerRootComponent(). At least, that used to be the approach,
+    // but now I can't get it working whether I set moduleName to "MyApp6" or
+    // "main" on native, JS, or both.
+    //
+    // AppDelegate.mm:
+    // ```diff
+    // - self.moduleName = @"MyApp6";
+    // + self.moduleName = @"main";
+    // ```
+    //
+    // AppDelegate.swift:
+    // ```diff
+    // - withModuleName: "MyApp6",
+    // + withModuleName: "main",
+    // ```
+
     return config;
   });
   return config;
