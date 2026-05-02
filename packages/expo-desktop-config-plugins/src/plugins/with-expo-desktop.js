@@ -1,8 +1,8 @@
 // @ts-ignore Cache issue since I renamed "name.js" to "Name.js"
-const { withNameSettingsGradle } = require("./plugins/android/Name");
-const { withDisplayName } = require("./plugins/ios/Name");
-const { withExpoAppDelegate } = require("./plugins/macos/withExpoAppDelegate");
-const { withExpoXcodeBuildPhase } = require("./plugins/macos/withExpoXcodeBuildPhase");
+const { withNameSettingsGradle } = require("./android/Name");
+const { withDisplayName } = require("./ios/Name");
+const { withExpoAppDelegate } = require("./macos/withExpoAppDelegate");
+const { withExpoXcodeBuildPhase } = require("./macos/withExpoXcodeBuildPhase");
 
 /**
  * @type {import("@expo/config-plugins").ConfigPlugin<{ displayName: string; bundleIdentifier?: string }>}
