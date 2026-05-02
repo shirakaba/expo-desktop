@@ -92,9 +92,11 @@ fi
 \`"$NODE_BINARY" --print "require('path').dirname(require.resolve('react-native/package.json')) + '/scripts/react-native-xcode.sh'"\`
     `.trim() + "\n";
 
-    // We escape line breaks as Xcode will otherwise do it anyway the moment
-    // someone edits the script via the GUI.
-    shellScript = shellScript.replaceAll("\n", "\\n");
+    // Mirror the escaping logic used by the xcode library to ensure that this
+    // multi-line string becomes a single line:
+    // https://github.com/apache/cordova-node-xcode/blob/b27fbd422c133d8bb70cb2e49aa79a4178855d1d/lib/pbxProject.js#L1647
+    shellScript = '"' + shellScript.replace(/"/g, '\\"') + '"';
+
     reactNativeBuildPhase.shellScript = shellScript;
 
     config.modResults = project;
