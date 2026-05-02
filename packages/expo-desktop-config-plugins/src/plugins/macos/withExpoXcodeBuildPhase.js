@@ -92,6 +92,9 @@ fi
 \`"$NODE_BINARY" --print "require('path').dirname(require.resolve('react-native/package.json')) + '/scripts/react-native-xcode.sh'"\`
     `.trim() + "\n";
 
+    // We escape line breaks as Xcode will otherwise do it anyway the moment
+    // someone edits the script via the GUI.
+    shellScript = shellScript.replaceAll("\n", "\\n");
     reactNativeBuildPhase.shellScript = shellScript;
 
     config.modResults = project;
