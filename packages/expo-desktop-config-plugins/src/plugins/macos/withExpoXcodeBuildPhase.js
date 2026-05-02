@@ -92,8 +92,17 @@ fi
 \`"$NODE_BINARY" --print "require('path').dirname(require.resolve('react-native/package.json')) + '/scripts/react-native-xcode.sh'"\`
     `.trim() + "\n";
 
-    // Mirror the escaping logic used by the xcode library to ensure that this
-    // multi-line string becomes a single line:
+    // Turn literal linebreaks into symbolic ones up-front to avoid Xcode
+    // updating the pbxproj the moment you open the shell script in the GUI.
+    //
+    // In other words, turn the multi-line string into a single-line string.
+    shellScript = shellScript.replaceAll(
+      `
+`,
+      "\n",
+    );
+
+    // Mirror the escaping logic used by the xcode library:
     // https://github.com/apache/cordova-node-xcode/blob/b27fbd422c133d8bb70cb2e49aa79a4178855d1d/lib/pbxProject.js#L1647
     shellScript = '"' + shellScript.replace(/"/g, '\\"') + '"';
 
