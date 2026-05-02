@@ -12,6 +12,7 @@ function withExpoAppDelegate(config, props) {
     config.modResults.contents = setBundleRoot(config, {
       bundleRoot: ".expo/.virtual-metro-entry",
     }).contents;
+    return config;
   });
   return config;
 }
