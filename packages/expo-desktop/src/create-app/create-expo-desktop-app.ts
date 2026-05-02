@@ -320,6 +320,7 @@ async function updatePackageJson({
     }
     packageJson.devDependencies["@react-native-community/cli"] = "latest";
     packageJson.devDependencies["@rnx-kit/metro-config"] = "latest";
+    packageJson.devDependencies["@react-native/metro-config"] = `~0.${versions.minor}`;
   }
 
   try {
