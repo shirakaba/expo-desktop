@@ -1,6 +1,8 @@
+// @ts-ignore Cache issue since I renamed "name.js" to "Name.js"
 const { withNameSettingsGradle } = require("./plugins/android/Name");
 const { withDisplayName } = require("./plugins/ios/Name");
 const { withExpoAppDelegate } = require("./plugins/macos/withExpoAppDelegate");
+const { withExpoXcodeBuildPhase } = require("./plugins/macos/withExpoXcodeBuildPhase");
 
 /**
  * @type {import("@expo/config-plugins").ConfigPlugin<{ displayName: string; bundleIdentifier?: string }>}
@@ -9,6 +11,7 @@ module.exports = function withExpoDesktop(config, props) {
   config = withNameSettingsGradle(config, props);
   config = withDisplayName(config, props);
   config = withExpoAppDelegate(config, props);
+  config = withExpoXcodeBuildPhase(config, props);
 
   // TODO: We need a plugin to rename files like `myapp6.xcodeproj` to the
   //       actual filesafe name that the user requested. Some examples of

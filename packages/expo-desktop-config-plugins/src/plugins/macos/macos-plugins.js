@@ -116,6 +116,9 @@ const withExpoPlist = (config, action) => {
   });
 };
 
+/**
+ * @type {import("@expo/config-plugins").ConfigPlugin<import("@expo/config-plugins").Mod<import("xcode").XcodeProject>>}
+ */
 const withXcodeProject = (config, action) => {
   return withMod(config, {
     platform: "macos",

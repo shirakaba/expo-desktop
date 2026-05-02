@@ -93,6 +93,7 @@ export async function createExpoDesktopApp({
 
   // TODO: Set up Xcode build script:
   //       https://microsoft.github.io/react-native-macos/docs/guides/installing-expo-modules
+  //       packages/expo-desktop-config-plugins/src/index.js > withExpoXcodeBuildPhase()
 
   // TODO: Set up Windows app.cpp entrypoint
 }

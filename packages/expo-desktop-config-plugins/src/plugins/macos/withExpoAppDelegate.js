@@ -1,6 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/triple-slash-reference
-/// <reference path="../../xcode.d.ts" />
-
 const { withAppDelegate } = require("./macos-plugins");
 
 /**
