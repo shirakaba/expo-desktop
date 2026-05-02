@@ -36,12 +36,19 @@ function withExpoXcodeBuildPhase(config, props) {
         !value ||
         typeof value !== "object" ||
         !("isa" in value) ||
-        value.isa !== "PBXShellScriptBuildPhase"
+        value.isa !== "PBXShellScriptBuildPhase" ||
+        !("name" in value)
       ) {
         continue;
       }
 
-      if ("name" in value && value.name.trim() === "Bundle React Native code and images") {
+      // There's likely no need to trim the name or test the unquoted name, but
+      // we check both out of an abundance of distrust for Xcode.
+      const trimmedName = value.name.trim();
+      if (
+        trimmedName === "Bundle React Native code and images" ||
+        trimmedName === '"Bundle React Native code and images"'
+      ) {
         reactNativeBuildPhase = value;
         break;
       }
