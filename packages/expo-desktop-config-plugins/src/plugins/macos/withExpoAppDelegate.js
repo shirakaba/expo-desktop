@@ -2,7 +2,6 @@
 /// <reference path="../../xcode.d.ts" />
 
 const { withAppDelegate } = require("./macos-plugins");
-const { mergeContents, removeContents } = require("@expo/config-plugins/build/utils/generateCode");
 
 /**
  * @param {import("@expo/config-types").ExpoConfig} config
