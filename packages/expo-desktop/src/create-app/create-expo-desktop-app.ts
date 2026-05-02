@@ -564,10 +564,9 @@ async function updatePodfile({ projectPath }: { projectPath: string }) {
     contents,
   ].join("\n");
 
-  contents =
+  contents = contents.replace(
+    /  (?:config = )?use_native_modules!/,
     "  " +
-    contents.replace(
-      /  (?:config = )?use_native_modules!/,
       `
   use_expo_modules!
 
@@ -581,7 +580,7 @@ async function updatePodfile({ projectPath }: { projectPath: string }) {
   ]
   config = use_native_modules!(config_command)
     `.trim(),
-    );
+  );
 
   contents = contents.replace(
     ":path => '../node_modules/react-native-macos',",
