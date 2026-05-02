@@ -52,13 +52,13 @@ export async function createExpoDesktopApp({
   await addDesktopApp({ cwd: projectPath, name, packageManager, type: "windows", versions });
 
   title("Adding the macOS app…", { spacing: 1 });
-  await updatePackageJson({ name, projectPath, versions, task: { type: "set-name-for-macos" } });
+  await updatePackageJson({ name, projectPath, versions, task: { type: "pre-init-macos" } });
   await addDesktopApp({ cwd: projectPath, name, packageManager, type: "macos", versions });
   await updatePackageJson({
     name,
     projectPath,
     versions,
-    task: { type: "restore-name-for-macos", name: packageJsonName },
+    task: { type: "post-init-macos", name: packageJsonName },
   });
 
   // TODO: Would be good to have a Config Plugin to rename the app - whether
@@ -91,10 +91,10 @@ export async function createExpoDesktopApp({
   title("Adding Expo support to the Babel config…", { spacing: 1 });
   await writeBabelConfig({ projectPath });
 
-  // https://microsoft.github.io/react-native-macos/docs/guides/installing-expo-modules
+  // TODO: Set up Xcode build script:
+  //       https://microsoft.github.io/react-native-macos/docs/guides/installing-expo-modules
 
   // TODO: Set up Windows app.cpp entrypoint
-  // TODO: Set up Xcode build script
 }
 
 async function createExpoApp({
@@ -243,8 +243,8 @@ async function updatePackageJson({
   projectPath: string;
   task:
     | { type: "create" }
-    | { type: "set-name-for-macos" }
-    | { type: "restore-name-for-macos"; name: string | undefined };
+    | { type: "pre-init-macos" }
+    | { type: "post-init-macos"; name: string | undefined };
   versions: {
     minor: number;
     expoMajor: number;
@@ -270,7 +270,7 @@ async function updatePackageJson({
 
   const nameBefore = packageJson.name;
 
-  if (task.type === "set-name-for-macos") {
+  if (task.type === "pre-init-macos") {
     // create-expo-app shifts this to lowercase as per package.json rules, and
     // then react-native-macos-init maddeningly uses it in preference over the
     // app.json "name" value.
@@ -285,19 +285,22 @@ async function updatePackageJson({
     // the package.json temporarily (or remove it altogether). We'll set it
     // back to lower case later in the "restore-name" task.
     packageJson.name = name.filesafeName;
-  } else if (task.type === "restore-name-for-macos") {
+  } else if (task.type === "post-init-macos") {
     if (task.name) {
       packageJson.name = task.name;
     } else {
       delete packageJson.name;
     }
-  } else {
+
+    // The windows init overwrites our scripts, so the best time to set them is
+    // now (as post-init-macos runs after both windows and macos have been
+    // initialised).
     if (!packageJson.scripts) {
       packageJson.scripts = {};
     }
     packageJson.scripts.macos = "rnc-cli run-macos";
     packageJson.scripts.windows = "rnc-cli run-windows";
-
+  } else {
     if (!packageJson.dependencies) {
       packageJson.dependencies = {};
     }
