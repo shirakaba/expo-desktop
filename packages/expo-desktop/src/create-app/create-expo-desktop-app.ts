@@ -6,11 +6,11 @@ import path from "node:path";
 import process from "node:process";
 
 import { EnhancedAppJson, PackageJson } from "../common/app-json.ts";
+import { applyConfigPlugins } from "../common/apply-config-plugins.ts";
 import { makePrettySummary } from "../common/arktype.ts";
 import { promisifiedSpawn } from "../common/child-process.ts";
 import { title } from "../common/clack.ts";
 import { packageManagerExec } from "../common/npm.ts";
-import { badName } from "../fixtures/configs.ts";
 
 export async function createExpoDesktopApp({
   name,
@@ -91,9 +91,14 @@ export async function createExpoDesktopApp({
   title("Adding Expo support to the Babel config…", { spacing: 1 });
   await writeBabelConfig({ projectPath });
 
-  // TODO: Set up Xcode build script:
-  //       https://microsoft.github.io/react-native-macos/docs/guides/installing-expo-modules
-  //       packages/expo-desktop-config-plugins/src/index.js > withExpoXcodeBuildPhase()
+  title("Applying config plugins to macOS and Windows projects…", { spacing: 1 });
+  await applyConfigPlugins({
+    projectRoot: projectPath,
+    // @ts-expect-error Normally only accepts ios and android
+    platforms: ["macos", "windows"],
+    packageJsonPath: path.resolve(projectPath, "package.json"),
+    appJsonPath: path.resolve(projectPath, "app.json"),
+  });
 
   // TODO: Set up Windows app.cpp entrypoint
 }

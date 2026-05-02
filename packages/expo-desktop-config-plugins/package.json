@@ -24,13 +24,17 @@
   "files": [
     "app.plugin.js",
     "LICENCE-expo.txt",
-    "src"
+    "src",
+    "types"
   ],
   "type": "commonjs",
   "exports": {
     "./app.plugin": "./app.plugin.js",
     "./app.plugin.js": "./app.plugin.js",
-    ".": "./src/index.js",
+    ".": {
+      "types": "./types/src/index.js",
+      "require": "./src/index.js"
+    },
     "./plugins": "./src/plugins/index.js",
     "./plugins/android": "./src/plugins/android/index.js",
     "./plugins/android/*": "./src/plugins/android/*.js",
@@ -41,6 +45,10 @@
     "./plugins/mod-compiler": "./src/plugins/mod-compiler.js",
     "./plugins/with-expo-desktop": "./src/plugins/with-expo-desktop.js",
     "./package.json": "./package.json"
+  },
+  "scripts": {
+    "prepublishOnly": "node --run build",
+    "build": "tsgo --declaration --emitDeclarationOnly --allowJs --outDir types"
   },
   "dependencies": {
     "@expo/json-file": "^9.1.5",

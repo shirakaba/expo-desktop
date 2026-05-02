@@ -3,8 +3,10 @@
   "compilerOptions": {
     "types": ["node"],
     "typeRoots": ["node_modules/@types", "typeRoot"],
-    "noEmit": true,
+    "noEmit": false,
     "exactOptionalPropertyTypes": true,
+    "declaration": true,
+    "emitDeclarationOnly": true,
     "allowImportingTsExtensions": true
   },
   "include": ["app.plugin.js", "src"]

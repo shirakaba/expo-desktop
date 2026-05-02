@@ -1,5 +1,3 @@
-const expoConfigPluginsModule = require("@expo/config-plugins");
-
 const {
   withAppDelegate,
   withInfoPlist,
@@ -31,33 +29,28 @@ const MacOSConfig = {
   XcodeUtils: require("./plugins/macos/Xcodeproj"),
 };
 
-module.exports = {
-  ...expoConfigPluginsModule,
+module.exports.withAppDelegate = withAppDelegate;
+module.exports.withInfoPlist = withInfoPlist;
+module.exports.withEntitlementsPlist = withEntitlementsPlist;
+module.exports.withExpoPlist = withExpoPlist;
+module.exports.withXcodeProject = withXcodeProject;
+module.exports.withPodfile = withPodfile;
+module.exports.withPodfileProperties = withPodfileProperties;
 
-  MacOSConfig,
+module.exports.withNameSettingsGradle = withNameSettingsGradle;
+module.exports.withDisplayName = withDisplayName;
+module.exports.withExpoAppDelegate = withExpoAppDelegate;
+module.exports.withExpoXcodeBuildPhase = withExpoXcodeBuildPhase;
+module.exports.withWindowSize = withWindowSize;
+module.exports.withMacosJsEnginePodfileProps = withMacosJsEnginePodfileProps;
 
-  withAppDelegate,
-  withInfoPlist,
-  withEntitlementsPlist,
-  withExpoPlist,
-  withXcodeProject,
-  withPodfile,
-  withPodfileProperties,
+module.exports.compileModsAsync = compileModsAsync;
+module.exports.withDefaultBaseMods = withDefaultBaseMods;
+module.exports.evalModsAsync = evalModsAsync;
 
-  withNameSettingsGradle,
-  withDisplayName,
-  withExpoAppDelegate,
-  withExpoXcodeBuildPhase,
-  withWindowSize,
-  withMacosJsEnginePodfileProps,
-
-  compileModsAsync,
-  withDefaultBaseMods,
-  evalModsAsync,
-
-  BaseMods: {
-    ...expoConfigPluginsModule.BaseMods,
-    withMacosBaseMods,
-    getMacosModFileProviders,
-  },
+module.exports.BaseMods = {
+  withMacosBaseMods,
+  getMacosModFileProviders,
 };
+
+module.exports.MacOSConfig = MacOSConfig;
