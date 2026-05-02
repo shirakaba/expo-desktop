@@ -76,17 +76,17 @@ export async function createExpoDesktopApp({
   title("Improving the macOS app's gitignore file…", { spacing: 1 });
   await improveMacosGitignore({ projectPath });
 
-  title("Installing Cocoapods for the iOS app…", { spacing: 1 });
-  await podInstall({ projectPath, type: "ios" });
+  title("Adding Expo support to the macOS Podfile…", { spacing: 1 });
+  await updatePodfile({ projectPath });
+
+  // title("Installing Cocoapods for the iOS app…", { spacing: 1 });
+  // await podInstall({ projectPath, type: "ios" });
 
   title("Installing Cocoapods for the macOS app…", { spacing: 1 });
   await podInstall({ projectPath, type: "macos" });
 
   title("Adding Expo support to the Metro config…", { spacing: 1 });
   await improveMetroConfig({ projectPath });
-
-  title("Adding Expo support to the macOS Podfile…", { spacing: 1 });
-  await updatePodfile({ projectPath });
 
   title("Adding Expo support to the Babel config…", { spacing: 1 });
   await writeBabelConfig({ projectPath });
@@ -99,6 +99,7 @@ export async function createExpoDesktopApp({
     packageJsonPath: path.resolve(projectPath, "package.json"),
     appJsonPath: path.resolve(projectPath, "app.json"),
   });
+  console.log(`${green("◆")}  Applied config plugins.\n`);
 
   // TODO: Set up Windows app.cpp entrypoint
 }
