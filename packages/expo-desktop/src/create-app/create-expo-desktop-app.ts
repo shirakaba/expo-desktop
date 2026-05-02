@@ -314,12 +314,12 @@ async function updatePackageJson({
     }
     packageJson.devDependencies["@react-native-community/cli"] = "latest";
     packageJson.devDependencies["@rnx-kit/metro-config"] = "latest";
+  }
 
-    try {
-      await fs.writeFile(packageJsonPath, JSON.stringify(packageJson, null, 2), "utf-8");
-    } catch (cause) {
-      throw new Error(`Error writing updated ${yellow("package.json")}`, { cause });
-    }
+  try {
+    await fs.writeFile(packageJsonPath, JSON.stringify(packageJson, null, 2), "utf-8");
+  } catch (cause) {
+    throw new Error(`Error writing updated ${yellow("package.json")}`, { cause });
   }
 
   console.log(`${green("◆")}  Altered package.json.\n`);
@@ -559,9 +559,11 @@ async function updatePodfile({ projectPath }: { projectPath: string }) {
     contents,
   ].join("\n");
 
-  contents = contents.replace(
-    /  (?:config = )?use_native_modules!/,
-    `
+  contents =
+    "  " +
+    contents.replace(
+      /  (?:config = )?use_native_modules!/,
+      `
   use_expo_modules!
 
   config_command = [
@@ -574,7 +576,7 @@ async function updatePodfile({ projectPath }: { projectPath: string }) {
   ]
   config = use_native_modules!(config_command)
     `.trim(),
-  );
+    );
 
   contents = contents.replace(
     ":path => '../node_modules/react-native-macos',",
