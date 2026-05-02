@@ -42,7 +42,7 @@ function setBundleRoot({ modResults: { language, contents } }, { bundleRoot }) {
   const [fullMatch, prefix, _value, suffix] = match;
   const leading = `${contents.slice(0, match.index)}${prefix}`;
   const trailing = `${suffix}${contents.slice(match.index + fullMatch.length)}`;
-  const bundleRootString = language === "swift" ? `"${bundleRoot}"` : `"@${bundleRoot}"`;
+  const bundleRootString = language === "swift" ? `"${bundleRoot}"` : `@"${bundleRoot}"`;
 
   const modified = `${leading}${bundleRootString}${trailing}`;
 
