@@ -30,6 +30,7 @@
   "exports": {
     "./app.plugin": "./app.plugin.js",
     "./app.plugin.js": "./app.plugin.js",
+    ".": "./src/index.js",
     "./plugins": "./src/plugins/index.js",
     "./plugins/android": "./src/plugins/android/index.js",
     "./plugins/android/*": "./src/plugins/android/*.js",
@@ -37,6 +38,8 @@
     "./plugins/ios/*": "./src/plugins/ios/*.js",
     "./plugins/macos": "./src/plugins/macos/index.js",
     "./plugins/macos/*": "./src/plugins/macos/*.js",
+    "./plugins/mod-compiler": "./src/plugins/mod-compiler.js",
+    "./plugins/with-expo-desktop": "./src/plugins/with-expo-desktop.js",
     "./package.json": "./package.json"
   },
   "dependencies": {
