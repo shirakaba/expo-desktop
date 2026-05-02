@@ -82,8 +82,19 @@ export async function createExpoDesktopApp({
   title("Installing Cocoapods for the macOS app…", { spacing: 1 });
   await podInstall({ projectPath, type: "macos" });
 
-  title("Improving Metro config…", { spacing: 1 });
+  title("Adding Expo support to the Metro config…", { spacing: 1 });
   await improveMetroConfig({ projectPath });
+
+  title("Adding Expo support to the macOS Podfile…", { spacing: 1 });
+  await updatePodfile({ projectPath });
+
+  title("Adding Expo support to the Babel config…", { spacing: 1 });
+  await writeBabelConfig({ projectPath });
+
+  // https://microsoft.github.io/react-native-macos/docs/guides/installing-expo-modules
+
+  // TODO: Set up Windows app.cpp entrypoint
+  // TODO: Set up Xcode build script
 }
 
 async function createExpoApp({
@@ -527,4 +538,79 @@ module.exports = config;
   }
 
   console.log(`\n${green("◆")}  Overwrote metro.config.js.\n`);
+}
+
+async function updatePodfile({ projectPath }: { projectPath: string }) {
+  const appJsonPath = path.resolve(projectPath, "macos/Podfile");
+
+  let contents: string;
+  try {
+    contents = await fs.readFile(appJsonPath, "utf-8");
+  } catch (cause) {
+    throw new Error(`Error reading ${yellow("macos/Podfile")}`, { cause });
+  }
+
+  contents = [
+    `require File.join(File.dirname(\`node --print "require.resolve('expo/package.json')"\`), "scripts/autolinking")`,
+    contents,
+  ].join("\n");
+
+  contents = contents.replace(
+    /  (?:config = )?use_native_modules!/,
+    `
+  use_expo_modules!
+
+  config_command = [
+    'npx',
+    'expo-modules-autolinking',
+    'react-native-config',
+    '--json',
+    '--platform',
+    'ios'
+  ]
+  config = use_native_modules!(config_command)
+    `.trim(),
+  );
+
+  contents = contents.replace(
+    ":path => '../node_modules/react-native-macos',",
+    ':path => "#{config[:reactNativePath]}-macos",',
+  );
+
+  try {
+    await fs.writeFile(appJsonPath, contents, "utf-8");
+  } catch (cause) {
+    throw new Error(`Error writing updated ${yellow("macos/Podfile")}`, { cause });
+  }
+
+  console.log(`${green("◆")}  Altered macos/Podfile.\n`);
+}
+
+async function writeBabelConfig({ projectPath }: { projectPath: string }) {
+  const babelConfigPath = path.resolve(projectPath, "babel.config.js");
+
+  console.log(`${cyan("◆")}  Writing babel.config.js…\n`);
+
+  try {
+    await fs.writeFile(
+      babelConfigPath,
+      `
+module.exports = function (api) {
+  api.cache(true);
+
+  return {
+    presets: ["babel-preset-expo"],
+  };
+};
+    `.trim() + "\n",
+      "utf-8",
+    );
+  } catch (error) {
+    log.error(
+      `Error improving ${yellow("babel.config.js")} file${error instanceof Error ? `: ${error.message}` : "."}`,
+    );
+    process.exit(1);
+  }
+
+  console.log(`\n${green("◆")}  Wrote babel.config.js.\n`);
 }
