@@ -1,5 +1,5 @@
-const { withNameSettingsGradle } = require("./plugins/android/name");
-const { withDisplayName } = require("./plugins/ios/name");
+const { withNameSettingsGradle } = require("./plugins/android/nombre");
+const { withDisplayName } = require("./plugins/ios/nombre");
 const { withExpoAppDelegate } = require("./plugins/macos/withExpoAppDelegate");
 
 /**
