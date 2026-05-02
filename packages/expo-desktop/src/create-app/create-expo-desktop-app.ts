@@ -587,6 +587,24 @@ async function updatePodfile({ projectPath }: { projectPath: string }) {
     ':path => "#{config[:reactNativePath]}-macos",',
   );
 
+  contents = contents.replace(
+    "react_native_post_install(installer)",
+    "    " +
+      `
+    react_native_post_install(installer)
+
+    # Fix for Xcode 26.4 build error
+    # https://stackoverflow.com/a/79921410/5951226
+    installer.pods_project.targets.each do |target|
+      if target.name == 'fmt'
+        target.build_configurations.each do |config|
+          config.build_settings['CLANG_CXX_LANGUAGE_STANDARD'] = 'c++17'
+        end
+      end
+    end
+    `.trim(),
+  );
+
   try {
     await fs.writeFile(appJsonPath, contents, "utf-8");
   } catch (cause) {
