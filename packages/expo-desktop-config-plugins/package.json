@@ -30,7 +30,10 @@
   "exports": {
     "./app.plugin": "./app.plugin.js",
     "./app.plugin.js": "./app.plugin.js",
-    ".": "./src/index.js",
+    ".": {
+      "require": "./src/index.js",
+      "types": "./src/index.d.ts"
+    },
     "./plugins": "./src/plugins/index.js",
     "./plugins/android": "./src/plugins/android/index.js",
     "./plugins/android/*": "./src/plugins/android/*.js",

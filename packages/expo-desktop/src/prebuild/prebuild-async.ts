@@ -1,10 +1,41 @@
+import type { ExpoConfig } from "@expo/config";
+import type { ModPlatform } from "@expo/config-plugins";
+
 import { getConfig } from "@expo/config";
 import chalk from "chalk";
 
+import {
+  clearNativeFolder,
+  maybeBailOnNativeModuleAsync,
+  promptToClearMalformedNativeProjectsAsync,
+} from "../expo/clear-native-folder.ts";
+import { ensureConfigAsync } from "../expo/ensure-config-async.ts";
 import { Log } from "../expo/log.ts";
+import {
+  assertPlatforms,
+  ensureValidPlatforms,
+  resolveTemplateOption,
+} from "../expo/resolve-options.ts";
+import { env } from "../expo/utils/env.ts";
 import { loadEnvFiles, setNodeEnv } from "../expo/utils/node-env.ts";
+import { logNewSection } from "../expo/utils/ora.ts";
+import { profile } from "../expo/utils/profile.ts";
+import { confirmAsync } from "../expo/utils/prompts.ts";
 
 const debug = require("debug")("expo-desktop:prebuild") as typeof console.log;
+
+export type PrebuildResults = {
+  /** Expo config. */
+  exp: ExpoConfig;
+  /** Indicates if the process created new files. */
+  hasNewProjectFiles: boolean;
+  /** The platforms that were prebuilt. */
+  platforms: ModPlatform[];
+  /** Indicates if pod install was run. */
+  podInstall: boolean;
+  /** Indicates if node modules were installed. */
+  nodeInstall: boolean;
+};
 
 /**
  * Entry point into the prebuild process, delegates to other helpers to perform various steps.
@@ -145,19 +176,23 @@ export async function prebuildAsync(
   // Install CocoaPods
   let podsInstalled: boolean = false;
   // err towards running pod install less because it's slow and users can easily run npx pod-install afterwards.
-  if (options.platforms.includes("ios") && options.install && needsPodInstall) {
+  if (
+    (options.platforms.includes("ios") || options.platforms.includes("macos" as any)) &&
+    options.install &&
+    needsPodInstall
+  ) {
     const { installCocoaPodsAsync } = await import("../utils/cocoapods.js");
 
     podsInstalled = await installCocoaPodsAsync(projectRoot);
   } else {
     debug("Skipped pod install");
   }
-  const inlineModules = exp.experiments?.inlineModules ?? false;
-  if (inlineModules && options.platforms.includes("ios")) {
-    await updateXcodeProject(projectRoot, {
-      watchedDirectories: inlineModules.watchedDirectories ?? [],
-    });
-  }
+  // const inlineModules = exp.experiments?.inlineModules ?? false;
+  // if (inlineModules && options.platforms.includes("ios")) {
+  //   await updateXcodeProject(projectRoot, {
+  //     watchedDirectories: inlineModules.watchedDirectories ?? [],
+  //   });
+  // }
 
   return {
     nodeInstall: !!options.install,
