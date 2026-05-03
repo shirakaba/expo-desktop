@@ -8,7 +8,12 @@ const { withAssociatedDomains } = require("expo-desktop-config-plugins/plugins/m
 const {
   withDisplayName,
   withProductName,
-} = require("expo-desktop-config-plugins/plugins/macos/name");
+} = require("expo-desktop-config-plugins/plugins/macos/Name");
+const { withScheme } = require("expo-desktop-config-plugins/plugins/macos/Scheme");
+const {
+  withVersion,
+  withBuildNumber,
+} = require("expo-desktop-config-plugins/plugins/macos/Version");
 const {
   withMacosJsEnginePodfileProps,
 } = require("expo-desktop-config-plugins/plugins/macos/withMacosJsEnginePodfileProps");
@@ -57,17 +62,17 @@ function withMacosExpoPlugins(config, { bundleIdentifier, displayName }) {
     withProductName,
     // IOSConfig.Orientation.withOrientation,
     // IOSConfig.RequiresFullScreen.withRequiresFullScreen,
-    // IOSConfig.Scheme.withScheme,
+    withScheme,
     // IOSConfig.UsesNonExemptEncryption.withUsesNonExemptEncryption,
-    // IOSConfig.Version.withBuildNumber,
-    // IOSConfig.Version.withVersion,
+    withBuildNumber,
+    withVersion,
     // IOSConfig.Google.withGoogleServicesFile,
     // // Deployment Target
     // IOSConfig.DeploymentTarget.withDeploymentTarget,
     // IOSConfig.DeploymentTarget.withDeploymentTargetPodfileProps,
     // Entitlements
     withAssociatedDomains,
-    // // XcodeProject
+    // XcodeProject
     // IOSConfig.DeviceFamily.withDeviceFamily,
     // IOSConfig.Bitcode.withBitcode,
     // IOSConfig.Locales.withLocales,

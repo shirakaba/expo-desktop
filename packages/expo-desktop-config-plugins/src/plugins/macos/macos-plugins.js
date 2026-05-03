@@ -16,6 +16,14 @@ function createInfoPlistPlugin(action, name) {
   return withUnknown;
 }
 
+/**
+ * @param {MutateInfoPlistAction} action
+ * @param {{ infoPlistProperty: string; expoConfigProperty: string; expoPropertyGetter?: (config: import("@expo/config-types").ExpoConfig) => string;}} settings
+ * @param {string} [name] the name of the config plugin
+ * @returns {import("@expo/config-plugins").ConfigPlugin}
+ *
+ * @see https://github.com/expo/expo/blob/870dcba2ade9572fc279f0a47bfbdd78af4a236d/packages/%40expo/config-plugins/src/plugins/ios-plugins.ts#L36
+ */
 function createInfoPlistPluginWithPropertyGuard(action, settings, name) {
   const withUnknown = (config) =>
     withInfoPlist(config, async (config) => {

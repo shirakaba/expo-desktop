@@ -33,6 +33,7 @@
     "react-native-81": {
       "@expo/config": "^12.0.13",
       "@expo/config-plugins": "^54.0.4",
+      "@expo/config-types": "^54.0.10",
       "@expo/prebuild-config": "^54.0.8",
       "expo": "^54.0.33",
       "react": "19.1.4",
@@ -43,6 +44,7 @@
     "react-native-82": {
       "@expo/config": "^55.0.15",
       "@expo/config-plugins": "^55.0.8",
+      "@expo/config-types": "^55.0.5",
       "@expo/prebuild-config": "^55.0.16",
       "expo": "^55.0.17",
       "react": "19.1.1",
@@ -52,6 +54,7 @@
     "react-native-83": {
       "@expo/config": "^55.0.15",
       "@expo/config-plugins": "^55.0.8",
+      "@expo/config-types": "^55.0.5",
       "@expo/prebuild-config": "^55.0.16",
       "expo": "^55.0.17",
       "react": "19.2.0",

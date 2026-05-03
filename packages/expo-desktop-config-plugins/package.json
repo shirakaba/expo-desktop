@@ -51,6 +51,7 @@
     "build": "tsgo --declaration --emitDeclarationOnly --allowJs --outDir types"
   },
   "dependencies": {
+    "@expo/config-types": "catalog:react-native-81",
     "@expo/json-file": "^9.1.5",
     "@expo/plist": "^0.4.8",
     "chalk": "^4.1.2",
