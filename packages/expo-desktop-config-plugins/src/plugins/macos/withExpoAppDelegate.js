@@ -71,7 +71,7 @@ const bundleRootRegexObjc =
  * @param {{ moduleName: string }} props
  * @returns {import("@expo/config-plugins/build/utils/generateCode").MergeResults}
  */
-function setModuleName({ modResults: { language, contents } }, { bundleRoot }) {
+function setModuleName({ modResults: { language, contents } }, { moduleName }) {
   if (language !== "swift" && language !== "objc" && language !== "objcpp") {
     throw new Error(
       `Expected AppDelegate to be in Swift or Obj-C(++), but unexpectedly got '${language}'.`,
