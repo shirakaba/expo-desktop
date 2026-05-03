@@ -1,9 +1,4 @@
-const { getPbxproj } = require("./Xcodeproj");
 const { withXcodeProject } = require("./macos-plugins");
-
-/**
- * @typedef {{ Debug: Record<string, string>; Release: Record<string, string>; base: Record<string, string>; }} BuildSettings
- */
 
 /**
  * @param {Parameters<import("@expo/config-plugins").ConfigPlugin>[0]} config
@@ -18,7 +13,11 @@ function withExpoXcodeBuildPhase(config, props) {
       return config;
     }
 
-    const project = getPbxproj(config.modRequest.projectRoot, config.modRequest.platform);
+    // As we're inside a withXcodeProject() context, we use config.modResults
+    // rather than getPbxproj() to get the latest mutated xcodeproj from the
+    // mods pipeline.
+    /** @type {import("xcode").XcodeProject} */
+    const project = config.modResults;
     const { PBXShellScriptBuildPhase } = project.hash.project.objects;
     if (!PBXShellScriptBuildPhase) {
       throw new Error(
@@ -107,8 +106,6 @@ fi
     shellScript = '"' + shellScript.replace(/"/g, '\\"') + '"';
 
     reactNativeBuildPhase.shellScript = shellScript;
-
-    config.modResults = project;
 
     return config;
   });
