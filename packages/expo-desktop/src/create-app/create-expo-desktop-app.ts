@@ -311,7 +311,7 @@ async function updatePackageJson({
     if (!packageJson.dependencies) {
       packageJson.dependencies = {};
     }
-    packageJson.dependencies["expo-desktop-config-plugins"] = "^1.1.9";
+    packageJson.dependencies["expo-desktop-config-plugins"] = "^1.1.10";
     packageJson.dependencies["react-native-macos"] = versions.macos;
     packageJson.dependencies["react-native-windows"] = versions.windows;
 
