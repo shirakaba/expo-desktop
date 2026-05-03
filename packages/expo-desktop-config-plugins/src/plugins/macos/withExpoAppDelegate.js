@@ -12,24 +12,9 @@ function withExpoAppDelegate(config, props) {
     config.modResults.contents = setBundleRoot(config, {
       bundleRoot: ".expo/.virtual-metro-entry",
     }).contents;
-
-    // TODO:
-    // Also adjust the moduleName in AppDelegate.mm to "main", as expected by
-    // Expo's registerRootComponent(). At least, that used to be the approach,
-    // but now I can't get it working whether I set moduleName to "MyApp6" or
-    // "main" on native, JS, or both.
-    //
-    // AppDelegate.mm:
-    // ```diff
-    // - self.moduleName = @"MyApp6";
-    // + self.moduleName = @"main";
-    // ```
-    //
-    // AppDelegate.swift:
-    // ```diff
-    // - withModuleName: "MyApp6",
-    // + withModuleName: "main",
-    // ```
+    config.modResults.contents = setModuleName(config, {
+      moduleName: "main",
+    }).contents;
 
     return config;
   });
@@ -38,7 +23,7 @@ function withExpoAppDelegate(config, props) {
 module.exports.withExpoAppDelegate = withExpoAppDelegate;
 
 /**
- * Declares that the AppDelegate conforms to RNAppAuthAuthorizationFlowManager.
+ * Sets the bundle root for the RCTBundleURLProvider.
  * @param {import("@expo/config-plugins").ExportedConfigWithProps<import("@expo/config-plugins/build/ios/Paths").AppDelegateProjectFile>} src
  * @param {{ bundleRoot: string }} props
  * @returns {import("@expo/config-plugins/build/utils/generateCode").MergeResults}
@@ -76,3 +61,44 @@ const bundleRootRegexSwift =
   /(RCTBundleURLProvider\.sharedSettings\(\)\.jsBundleURL\(forBundleRoot:\s*)(.*)(\s*\))/;
 const bundleRootRegexObjc =
   /(\[\[RCTBundleURLProvider sharedSettings\] jsBundleURLForBundleRoot:\s*)(.*)(\s*\])/;
+
+/**
+ * Sets the moduleName for the RCTAppDelegate, which is used by its
+ * RCTRootViewFactory, ultimately passed onto RCTFabricSurface and finally a
+ * SurfaceHandler, where the moduleName is used as the Surface's moduleName in
+ * the AppRegistry.
+ * @param {import("@expo/config-plugins").ExportedConfigWithProps<import("@expo/config-plugins/build/ios/Paths").AppDelegateProjectFile>} src
+ * @param {{ moduleName: string }} props
+ * @returns {import("@expo/config-plugins/build/utils/generateCode").MergeResults}
+ */
+function setModuleName({ modResults: { language, contents } }, { bundleRoot }) {
+  if (language !== "swift" && language !== "objc" && language !== "objcpp") {
+    throw new Error(
+      `Expected AppDelegate to be in Swift or Obj-C(++), but unexpectedly got '${language}'.`,
+    );
+  }
+
+  const pattern = language === "swift" ? moduleNameRegexSwift : moduleNameRegexObjc;
+  const match = pattern.exec(contents);
+  if (!match) {
+    const error = new Error(`Failed to match "${pattern}" in contents:\n${contents}`);
+    error.code = "ERR_NO_MATCH";
+    throw error;
+  }
+
+  const [fullMatch, prefix, _value] = match;
+  const leading = `${contents.slice(0, match.index)}${prefix}`;
+  const trailing = `${contents.slice(match.index + fullMatch.length)}`;
+  const moduleNameString = language === "swift" ? `"${moduleName}"` : `@"${moduleName}"`;
+
+  const modified = `${leading}${moduleNameString}${trailing}`;
+
+  return {
+    contents: modified,
+    didClear: false,
+    didMerge: true,
+  };
+}
+
+const moduleNameRegexSwift = /(withModuleName:\s*)(".*")/;
+const moduleNameRegexObjc = /(self.moduleName =\s*)(@".*")/;
