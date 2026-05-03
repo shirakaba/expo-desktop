@@ -1,8 +1,14 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const { withPlugins } = require("@expo/config-plugins");
+const {
+  withBundleIdentifier,
+} = require("expo-desktop-config-plugins/plugins/macos/BundleIdentifier");
 const { withAssociatedDomains } = require("expo-desktop-config-plugins/plugins/macos/Entitlements");
-const { withMacosDisplayName } = require("expo-desktop-config-plugins/plugins/macos/name");
+const {
+  withDisplayName,
+  withProductName,
+} = require("expo-desktop-config-plugins/plugins/macos/name");
 const {
   withMacosJsEnginePodfileProps,
 } = require("expo-desktop-config-plugins/plugins/macos/withMacosJsEnginePodfileProps");
@@ -31,7 +37,7 @@ module.exports.withVersionedExpoSDKPlugins = withVersionedExpoSDKPlugins;
  *
  * @type {import("@expo/config-plugins").ConfigPlugin<{ displayName?: string; bundleIdentifier?: string }>}
  */
-function withMacosExpoPlugins(config, props = {}) {
+function withMacosExpoPlugins(config, { bundleIdentifier, displayName }) {
   const projectRoot = config._internal?.projectRoot;
   if (typeof projectRoot === "string" && !projectHasMacosNativeTree(projectRoot)) {
     return config;
@@ -40,14 +46,35 @@ function withMacosExpoPlugins(config, props = {}) {
   if (!config.macos) {
     config.macos = {};
   }
-  if (props.bundleIdentifier) {
-    config.macos.bundleIdentifier = props.bundleIdentifier;
+  if (bundleIdentifier) {
+    config.macos.bundleIdentifier = bundleIdentifier;
   }
 
   return withPlugins(config, [
-    [withMacosDisplayName, props],
+    [withBundleIdentifier, { bundleIdentifier }],
+    // IOSConfig.Google.withGoogle,
+    [withDisplayName, { displayName }],
+    withProductName,
+    // IOSConfig.Orientation.withOrientation,
+    // IOSConfig.RequiresFullScreen.withRequiresFullScreen,
+    // IOSConfig.Scheme.withScheme,
+    // IOSConfig.UsesNonExemptEncryption.withUsesNonExemptEncryption,
+    // IOSConfig.Version.withBuildNumber,
+    // IOSConfig.Version.withVersion,
+    // IOSConfig.Google.withGoogleServicesFile,
+    // // Deployment Target
+    // IOSConfig.DeploymentTarget.withDeploymentTarget,
+    // IOSConfig.DeploymentTarget.withDeploymentTargetPodfileProps,
+    // Entitlements
     withAssociatedDomains,
-    withMacosJsEnginePodfileProps,
+    // // XcodeProject
+    // IOSConfig.DeviceFamily.withDeviceFamily,
+    // IOSConfig.Bitcode.withBitcode,
+    // IOSConfig.Locales.withLocales,
+    // IOSConfig.DevelopmentTeam.withDevelopmentTeam,
+    // // Dangerous
+    // withIosIcons,
+    // IOSConfig.PrivacyInfo.withPrivacyInfo,
   ]);
 }
 module.exports.withMacosExpoPlugins = withMacosExpoPlugins;

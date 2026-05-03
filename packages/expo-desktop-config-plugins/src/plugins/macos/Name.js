@@ -1,5 +1,7 @@
-const { withInfoPlist } = require("./macos-plugins");
 const { addWarningMacOS } = require("./_utils/warnings");
+const { withInfoPlist, withXcodeProject } = require("./macos-plugins");
+const { findFirstNativeTarget } = require("./Target");
+const { getBuildConfigurationsForListId, sanitizedName } = require("./Xcodeproj");
 
 /**
  * @see https://github.com/expo/expo/blob/e6f247b4f2b0d1dffb819d4821bc2b0a8393c80e/packages/%40expo/config-plugins/src/ios/Name.ts#L11
@@ -13,6 +15,36 @@ const withDisplayName = createInfoPlistPluginWithPropertyGuard(
   "withDisplayName",
 );
 module.exports.withDisplayName = withDisplayName;
+
+const withName = createInfoPlistPluginWithPropertyGuard(
+  setName,
+  {
+    infoPlistProperty: "CFBundleName",
+    expoConfigProperty: "name",
+  },
+  "withName",
+);
+module.exports.withName = withName;
+
+/**
+ * Set the PRODUCT_NAME variable in the xcproj file based on the app.json name property.
+ * @type {import("@expo/config-plugins").ConfigPlugin}
+ */
+const withProductName = (config) => {
+  return withXcodeProject(config, (config) => {
+    config.modResults = setProductName(config, config.modResults);
+    return config;
+  });
+};
+module.exports.withProductName = withProductName;
+
+/**
+ * @param {Pick<ExpoConfig, 'name'> | string} config
+ */
+function getName(config) {
+  return typeof config.name === "string" ? config.name : null;
+}
+module.exports.getName = getName;
 
 /**
  * @typedef {Parameters<import("@expo/config-plugins").ConfigPlugin>[0]} ExpoConfig
@@ -47,6 +79,64 @@ function setDisplayName(configOrName, { CFBundleDisplayName, ...infoPlist }) {
   };
 }
 module.exports.setDisplayName = setDisplayName;
+
+/**
+ * CFBundleName is recommended to be 16 chars or less and is used in lists, eg:
+ * sometimes on the App Store
+ * @param {Pick<ExpoConfig, 'name'> | string} config
+ * @param {InfoPlist} infoPlist
+ * @returns {InfoPlist}
+ */
+function setName(config, { CFBundleName, ...infoPlist }) {
+  const name = getName(config);
+
+  if (!name) {
+    return infoPlist;
+  }
+
+  return {
+    ...infoPlist,
+    CFBundleName: name,
+  };
+}
+module.exports.setName = setName;
+
+/**
+ * CFBundleName is recommended to be 16 chars or less and is used in lists, eg:
+ * sometimes on the App Store
+ * @param {Pick<ExpoConfig, 'name'> | string} config
+ * @param {import("xcode").XcodeProject} project
+ * @returns {import("xcode").XcodeProject}
+ */
+function setProductName(config, project) {
+  const name = sanitizedName(getName(config) ?? "");
+
+  if (!name) {
+    return project;
+  }
+  const quotedName = ensureQuotes(name);
+
+  const [, nativeTarget] = findFirstNativeTarget(project);
+
+  getBuildConfigurationsForListId(project, nativeTarget.buildConfigurationList).forEach(
+    ([, item]) => {
+      item.buildSettings.PRODUCT_NAME = quotedName;
+    },
+  );
+
+  return project;
+}
+module.exports.setProductName = setProductName;
+
+/**
+ * @param {string} value
+ */
+const ensureQuotes = (value) => {
+  if (!value.match(/^['"]/)) {
+    return `"${value}"`;
+  }
+  return value;
+};
 
 /**
  * @param {MutateInfoPlistAction} action
