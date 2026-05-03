@@ -22,8 +22,8 @@ export async function applyConfigPlugins(
   // on an Expo 55 project, we import Expo deps from the project itself.
   let expoConfigModule: typeof import("@expo/config");
   try {
-    expoConfigModule = await import(
-      path.dirname(require.resolve("@expo/config/package.json", { paths: [projectRoot] }))
+    expoConfigModule = require(
+      path.dirname(require.resolve("@expo/config/package.json", { paths: [projectRoot] })),
     );
   } catch (cause) {
     throw new Error(
@@ -35,8 +35,8 @@ export async function applyConfigPlugins(
 
   let expoConfigPluginsModule: typeof import("@expo/config-plugins");
   try {
-    expoConfigPluginsModule = await import(
-      path.dirname(require.resolve("@expo/config-plugins/package.json", { paths: [projectRoot] }))
+    expoConfigPluginsModule = require(
+      path.dirname(require.resolve("@expo/config-plugins/package.json", { paths: [projectRoot] })),
     );
   } catch (cause) {
     throw new Error(
