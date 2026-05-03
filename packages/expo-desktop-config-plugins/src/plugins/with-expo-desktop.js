@@ -9,6 +9,8 @@ const { withExpoXcodeBuildPhase } = require("./macos/withExpoXcodeBuildPhase");
  * @type {import("@expo/config-plugins").ConfigPlugin<{ displayName: string; bundleIdentifier?: string }>}
  */
 module.exports = function withExpoDesktop(config, props) {
+  // TODO: Either make all props optional, or throw error when missing.
+
   config = withNameSettingsGradle(config, props);
 
   // Same-named mods do not clash, as they are stored by platform first, then
@@ -22,6 +24,9 @@ module.exports = function withExpoDesktop(config, props) {
   // with.
   config = withExpoAppDelegate(config, { windowTitle: props.displayName });
   config = withExpoXcodeBuildPhase(config, props);
+
+  // TODO: Set the Xcode PRODUCT_BUNDLE_IDENTIFIER build setting based on
+  //       props.bundleIdentifier.
 
   // TODO: We need a plugin to rename files like `myapp6.xcodeproj` to the
   //       actual filesafe name that the user requested. Some examples of
