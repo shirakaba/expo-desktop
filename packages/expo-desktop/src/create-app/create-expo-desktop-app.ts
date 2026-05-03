@@ -189,6 +189,7 @@ async function updateAppJson({
   // Try to preserve order.
   appJson.expo.name = name.filesafeName;
   appJson.expo.slug = name.filesafeName;
+  appJson.expo.platforms = ["android", "ios", "macos", "windows"];
   if (!appJson.expo.ios) {
     appJson.expo.ios = {};
   }

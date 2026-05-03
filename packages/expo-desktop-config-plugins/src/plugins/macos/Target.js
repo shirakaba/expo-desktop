@@ -163,13 +163,13 @@ function findSignableTargets(project) {
 function findFirstNativeTarget(project) {
   const targets = getNativeTargets(project);
 
-  /** @type {Array<import("xcode").PBXNativeTarget>} */
+  /** @type {Array<[hash: string, import("xcode").PBXNativeTarget]>} */
   const applicationTargets = new Array();
-  for (const [, target] of targets) {
+  for (const [hash, target] of targets) {
     if (!isTargetOfType(target, TargetType.APPLICATION)) {
       continue;
     }
-    applicationTargets.push(target);
+    applicationTargets.push([hash, target]);
   }
 
   if (!applicationTargets.length) {
@@ -182,7 +182,7 @@ function findFirstNativeTarget(project) {
 
   // The starter template for react-native-macos defines HelloWorld-iOS and
   // HelloWorld-macOS targets.
-  const macosTarget = applicationTargets.find(({ name }) => name.endsWith("-macOS"));
+  const macosTarget = applicationTargets.find(([, { name }]) => /-macOS"?$/.test(name));
   if (!macosTarget) {
     throw new Error(
       `Found multiple targets in the project.pbxproj (${JSON.stringify(applicationTargets.map(({ name }) => name))}), but could not distinguish the macOS one`,

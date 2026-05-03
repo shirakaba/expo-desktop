@@ -3,6 +3,7 @@ import { type } from "arktype";
 export const ExpoConfig = type({
   "name?": "string",
   "slug?": "string",
+  "platforms?": type('"android" | "ios" | "web" | "macos" | "windows"').array(),
   "version?": "string",
   "ios?": type({
     "bundleIdentifier?": "string",

@@ -1,10 +1,8 @@
 // https://github.com/expo/expo/blob/sdk-52/packages/%40expo/config-plugins/src/plugins/withIosBaseMods.ts
 
 const path = require("node:path");
-const {
-  default: fs,
-  promises: { readFile, writeFile },
-} = require("node:fs");
+const fs = require("node:fs");
+const fsPromises = require("node:fs/promises");
 const assert = require("node:assert");
 const {
   BaseMods: { withGeneratedBaseMods, provider },
@@ -91,7 +89,7 @@ const defaultProviders = {
       return Paths.getFileInfo(filePath);
     },
     async write(filePath, { modResults: { contents } }) {
-      await writeFile(filePath, contents);
+      await fsPromises.writeFile(filePath, contents);
     },
   }),
   viewController: provider({
@@ -107,7 +105,7 @@ const defaultProviders = {
       return Paths.getFileInfo(filePath);
     },
     async write(filePath, { modResults: { contents } }) {
-      await writeFile(filePath, contents);
+      await fsPromises.writeFile(filePath, contents);
     },
   }),
   // Append a rule to supply Expo.plist data to mods on `mods.macos.expoPlist`
@@ -119,7 +117,7 @@ const defaultProviders = {
     },
     async read(filePath, { modRequest: { introspect } }) {
       try {
-        return plist.parse(await readFile(filePath, "utf8"));
+        return plist.parse(await fsPromises.readFile(filePath, "utf8"));
       } catch (error) {
         if (introspect) {
           return {};
@@ -131,7 +129,7 @@ const defaultProviders = {
       if (introspect) {
         return;
       }
-      await writeFile(filePath, plist.build(sortObject(modResults)));
+      await fsPromises.writeFile(filePath, plist.build(sortObject(modResults)));
     },
   }),
   // Append a rule to supply .xcodeproj data to mods on `mods.macos.xcodeproj`
@@ -145,7 +143,7 @@ const defaultProviders = {
       return project;
     },
     async write(filePath, { modResults }) {
-      await writeFile(filePath, modResults.writeSync());
+      await fsPromises.writeFile(filePath, modResults.writeSync());
     },
   }),
   // Append a rule to supply Info.plist data to mods on `mods.macos.infoPlist`
@@ -212,7 +210,7 @@ const defaultProviders = {
       if (!config.macos.infoPlist) config.macos.infoPlist = {};
       let modResults;
       try {
-        const contents = await readFile(filePath, "utf8");
+        const contents = await fsPromises.readFile(filePath, "utf8");
         assert(contents, "Info.plist is empty");
         modResults = plist.parse(contents);
       } catch (error) {
@@ -240,7 +238,7 @@ const defaultProviders = {
       if (config.modRequest.introspect) {
         return;
       }
-      await writeFile(filePath, plist.build(sortObject(config.modResults)));
+      await fsPromises.writeFile(filePath, plist.build(sortObject(config.modResults)));
     },
   }),
   // Append a rule to supply .entitlements data to mods on `mods.macos.entitlements`
@@ -275,7 +273,7 @@ const defaultProviders = {
       let modResults;
       try {
         if (!config.modRequest.ignoreExistingNativeFiles && fs.existsSync(filePath)) {
-          const contents = await readFile(filePath, "utf8");
+          const contents = await fsPromises.readFile(filePath, "utf8");
           assert(contents, "Entitlements plist is empty");
           modResults = plist.parse(contents);
         } else {
@@ -311,7 +309,7 @@ const defaultProviders = {
       if (config.modRequest.introspect) {
         return;
       }
-      await writeFile(filePath, plist.build(sortObject(config.modResults)));
+      await fsPromises.writeFile(filePath, plist.build(sortObject(config.modResults)));
     },
   }),
   podfile: provider({
@@ -324,7 +322,7 @@ const defaultProviders = {
       return Paths.getFileInfo(filePath);
     },
     async write(filePath, { modResults: { contents } }) {
-      await writeFile(filePath, contents);
+      await fsPromises.writeFile(filePath, contents);
     },
   }),
   // Append a rule to supply Podfile.properties.json data to mods on `mods.macos.podfileProperties`
