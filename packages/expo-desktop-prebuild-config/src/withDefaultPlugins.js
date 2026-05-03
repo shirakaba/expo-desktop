@@ -67,21 +67,28 @@ function withMacosExpoPlugins(config, { bundleIdentifier, displayName }) {
 
   return withPlugins(config, [
     [withBundleIdentifier, { bundleIdentifier }],
+    // IOSConfig.Google.withGoogle,
     [withDisplayName, { displayName }],
     withProductName,
+    // IOSConfig.Orientation.withOrientation,
+    // IOSConfig.RequiresFullScreen.withRequiresFullScreen,
     withScheme,
+    // IOSConfig.UsesNonExemptEncryption.withUsesNonExemptEncryption,
     withBuildNumber,
     withVersion,
+    // IOSConfig.Google.withGoogleServicesFile,
     // == Deployment Target ==
     withDeploymentTarget,
     withDeploymentTargetPodfileProps,
     // == Entitlements ==
     withAssociatedDomains,
     // == XcodeProject ==
+    // IOSConfig.DeviceFamily.withDeviceFamily,
     withBitcode,
     withLocales,
     withDevelopmentTeam,
     // == Dangerous ==
+    // withIosIcons,
     withPrivacyInfo,
   ]);
 }
