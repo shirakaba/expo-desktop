@@ -1,14 +1,24 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const { withPlugins } = require("@expo/config-plugins");
+const { withBitcode } = require("expo-desktop-config-plugins/plugins/macos/Bitcode");
 const {
   withBundleIdentifier,
 } = require("expo-desktop-config-plugins/plugins/macos/BundleIdentifier");
+const {
+  withDeploymentTarget,
+  withDeploymentTargetPodfileProps,
+} = require("expo-desktop-config-plugins/plugins/macos/DeploymentTarget");
+const {
+  withDevelopmentTeam,
+} = require("expo-desktop-config-plugins/plugins/macos/DevelopmentTeam");
 const { withAssociatedDomains } = require("expo-desktop-config-plugins/plugins/macos/Entitlements");
+const { withLocales } = require("expo-desktop-config-plugins/plugins/macos/Locales");
 const {
   withDisplayName,
   withProductName,
 } = require("expo-desktop-config-plugins/plugins/macos/Name");
+const { withPrivacyInfo } = require("expo-desktop-config-plugins/plugins/macos/PrivacyInfo");
 const { withScheme } = require("expo-desktop-config-plugins/plugins/macos/Scheme");
 const {
   withVersion,
@@ -67,19 +77,19 @@ function withMacosExpoPlugins(config, { bundleIdentifier, displayName }) {
     withBuildNumber,
     withVersion,
     // IOSConfig.Google.withGoogleServicesFile,
-    // // Deployment Target
-    // IOSConfig.DeploymentTarget.withDeploymentTarget,
-    // IOSConfig.DeploymentTarget.withDeploymentTargetPodfileProps,
-    // Entitlements
+    // == Deployment Target ==
+    withDeploymentTarget,
+    withDeploymentTargetPodfileProps,
+    // == Entitlements ==
     withAssociatedDomains,
-    // XcodeProject
+    // == XcodeProject ==
     // IOSConfig.DeviceFamily.withDeviceFamily,
-    // IOSConfig.Bitcode.withBitcode,
-    // IOSConfig.Locales.withLocales,
-    // IOSConfig.DevelopmentTeam.withDevelopmentTeam,
-    // // Dangerous
+    withBitcode,
+    withLocales,
+    withDevelopmentTeam,
+    // == Dangerous ==
     // withIosIcons,
-    // IOSConfig.PrivacyInfo.withPrivacyInfo,
+    withPrivacyInfo,
   ]);
 }
 module.exports.withMacosExpoPlugins = withMacosExpoPlugins;
