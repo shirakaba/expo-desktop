@@ -1,19 +1,19 @@
 /**
  * Based on `@expo/config-plugins` Locales.ts (`macos/{projectName}/Supporting`, `getProjectName(_, "macos")`).
- * Locale JSON still merges the nested `ios` key via `getResolvedLocalesAsync(..., "ios")`, matching Expo’s Apple-platform metadata shape.
+ * Locale JSON merges the nested `macos` key via `getResolvedLocalesAsync(..., "macos")` (see `./_utils/locales.js`).
  * @see https://github.com/expo/expo/blob/main/packages/@expo/config-plugins/src/ios/Locales.ts
  */
 
 const fs = require("node:fs");
 const path = require("node:path");
-const { getResolvedLocalesAsync } = require("@expo/config-plugins/build/utils/locales");
+const { getResolvedLocalesAsync } = require("./_utils/locales");
 const Xcodeproj = require("./Xcodeproj");
 const macosPlugins = require("./macos-plugins");
 
 /** @typedef {import("xcode").XcodeProject} XcodeProject */
-/** @typedef {import("@expo/config-plugins/build/utils/locales").LocaleJson} LocaleJson */
+/** @typedef {import("./_utils/locales").LocaleJson} LocaleJson */
 
-const LOCALE_JSON_PLATFORM = "ios";
+const LOCALE_JSON_PLATFORM = "macos";
 
 /**
  * @type {import("@expo/config-plugins").ConfigPlugin}
@@ -33,7 +33,7 @@ Object.defineProperty(withLocales, "name", {
 
 /**
  * @param {{
- *   localesMap: LocaleJson | import("@expo/config-plugins/build/utils/locales").ResolvedLocalesJson;
+ *   localesMap: LocaleJson | import("./_utils/locales").ResolvedLocalesJson;
  *   supportingDirectory: string;
  *   fileName: string;
  *   projectName: string;
@@ -88,31 +88,6 @@ function getLocales(config) {
 }
 
 /**
- * Normalizes older and newer `@expo/config-plugins` `getResolvedLocalesAsync` results.
- *
- * @param {unknown} resolved
- */
-function unwrapResolvedLocales(resolved) {
-  if (
-    resolved &&
-    typeof resolved === "object" &&
-    "localesMap" in /** @type {object} */ (resolved)
-  ) {
-    const r = /** @type {{ localesMap?: object; localizableStringsIOS?: object }} */ (resolved);
-    return {
-      localesMap: r.localesMap ?? {},
-      localizableStrings: r.localizableStringsIOS,
-    };
-  }
-  return {
-    localesMap: /** @type {Record<string, LocaleJson>} */ (
-      resolved && typeof resolved === "object" ? resolved : {}
-    ),
-    localizableStrings: undefined,
-  };
-}
-
-/**
  * @param {Pick<import("@expo/config-types").ExpoConfig, "locales">} config
  * @param {{ projectRoot: string; project: XcodeProject }} opts
  * @returns {Promise<XcodeProject>}
@@ -122,8 +97,11 @@ async function setLocalesAsync(config, { projectRoot, project: proj }) {
   if (!locales) {
     return proj;
   }
-  const resolved = await getResolvedLocalesAsync(projectRoot, locales, LOCALE_JSON_PLATFORM);
-  const { localesMap, localizableStrings } = unwrapResolvedLocales(resolved);
+  const { localesMap, localizableStrings } = await getResolvedLocalesAsync(
+    projectRoot,
+    locales,
+    LOCALE_JSON_PLATFORM,
+  );
 
   const projectName = Xcodeproj.getProjectName(projectRoot, "macos");
   const supportingDirectory = path.join(projectRoot, "macos", projectName, "Supporting");
