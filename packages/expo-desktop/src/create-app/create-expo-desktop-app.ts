@@ -311,7 +311,34 @@ async function updatePackageJson({
     if (!packageJson.dependencies) {
       packageJson.dependencies = {};
     }
-    packageJson.dependencies["expo-desktop-config-plugins"] = "^1.1.10";
+
+    const dev = false;
+    // It's a pain to have to publish expo-desktop-config-plugins to npm to
+    // respond to each new change, so I'm adding a convenience for local dev.
+    if (dev) {
+      packageJson.dependencies["expo-desktop-config-plugins"] =
+        "file:../../expo-desktop-config-plugins";
+      (packageJson as any).catalogs = {
+        base: {
+          "@tsconfig/node24": "^24.0.4",
+          "@types/node": "^24.12.2",
+          "@typescript/native-preview": "^7.0.0-dev.20260425.1",
+        },
+        "react-native-81": {
+          "@expo/config": "^12.0.13",
+          "@expo/config-plugins": "^54.0.4",
+          "@expo/prebuild-config": "^54.0.8",
+          expo: "^54.0.33",
+          react: "19.1.4",
+          "react-native": "0.81.6",
+          "react-native-macos": "0.81.7",
+          "react-native-windows": "0.81.12",
+        },
+      };
+    } else {
+      packageJson.dependencies["expo-desktop-config-plugins"] = "^1.1.10";
+    }
+
     packageJson.dependencies["react-native-macos"] = versions.macos;
     packageJson.dependencies["react-native-windows"] = versions.windows;
 
