@@ -12,6 +12,15 @@ import { promisifiedSpawn } from "../common/child-process.ts";
 import { title } from "../common/clack.ts";
 import { packageManagerExec } from "../common/npm.ts";
 
+/**
+ * A crude switch to use to help with local development.
+ *
+ * - Installs the local copy of expo-desktop-config-plugins rather than pinning
+ *   to a published release.
+ * - Adds the apply-config-plugins.mjs script.
+ */
+const localDev = false;
+
 export async function createExpoDesktopApp({
   name,
   packageManager,
@@ -61,13 +70,6 @@ export async function createExpoDesktopApp({
     task: { type: "post-init-macos", name: packageJsonName },
   });
 
-  // TODO: Would be good to have a Config Plugin to rename the app - whether
-  //       based on anything from RNTA, or rolling something myself.
-  // https://github.com/shirakaba/fiddle-template/tree/config-plugins/plugins/macos
-  // https://github.com/microsoft/react-native-test-app/blob/trunk/packages/app/plugins/macos.js
-  // https://github.com/microsoft/react-native-test-app/blob/trunk/packages/app/scripts/apply-config-plugins.mjs
-  // https://github.com/microsoft/react-native-test-app/blob/0951cf5a3727c01d2ef25540eb796eb56b14ae04/packages/app/scripts/config-plugins/apply.mjs#L12
-
   title("Running Expo Prebuild for the mobile apps…", { spacing: 1 });
   await runPrebuildMobile({ packageManager, projectPath });
 
@@ -92,6 +94,9 @@ export async function createExpoDesktopApp({
   await writeBabelConfig({ projectPath });
 
   title("Applying config plugins to macOS and Windows projects…", { spacing: 1 });
+  if (localDev) {
+    await addApplyConfigPluginsScript({ projectPath });
+  }
   await applyConfigPlugins({
     projectRoot: projectPath,
     // @ts-expect-error Normally only accepts ios and android
@@ -312,10 +317,7 @@ async function updatePackageJson({
       packageJson.dependencies = {};
     }
 
-    const dev = false;
-    // It's a pain to have to publish expo-desktop-config-plugins to npm to
-    // respond to each new change, so I'm adding a convenience for local dev.
-    if (dev) {
+    if (localDev) {
       packageJson.dependencies["expo-desktop-config-plugins"] =
         "file:../../expo-desktop-config-plugins";
     } else {
@@ -653,4 +655,68 @@ module.exports = function (api) {
   }
 
   console.log(`\n${green("◆")}  Wrote babel.config.js.\n`);
+}
+
+/**
+ * For now, this is just a convenience script to allow me to run the config
+ * plugins again after creating the app, to help with development. But it is
+ * basically 80% of what Prebuild does, so we may end up adapting it and
+ * shipping it for users in the end.
+ */
+async function addApplyConfigPluginsScript({ projectPath }: { projectPath: string }) {
+  await fs.writeFile(
+    path.resolve(projectPath, "apply-config-plugins.mjs"),
+    `
+import * as fs from "node:fs";
+import { createRequire } from "node:module";
+import * as path from "node:path";
+
+const require = createRequire(import.meta.url);
+const { withPlugins } = require("@expo/config-plugins");
+const { compileModsAsync } = require("expo-desktop-config-plugins");
+
+const projectPath = import.meta.dirname;
+
+const info = {
+  projectRoot: projectPath,
+  // @ts-expect-error Normally only accepts ios and android
+  platforms: ["macos", "windows"],
+  packageJsonPath: path.resolve(projectPath, "package.json"),
+  appJsonPath: path.resolve(projectPath, "app.json"),
+};
+
+const withInternal = (config, internals) => {
+  config._internal = {
+    isDebug: false,
+    ...config._internal,
+    ...internals,
+  };
+  return config;
+};
+
+/**
+ * Applies config plugins.
+ * @see https://github.com/microsoft/react-native-test-app/blob/trunk/packages/app/scripts/config-plugins/apply.mjs
+ */
+async function applyConfigPlugins({ appJsonPath, ...info }) {
+  if (!appJsonPath) {
+    return;
+  }
+
+  const content = fs.readFileSync(appJsonPath, { encoding: "utf-8" });
+  const appConfig = JSON.parse(content);
+  const { expo: expoConfig, ...config } = appConfig;
+  const { plugins } = expoConfig;
+  console.log("Expo Config Plugins", plugins);
+  if (!Array.isArray(plugins) || plugins.length === 0) {
+    return;
+  }
+
+  return compileModsAsync(withPlugins(withInternal(expoConfig, info), plugins), info);
+}
+
+await applyConfigPlugins(info);
+    `.trim() + "\n",
+    "utf-8",
+  );
 }
