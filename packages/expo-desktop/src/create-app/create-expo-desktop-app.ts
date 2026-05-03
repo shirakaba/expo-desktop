@@ -5,7 +5,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
 
-import { EnhancedAppJson, PackageJson } from "../common/app-json.ts";
+import { AppJson, PackageJson } from "../common/app-json.ts";
 import { applyConfigPlugins } from "../common/apply-config-plugins.ts";
 import { makePrettySummary } from "../common/arktype.ts";
 import { promisifiedSpawn } from "../common/child-process.ts";
@@ -168,10 +168,10 @@ async function updateAppJson({
 }) {
   const appJsonPath = path.resolve(projectPath, "app.json");
 
-  let appJson: ReturnType<typeof EnhancedAppJson>;
+  let appJson: ReturnType<typeof AppJson>;
   try {
     const contents = await fs.readFile(appJsonPath, "utf-8");
-    appJson = EnhancedAppJson(JSON.parse(contents));
+    appJson = AppJson(JSON.parse(contents));
   } catch (cause) {
     throw new Error(`Error reading ${yellow("app.json")}`, { cause });
   }
@@ -193,30 +193,16 @@ async function updateAppJson({
     appJson.expo.ios = {};
   }
   appJson.expo.ios.bundleIdentifier = name.rdns.replaceAll("_", "-");
+
+  if (!appJson.expo.macos) {
+    appJson.expo.macos = {};
+  }
+  appJson.expo.macos.bundleIdentifier = name.rdns.replaceAll("_", "-");
+
   if (!appJson.expo.android) {
     appJson.expo.android = {};
   }
   appJson.expo.android.package = name.rdns.replaceAll("-", "_");
-
-  if (!appJson["expo-desktop"]) {
-    appJson["expo-desktop"] = {
-      displayName: name.displayName,
-      filesafeName: name.filesafeName,
-      rdns: name.rdns,
-    };
-  }
-
-  if (!appJson["expo-desktop"].macos) {
-    appJson["expo-desktop"].macos = {};
-  }
-  appJson["expo-desktop"].macos.bundleIdentifier = name.rdns.replaceAll("_", "-");
-
-  if (!appJson["expo-desktop"].windows) {
-    appJson["expo-desktop"].windows = {};
-  }
-  // appJson["expo-desktop"].windows.namespace = name.rdns.replaceAll("-", "");
-  appJson["expo-desktop"].windows.displayName = name.displayName;
-  // appJson["expo-desktop"].windows.projectName = name.filesafeName;
 
   if (!appJson.expo.plugins) {
     appJson.expo.plugins = [];

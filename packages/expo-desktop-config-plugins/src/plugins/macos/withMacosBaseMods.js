@@ -10,7 +10,7 @@ const {
   BaseMods: { withGeneratedBaseMods, provider },
 } = require("@expo/config-plugins");
 const { getNativeTargets } = require("@expo/config-plugins/build/ios/Target");
-const plist = require("@expo/plist");
+const { default: plist } = require("@expo/plist");
 const { default: JsonFile } = require("@expo/json-file");
 const { project: xcodeProject } = require("xcode");
 const Entitlements = require("./Entitlements");
@@ -19,7 +19,7 @@ const Paths = require("./Paths");
 const { getPbxproj } = require("./Xcodeproj");
 const { createFileResolver } = require("./_utils/files");
 const { fileExists } = require("./_utils/modules");
-const sortObject = require("./_utils/sortObject");
+const { sortObject } = require("./_utils/sortObject");
 const { addWarningMacOS } = require("./_utils/warnings");
 
 const resolveViewControllerPath = createFileResolver({

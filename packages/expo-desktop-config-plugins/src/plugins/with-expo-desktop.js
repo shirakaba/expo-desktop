@@ -1,6 +1,7 @@
 // @ts-ignore Cache issue since I renamed "name.js" to "Name.js"
 const { withNameSettingsGradle } = require("./android/Name");
-const { withDisplayName } = require("./ios/Name");
+const { withDisplayName: withDisplayNameIos } = require("./ios/Name");
+const { withDisplayName: withDisplayNameMacos } = require("./macos/Name");
 const { withExpoAppDelegate } = require("./macos/withExpoAppDelegate");
 const { withExpoXcodeBuildPhase } = require("./macos/withExpoXcodeBuildPhase");
 
@@ -9,7 +10,16 @@ const { withExpoXcodeBuildPhase } = require("./macos/withExpoXcodeBuildPhase");
  */
 module.exports = function withExpoDesktop(config, props) {
   config = withNameSettingsGradle(config, props);
-  config = withDisplayName(config, props);
+
+  // Same-named mods do not clash, as they are stored by platform first, then
+  // mod name (`config.mods[platform][mod]`):
+  // https://github.com/expo/expo/blob/9999e24657faffc6536bc3ec95efe9ecfc055fae/packages/%40expo/config-plugins/src/plugins/withMod.ts#L56-L60
+  config = withDisplayNameIos(config, props);
+  config = withDisplayNameMacos(config, props);
+
+  // We've only made these Config Plugins for macOS because
+  // expo-template-bare-minimum sets iOS projects up correctly for iOS to begin
+  // with.
   config = withExpoAppDelegate(config, props);
   config = withExpoXcodeBuildPhase(config, props);
 
