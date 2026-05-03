@@ -11,7 +11,7 @@ const { withMacosExpoPlugins } = require("./withDefaultPlugins");
 
 /**
  * @param {string} projectRoot
- * @param {{ bundleIdentifier?: string; packageName?: string; platforms: Array<import('@expo/config-plugins').ModPlatform>; }} props
+ * @param {{ displayName?: string; bundleIdentifier?: string; packageName?: string; platforms: Array<import('@expo/config-plugins').ModPlatform>; }} props
  * @returns {Promise<ReturnType<typeof getConfig>>}
  *
  * @see https://github.com/expo/expo/blob/8dd645080f52927e2a8bf406167da7241a1d46d8/packages/%40expo/prebuild-config/src/getPrebuildConfig.ts#L12
@@ -28,12 +28,12 @@ module.exports.getPrebuildConfigAsync = getPrebuildConfigAsync;
 
 /**
  * @param {string} projectRoot
- * @param {{ bundleIdentifier?: string; packageName?: string; platforms: Array<import('@expo/config-plugins').ModPlatform>; autolinkedModules?: Array<string> }} props
+ * @param {{ displayName?: string; bundleIdentifier?: string; packageName?: string; platforms: Array<import('@expo/config-plugins').ModPlatform>; autolinkedModules?: Array<string> }} props
  * @returns {Promise<ReturnType<typeof getConfig>>}
  */
 function getPrebuildConfig(
   projectRoot,
-  { platforms, bundleIdentifier, packageName, autolinkedModules },
+  { platforms, displayName, bundleIdentifier, packageName, autolinkedModules },
 ) {
   // let config: ExpoConfig;
   let { exp: config, ...rest } = getConfig(projectRoot, {
@@ -72,6 +72,7 @@ function getPrebuildConfig(
     // Add all built-in plugins
     config = withMacosExpoPlugins(config, {
       bundleIdentifier: config.macos.bundleIdentifier,
+      displayName,
     });
   }
 

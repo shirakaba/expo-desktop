@@ -27,8 +27,15 @@
   ],
   "type": "commonjs",
   "exports": {
-    ".": "./src/index.js",
+    ".": {
+      "types": "./types/index.d.ts",
+      "require": "./src/index.js"
+    },
     "./package.json": "./package.json"
+  },
+  "scripts": {
+    "prepublishOnly": "node --run build",
+    "build": "tsgo --declaration --emitDeclarationOnly --allowJs --outDir types"
   },
   "dependencies": {
     "expo-desktop-config-plugins": "workspace:"

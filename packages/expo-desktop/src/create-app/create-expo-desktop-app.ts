@@ -99,10 +99,10 @@ export async function createExpoDesktopApp({
   }
   await applyConfigPlugins({
     projectRoot: projectPath,
+    displayName: name.displayName,
+    bundleIdentifier: name.rdns.replaceAll("_", "-"),
     // @ts-expect-error Normally only accepts ios and android
     platforms: ["macos", "windows"],
-    packageJsonPath: path.resolve(projectPath, "package.json"),
-    appJsonPath: path.resolve(projectPath, "app.json"),
   });
   console.log(`${green("◆")}  Applied config plugins.\n`);
 
@@ -211,6 +211,9 @@ async function updateAppJson({
     ...appJson.expo.plugins,
     [
       "expo-desktop-config-plugins",
+      // These props, which feed withDisplayName(), may seem redundant since we
+      // now apply withMacosExpoPlugins(), but withDisplayName() goes a bit
+      // further (e.g. setting the window title).
       {
         displayName: name.displayName,
         bundleIdentifier: name.rdns.replaceAll("_", "-"),
@@ -653,22 +656,21 @@ async function addApplyConfigPluginsScript({ projectPath }: { projectPath: strin
   await fs.writeFile(
     path.resolve(projectPath, "apply-config-plugins.mjs"),
     `
-import * as fs from "node:fs";
 import { createRequire } from "node:module";
 import * as path from "node:path";
 
 const require = createRequire(import.meta.url);
-const { withPlugins } = require("@expo/config-plugins");
+const { getPrebuildConfigAsync } = require("expo-desktop-prebuild-config");
 const { compileModsAsync } = require("expo-desktop-config-plugins");
 
-const projectPath = import.meta.dirname;
+const projectRoot = import.meta.dirname;
 
 const info = {
-  projectRoot: projectPath,
+  projectRoot,
+  displayName: "My Display Name",
+  bundleIdentifier: "com.example.my-app-123",
   // @ts-expect-error Normally only accepts ios and android
   platforms: ["macos", "windows"],
-  packageJsonPath: path.resolve(projectPath, "package.json"),
-  appJsonPath: path.resolve(projectPath, "app.json"),
 };
 
 const withInternal = (config, internals) => {
@@ -684,21 +686,62 @@ const withInternal = (config, internals) => {
  * Applies config plugins.
  * @see https://github.com/microsoft/react-native-test-app/blob/trunk/packages/app/scripts/config-plugins/apply.mjs
  */
-async function applyConfigPlugins({ appJsonPath, ...info }) {
-  if (!appJsonPath) {
-    return;
+async function applyConfigPlugins(options) {
+  const { projectRoot } = options;
+
+  // To avoid making expo-desktop depend on Expo SDK 54 when we might be running
+  // on an Expo 55 project, we import Expo deps from the project itself.
+  /** @type {typeof import("@expo/config")} */
+  let expoConfigModule;
+  try {
+    expoConfigModule = await import(
+      path.dirname(require.resolve("@expo/config/package.json", { paths: [projectRoot] }))
+    );
+  } catch (cause) {
+    throw new Error(
+      \`Error importing "@expo/config" relative to projectRoot "\${projectRoot}". Make sure to install node modules before running any prebuilds, and make sure that the project depends on the package named "expo".\`,
+      { cause },
+    );
+  }
+  const { getConfig } = expoConfigModule;
+
+  /** @type {typeof import("@expo/config-plugins")} */
+  let expoConfigPluginsModule;
+  try {
+    expoConfigPluginsModule = await import(
+      path.dirname(require.resolve("@expo/config-plugins/package.json", { paths: [projectRoot] }))
+    );
+  } catch (cause) {
+    throw new Error(
+      \`Error importing "@expo/config-plugins" relative to projectRoot "\${projectRoot}". Make sure to install node modules before running any prebuilds, and make sure that the project depends on the package named "expo".\`,
+      { cause },
+    );
+  }
+  const { withPlugins } = expoConfigPluginsModule;
+
+  // (1) Filter out platforms that aren't in the app.json.
+  // https://github.com/expo/expo/blob/8dd645080f52927e2a8bf406167da7241a1d46d8/packages/%40expo/cli/src/prebuild/prebuildAsync.ts#L74
+  let { exp: expoConfig } = getConfig(projectRoot);
+  const { platforms, plugins } = expoConfig;
+  if (platforms?.length) {
+    const finalPlatforms = options.platforms.filter((platform) => platforms.includes(platform));
+    if (finalPlatforms.length > 0) {
+      options.platforms = finalPlatforms;
+    } else {
+      const requestedPlatforms = options.platforms.join(", ");
+      console.warn(
+        \`⚠️  Requested prebuild for "\${requestedPlatforms}", but only "\${platforms.join(", ")}" is present in app config ("expo.platforms" entry). Continuing with "\${requestedPlatforms}".\`,
+      );
+    }
   }
 
-  const content = fs.readFileSync(appJsonPath, { encoding: "utf-8" });
-  const appConfig = JSON.parse(content);
-  const { expo: expoConfig, ...config } = appConfig;
-  const { plugins } = expoConfig;
-  console.log("Expo Config Plugins", plugins);
-  if (!Array.isArray(plugins) || plugins.length === 0) {
-    return;
-  }
+  const prebuildConfig = await getPrebuildConfigAsync(projectRoot, options);
+  expoConfig = prebuildConfig.exp;
 
-  return compileModsAsync(withPlugins(withInternal(expoConfig, info), plugins), info);
+  return compileModsAsync(
+    withPlugins(withInternal(expoConfig, options), plugins),
+    options,
+  );
 }
 
 await applyConfigPlugins(info);

@@ -1,6 +1,7 @@
 {
   "extends": "@tsconfig/node24",
   "compilerOptions": {
+    "allowJs": true,
     "types": ["node"],
     "typeRoots": ["node_modules/@types", "typeRoot"],
     "noEmit": false,
