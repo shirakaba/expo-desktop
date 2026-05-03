@@ -20,7 +20,7 @@ module.exports = function withExpoDesktop(config, props) {
   // We've only made these Config Plugins for macOS because
   // expo-template-bare-minimum sets iOS projects up correctly for iOS to begin
   // with.
-  config = withExpoAppDelegate(config, props);
+  config = withExpoAppDelegate(config, { windowTitle: props.displayName });
   config = withExpoXcodeBuildPhase(config, props);
 
   // TODO: We need a plugin to rename files like `myapp6.xcodeproj` to the
