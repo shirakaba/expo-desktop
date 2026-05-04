@@ -1,0 +1,14 @@
+# https://docs.github.com/en/get-started/getting-started-with-git/configuring-git-to-handle-line-endings#
+* text=auto
+
+# macOS-specific
+*.pbxproj -text
+*.sh text eol=lf
+
+# Windows-specific
+*.sln text eol=crlf
+*.vcxproj   text eol=crlf
+*.vcxproj.filters text eol=crlf
+*.props     text eol=crlf
+*.bat text eol=crlf
+*.cmd text eol=crlf
