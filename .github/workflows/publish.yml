@@ -47,28 +47,8 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Publish packages
-        shell: bash
-        run: |
-          set +e
-          bun run release:publish
-          publish_exit=$?
-          set -euo pipefail
-
-          # Now push the local git tags that `changeset publish` generated.
-          #
-          # It's possible for some publishes to succeed and others to fail, so
-          # we push the tags for any successes, and surface the exit code for
-          # the overall operation.
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-          mapfile -t release_tags < <(git tag -l "expo-desktop*@*")
-          push_exit=0
-          for tag in "${release_tags[@]}"; do
-            [[ -n "$tag" ]] || continue
-            [[ "$(git rev-parse "$tag^{commit}")" == "$GITHUB_SHA" ]] || continue
-            git push origin "refs/tags/$tag" || push_exit=1
-          done
-
-          if [[ "$push_exit" -ne 0 ]]; then exit 1; fi
-          exit "$publish_exit"
+        id: changesets
+        # This action pushes the git tags after calling the publish command.
+        uses: changesets/action@v1
+        with:
+          publish: node --run release:publish
