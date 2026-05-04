@@ -27,7 +27,6 @@
         "@clack/prompts": "^1.2.0",
         "arktype": "^2.2.0",
         "citty": "^0.2.2",
-        "expo-desktop-config-plugins": "workspace:",
         "expo-desktop-prebuild-config": "workspace:",
         "kleur": "^4.1.5",
         "toml": "^4.1.1",
