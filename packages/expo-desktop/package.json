@@ -34,7 +34,7 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "build": "tsgo -p tsconfig.build.json",
+    "build": "node scripts/build-cli.mjs",
     "prepublishOnly": "node --run build",
     "generate-config": "node scripts/generate-config.ts",
     "schema": "node scripts/update-schema.ts",
@@ -55,7 +55,7 @@
     "@tsconfig/node24": "catalog:base",
     "@types/bun": "^1.3.13",
     "@types/node": "catalog:base",
-    "@typescript/native-preview": "catalog:base"
+    "typescript": "catalog:base"
   },
   "peerDependencies": {
     "@expo/config": ">=12.0.0",
