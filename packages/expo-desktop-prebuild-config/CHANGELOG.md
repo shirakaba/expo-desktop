@@ -1,5 +1,11 @@
 # expo-desktop-prebuild-config
 
+## 1.0.2
+
+### Patch Changes
+
+- Fix publishing config (npm side) and republish
+
 ## 1.0.1
 
 ### Patch Changes
