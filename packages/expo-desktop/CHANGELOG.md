@@ -1,5 +1,11 @@
 # expo-desktop
 
+## 0.1.8
+
+### Patch Changes
+
+- Forward args correctly to npm
+
 ## 0.1.7
 
 ### Patch Changes
