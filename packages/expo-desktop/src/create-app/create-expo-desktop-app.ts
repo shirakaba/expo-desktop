@@ -362,6 +362,19 @@ async function updatePackageJson({
     packageJson.devDependencies["@react-native-community/cli"] = "latest";
     packageJson.devDependencies["@rnx-kit/metro-config"] = "latest";
     packageJson.devDependencies["@react-native/metro-config"] = `~0.${versions.minor}`;
+
+    if (!packageJson.overrides) {
+      packageJson.overrides = {};
+    }
+
+    // react-native-macos and react-native-windows may declare conflicting peer
+    // dependency ranges to what the Expo template provides.
+    if (packageJson.dependencies.react) {
+      packageJson.overrides.react = packageJson.dependencies.react;
+    }
+    if (packageJson.dependencies["react-native"]) {
+      packageJson.overrides["react-native"] = packageJson.dependencies["react-native"];
+    }
   }
 
   try {

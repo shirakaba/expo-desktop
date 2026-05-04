@@ -32,4 +32,7 @@ export const PackageJson = type({
   "dependencies?": "Record<string, string>",
   "devDependencies?": "Record<string, string>",
   "peerDependencies?": "Record<string, string>",
+  // Not quite sure how to express arbitrarily recursive types in ArkType, so
+  // I'll just support two levels for now.
+  "overrides?": "Record<string, string | Record<string, string>>",
 });
