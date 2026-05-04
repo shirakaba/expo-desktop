@@ -9,7 +9,7 @@ Other workspace members (`demo-expo-desktop`, `expo-desktop-scripts`) are **`"pr
 1. After user-visible changes, add a changeset:
 
    ```bash
-   bun run changeset
+   pnpm run changeset
    ```
 
 2. Commit the new `.changeset/*.md` file with your work (or in a follow-up commit).
@@ -25,7 +25,7 @@ Other workspace members (`demo-expo-desktop`, `expo-desktop-scripts`) are **`"pr
 2. Apply pending changesets (bumps `package.json`, updates `CHANGELOG.md`, rewrites internal `workspace:` deps to semver, removes consumed changeset files):
 
    ```bash
-   bun run release:version
+   pnpm run release:version
    ```
 
 3. Review `git diff`.
