@@ -10,7 +10,7 @@ import process from "node:process";
 import { AppJson, PackageJson } from "../common/app-json.ts";
 import { applyConfigPlugins } from "../common/apply-config-plugins.ts";
 import { makePrettySummary } from "../common/arktype.ts";
-import { promisifiedSpawnTask } from "../common/child-process.ts";
+import { promisifiedSpawnTask, SPAWN_DEBUG_LOG_GLOB } from "../common/child-process.ts";
 import { title } from "../common/clack.ts";
 import { packageManagerExec } from "../common/npm.ts";
 
@@ -44,6 +44,7 @@ export async function createExpoDesktopApp({
   };
 }) {
   const { projectPath } = await createExpoApp({ name, packageManager, versions });
+  await appendRootGitignoreSpawnDebugLogs(projectPath);
 
   title("Altering app.json…", { spacing: 1 });
   await updateAppJson({ name, projectPath });
@@ -144,6 +145,7 @@ async function createExpoApp({
 
   console.log(`${cyan("◆")}  Running: ${yellow(`${command} ${args.join(" ")}`)}\n`);
 
+  const projectPath = path.resolve(process.cwd(), name.filesafeName);
   try {
     await tasks([
       promisifiedSpawnTask({
@@ -151,6 +153,7 @@ async function createExpoApp({
         command,
         args,
         options: { stdio: "inherit" },
+        debugLogDir: projectPath,
       }),
     ]);
   } catch (error) {
@@ -160,9 +163,26 @@ async function createExpoApp({
     process.exit(1);
   }
 
-  const projectPath = path.resolve(process.cwd(), name.filesafeName);
-
   return { projectPath };
+}
+
+async function appendRootGitignoreSpawnDebugLogs(projectPath: string) {
+  const gitignorePath = path.join(projectPath, ".gitignore");
+  let content = "";
+  try {
+    content = await fs.readFile(gitignorePath, "utf-8");
+  } catch (error) {
+    if (!(error instanceof Error) || !("code" in error) || error.code !== "ENOENT") {
+      throw error;
+    }
+  }
+  if (content.includes(SPAWN_DEBUG_LOG_GLOB)) {
+    return;
+  }
+
+  const block = `# expo-desktop child process debug logs\n${SPAWN_DEBUG_LOG_GLOB}\n`;
+  const padding = content.length ? "\n" : "";
+  await fs.appendFile(gitignorePath, `${padding}${block}`, "utf-8");
 }
 
 async function updateAppJson({
