@@ -5,6 +5,7 @@ import { type } from "arktype";
 import { cyan, green, yellow } from "kleur/colors";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { platform } from "node:process";
 import process from "node:process";
 
 import { AppJson, PackageJson } from "../common/app-json.ts";
@@ -95,15 +96,17 @@ export async function createExpoDesktopApp({
   title("Adding Expo support to the macOS Podfile…", { spacing: 1 });
   await updatePodfile({ projectPath });
 
-  // Avoid having to wait a million years for Hermes to download when focusing
-  // on developing desktop
-  if (!localDev) {
-    title("Installing Cocoapods for the iOS app…", { spacing: 1 });
-    await podInstall({ projectPath, type: "ios" });
-  }
+  if (platform === "darwin") {
+    // Avoid having to wait a million years for Hermes to download when focusing
+    // on developing desktop
+    if (!localDev) {
+      title("Installing Cocoapods for the iOS app…", { spacing: 1 });
+      await podInstall({ projectPath, type: "ios" });
+    }
 
-  title("Installing Cocoapods for the macOS app…", { spacing: 1 });
-  await podInstall({ projectPath, type: "macos" });
+    title("Installing Cocoapods for the macOS app…", { spacing: 1 });
+    await podInstall({ projectPath, type: "macos" });
+  }
 
   title("Adding Expo support to the Metro config…", { spacing: 1 });
   await improveMetroConfig({ projectPath });
