@@ -93,8 +93,12 @@ export async function createExpoDesktopApp({
   title("Adding Expo support to the macOS Podfile…", { spacing: 1 });
   await updatePodfile({ projectPath });
 
-  // title("Installing Cocoapods for the iOS app…", { spacing: 1 });
-  // await podInstall({ projectPath, type: "ios" });
+  // Avoid having to wait a million years for Hermes to download when focusing
+  // on developing desktop
+  if (!localDev) {
+    title("Installing Cocoapods for the iOS app…", { spacing: 1 });
+    await podInstall({ projectPath, type: "ios" });
+  }
 
   title("Installing Cocoapods for the macOS app…", { spacing: 1 });
   await podInstall({ projectPath, type: "macos" });
