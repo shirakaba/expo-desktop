@@ -32,6 +32,12 @@ Other workspace members (`demo-expo-desktop`, `expo-desktop-scripts`) are **`"pr
 
 4. Commit and push to `main`. GitHub Actions runs `changeset publish` when those pushes include the listed packages’ `package.json` or `CHANGELOG.md`.
 
+To **retry publish** for the versions already on `main` (no new `changeset version`), use **Actions → Publish to npm → Run workflow**, or:
+
+```bash
+gh workflow run publish.yml --ref main
+```
+
 ## CI setup
 
 Publishing uses **npm trusted publishing (OIDC)** from GitHub Actions—**no `NPM_TOKEN` secret**. On npmjs.com, each package must list this repo’s **`publish.yml`** workflow as its trusted publisher. The workflow sets **`id-token: write`** and uses **`actions/setup-node`** so `changeset publish` (which invokes **`npm publish`**) runs with the **npm bundled on the chosen Node line**. Trusted publishing requires **npm ≥ 11.5.1**; that comes with **Active LTS Node 24+** (npm 11.x). This workflow uses **`node-version: lts/*`**, which follows the current Active LTS on the runner.

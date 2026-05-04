@@ -11,6 +11,7 @@ on:
       - "packages/expo-desktop-prebuild-config/CHANGELOG.md"
       - "packages/expo-desktop-config-plugins/package.json"
       - "packages/expo-desktop-config-plugins/CHANGELOG.md"
+  workflow_dispatch:
 
 concurrency:
   group: publish-npm
