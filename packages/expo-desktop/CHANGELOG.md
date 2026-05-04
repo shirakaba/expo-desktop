@@ -1,5 +1,11 @@
 # expo-desktop
 
+## 0.1.9
+
+### Patch Changes
+
+- Skip interactive prompts
+
 ## 0.1.8
 
 ### Patch Changes
