@@ -1,5 +1,11 @@
 # expo-desktop
 
+## 0.1.12
+
+### Patch Changes
+
+- npm dlx -> npx --yes
+
 ## 0.1.11
 
 ### Patch Changes
