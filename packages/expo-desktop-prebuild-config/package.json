@@ -19,7 +19,7 @@
   "author": "Jamie Birch <14055146+shirakaba@users.noreply.github.com> (https://github.com/shirakaba)",
   "repository": {
     "type": "git",
-    "url": "https://github.com/shirakaba/expo-desktop.git",
+    "url": "git+https://github.com/shirakaba/expo-desktop.git",
     "directory": "packages/expo-desktop-prebuild-config"
   },
   "files": [
