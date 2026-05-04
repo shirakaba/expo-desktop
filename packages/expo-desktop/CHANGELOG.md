@@ -1,5 +1,11 @@
 # expo-desktop
 
+## 0.1.4
+
+### Patch Changes
+
+- Make JS build.
+
 ## 0.1.3
 
 ### Patch Changes
