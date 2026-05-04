@@ -49,11 +49,19 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      # Changesets runs `npm publish --json`; npm hides most prepublishOnly output from the
-      # job log (it goes to ~/.npm/_logs). This step always streams the same build to Actions.
-      - name: Build expo-desktop (pre-flight, full log)
+      # Build in order of dependency graph:
+      # config-plugins → prebuild-config → expo-desktop.
+      - name: Build expo-desktop-config-plugins
+        working-directory: packages/expo-desktop-config-plugins
+        run: node --run build
+
+      - name: Build expo-desktop-prebuild-config
+        working-directory: packages/expo-desktop-prebuild-config
+        run: node --run build
+
+      - name: Build expo-desktop
         working-directory: packages/expo-desktop
-        run: node scripts/build-cli.mjs
+        run: node --run build
 
       - name: Publish packages
         id: changesets
