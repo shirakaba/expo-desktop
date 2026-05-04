@@ -1,5 +1,11 @@
 # expo-desktop-config-plugins
 
+## 1.1.14
+
+### Patch Changes
+
+- (CI-only change): Try pushing git tags along with package publishes.
+
 ## 1.1.13
 
 ### Patch Changes

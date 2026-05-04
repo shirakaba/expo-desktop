@@ -1,5 +1,13 @@
 # expo-desktop-prebuild-config
 
+## 1.0.3
+
+### Patch Changes
+
+- (CI-only change): Try pushing git tags along with package publishes.
+- Updated dependencies
+  - expo-desktop-config-plugins@1.1.14
+
 ## 1.0.2
 
 ### Patch Changes
