@@ -2,6 +2,8 @@
 
 Published packages: `expo-desktop`, `expo-desktop-prebuild-config`, and `expo-desktop-config-plugins`. Changelog text comes from [Changesets](https://github.com/changesets/changesets) (`.changeset/*.md`), not from git commit messages.
 
+Other workspace members (`demo-expo-desktop`, `expo-desktop-scripts`) are **`"private": true`** in their `package.json` so **`changeset publish` skips them**. The **`ignore`** list in `.changeset/config.json` only affects which packages Changesets will version from changesets; it does **not** stop publish for non-private packages.
+
 ## During development
 
 1. After user-visible changes, add a changeset:
