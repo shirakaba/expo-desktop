@@ -1,5 +1,11 @@
 # expo-desktop
 
+## 0.1.10
+
+### Patch Changes
+
+- Fix expo-tempalte-blank-typescript version lookup
+
 ## 0.1.9
 
 ### Patch Changes
