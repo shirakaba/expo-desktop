@@ -5,6 +5,9 @@ on:
     branches:
       - main
     paths:
+      - ".github/workflows/publish.yml"
+      - "packages/expo-desktop/scripts/build-cli.mjs"
+      - "packages/expo-desktop/tsconfig.build.json"
       - "packages/expo-desktop/package.json"
       - "packages/expo-desktop/CHANGELOG.md"
       - "packages/expo-desktop-prebuild-config/package.json"
@@ -46,23 +49,36 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
+      # Changesets runs `npm publish --json`; npm hides most prepublishOnly output from the
+      # job log (it goes to ~/.npm/_logs). This step always streams the same build to Actions.
+      - name: Build expo-desktop (pre-flight, full log)
+        working-directory: packages/expo-desktop
+        run: node scripts/build-cli.mjs
+
       - name: Publish packages
         id: changesets
-        # This action pushes the git tags after calling the publish command.
-        # Changesets runs `npm publish --json`; npm often buffers lifecycle output into
-        # ~/.npm/_logs instead of the job log, so we dump expo-desktop-build.log on failure.
         uses: changesets/action@v1
         with:
           publish: node --run release:publish
 
-      - name: expo-desktop build log (on failure)
+      - name: Publish failure diagnostics
         if: failure()
         run: |
-          echo "---- packages/expo-desktop/expo-desktop-build.log ----"
+          echo "==== packages/expo-desktop/expo-desktop-build.log ===="
           if [ -f packages/expo-desktop/expo-desktop-build.log ]; then
             cat packages/expo-desktop/expo-desktop-build.log
           else
-            echo "(log file missing — prepublishOnly may not have reached scripts/build-cli.mjs)"
+            echo "(missing — build script never started or wrong working tree)"
           fi
-          echo "---- npm debug log hint ----"
-          echo "npm also writes full logs under ~/.npm/_logs/ on the runner (path is printed in the publish error)."
+          echo "==== newest npm debug log (tail 400 lines) ===="
+          log=""
+          if [ -d "$HOME/.npm/_logs" ]; then
+            log="$(find "$HOME/.npm/_logs" -maxdepth 1 -name '*-debug-*.log' -type f -printf '%T@ %p\n' 2>/dev/null | sort -nr | head -1 | cut -d' ' -f2- || true)"
+          fi
+          if [ -n "${log}" ] && [ -f "${log}" ]; then
+            echo "--- ${log} ---"
+            tail -n 400 "${log}"
+          else
+            echo "(no npm debug log found)"
+            ls -la "$HOME/.npm/_logs" 2>/dev/null || true
+          fi
