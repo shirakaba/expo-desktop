@@ -34,6 +34,7 @@
     "./package.json": "./package.json"
   },
   "scripts": {
+    "build": "tsgo -p tsconfig.build.json",
     "generate-config": "node scripts/generate-config.ts",
     "schema": "node scripts/update-schema.ts",
     "start": "node src/cli.ts",
