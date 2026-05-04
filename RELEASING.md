@@ -32,7 +32,9 @@ Published packages: `expo-desktop`, `expo-desktop-prebuild-config`, and `expo-de
 
 ## CI setup
 
-Add an npm automation or granular access token as repository secret **`NPM_TOKEN`**. The publish workflow uses `NODE_AUTH_TOKEN` with the npm registry.
+Publishing uses **npm trusted publishing (OIDC)** from GitHub Actions—**no `NPM_TOKEN` secret**. On npmjs.com, each package must list this repo’s **`publish.yml`** workflow as its trusted publisher. The workflow sets **`id-token: write`** and uses **`actions/setup-node`** so `changeset publish` (which invokes **`npm publish`**) runs with the **npm bundled on the chosen Node line**. Trusted publishing requires **npm ≥ 11.5.1**; that comes with **Active LTS Node 24+** (npm 11.x). This workflow uses **`node-version: lts/*`**, which follows the current Active LTS on the runner.
+
+If you later add **private** npm dependencies, use a **read-only** granular token only for install steps; OIDC still handles the publish step ([npm docs](https://docs.npmjs.com/trusted-publishers)).
 
 ## Prereleases
 
