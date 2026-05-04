@@ -1,9 +1,10 @@
 import { confirm, isCancel, text, log, select } from "@clack/prompts";
 import { default as kleur } from "kleur";
 import { green, grey } from "kleur/colors";
+import { platform } from "node:process";
 
 import { title } from "../common/clack.ts";
-import { createExpoDesktopApp } from "./create-expo-desktop-app.ts";
+import { createExpoDesktopApp, localDev } from "./create-expo-desktop-app.ts";
 import { previewFileTree } from "./preview-file-tree.ts";
 import { promptForVersion } from "./prompt-for-version.ts";
 
@@ -14,7 +15,7 @@ export async function newExpoDesktopProject(args: {
   version: string | undefined;
 }) {
   // A dev-time switch for skipping the questions
-  const skip = true;
+  const skip = localDev;
   if (skip) {
     await createExpoDesktopApp({
       name: {
@@ -58,7 +59,8 @@ export async function newExpoDesktopProject(args: {
       { value: "bun", label: "Bun (recommended)" },
       { value: "pnpm", label: "pnpm" },
     ],
-    initialValue: "bun",
+    // As far as I've found on ARM Windows, Bun just segfaults on install :(
+    initialValue: platform === "win32" ? "pnpm" : "bun",
   });
   if (isCancel(packageManager)) {
     process.exit(0);

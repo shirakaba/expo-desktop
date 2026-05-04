@@ -17,11 +17,12 @@ import { packageManagerExec } from "../common/npm.ts";
 /**
  * A crude switch to use to help with local development.
  *
+ * - Skips the questionnaire at the start.
  * - Installs the local copy of expo-desktop-config-plugins rather than pinning
  *   to a published release.
  * - Adds the apply-config-plugins.mjs script.
  */
-const localDev = false;
+export const localDev = false;
 
 export async function createExpoDesktopApp({
   name,

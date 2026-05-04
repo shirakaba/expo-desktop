@@ -5,7 +5,6 @@ import { default as kleur } from "kleur";
 import { dim, grey } from "kleur/colors";
 
 import packageJson from "../package.json" with { type: "json" };
-import { prebuild } from "./prebuild/command.ts";
 
 const main = defineCommand({
   meta: {
