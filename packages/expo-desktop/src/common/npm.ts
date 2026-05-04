@@ -187,8 +187,8 @@ export function packageManagerExec(packageManager: "npm" | "bun" | "pnpm") {
       command = "bunx";
       break;
     case "npm":
-      command = "npm";
-      args.push("dlx");
+      command = "npx";
+      args.push("--yes");
       break;
     case "pnpm":
       command = "pnpm";
