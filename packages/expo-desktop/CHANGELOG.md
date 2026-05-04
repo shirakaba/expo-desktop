@@ -1,5 +1,11 @@
 # expo-desktop
 
+## 0.1.7
+
+### Patch Changes
+
+- Stop auto-skipping and stop recommending Bun on Windows
+
 ## 0.1.6
 
 ### Patch Changes
