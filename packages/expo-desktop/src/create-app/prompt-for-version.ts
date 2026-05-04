@@ -457,9 +457,9 @@ function getExpoBlankTypeScriptForRNVersion({ major, minor }: { major: number; m
     .sort((a, b) => b - a)
     .at(0);
 
-  if (!highestPatch) {
+  if (typeof highestPatch !== "number") {
     return;
   }
 
-  return `${major}.${minor}.${highestPatch}`;
+  return patches[highestPatch];
 }
