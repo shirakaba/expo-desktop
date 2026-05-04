@@ -1,2 +1,5 @@
 .DS_Store
 node_modules
+
+# flatten-expo-desktop-protocols.mjs backup
+.flatten-expo-desktop-protocol-backup.json
