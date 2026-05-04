@@ -1,6 +1,6 @@
 {
   "name": "expo-desktop-prebuild-config",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Desktop-friendly Expo prebuild config",
   "keywords": [
     "android",
