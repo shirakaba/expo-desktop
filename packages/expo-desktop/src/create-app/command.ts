@@ -55,12 +55,14 @@ export async function newExpoDesktopProject(args: {
   const packageManager = await select<"npm" | "bun" | "pnpm">({
     message: "What package manager shall we install with?",
     options: [
-      { value: "npm", label: "npm" },
-      { value: "bun", label: "Bun (recommended)" },
-      { value: "pnpm", label: "pnpm" },
+      {
+        value: "npm",
+        label: `npm${platform !== "darwin" && platform !== "win32" ? " (recommended)" : ""}`,
+      },
+      { value: "bun", label: `Bun${platform === "darwin" ? " (recommended)" : ""}` },
+      { value: "pnpm", label: `pnpm${platform === "win32" ? " (recommended)" : ""}` },
     ],
-    // As far as I've found on ARM Windows, Bun just segfaults on install :(
-    initialValue: platform === "win32" ? "pnpm" : "bun",
+    initialValue: platform === "darwin" ? "bun" : platform === "win32" ? "pnpm" : "npm",
   });
   if (isCancel(packageManager)) {
     process.exit(0);
