@@ -20,6 +20,9 @@ concurrency:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    # Matches the GitHub Environment name on each npm package’s "Trusted
+    # publisher" config.
+    environment: Stable Release
     permissions:
       contents: read
       id-token: write
