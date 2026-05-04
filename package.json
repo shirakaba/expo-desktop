@@ -12,9 +12,13 @@
   "scripts": {
     "prepare": "husky",
     "lint-staged": "lint-staged",
-    "format": "oxfmt"
+    "format": "oxfmt",
+    "changeset": "changeset",
+    "release:version": "changeset version",
+    "release:publish": "changeset publish"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.31.0",
     "husky": "^9.1.7",
     "lint-staged": "^16.4.0",
     "oxfmt": "^0.47.0"

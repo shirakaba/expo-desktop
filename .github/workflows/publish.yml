@@ -1,0 +1,45 @@
+name: Publish to npm
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "packages/expo-desktop/package.json"
+      - "packages/expo-desktop/CHANGELOG.md"
+      - "packages/expo-desktop-prebuild-config/package.json"
+      - "packages/expo-desktop-prebuild-config/CHANGELOG.md"
+      - "packages/expo-desktop-config-plugins/package.json"
+      - "packages/expo-desktop-config-plugins/CHANGELOG.md"
+
+concurrency:
+  group: publish-npm
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6.0.2
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2.2.0
+        with:
+          bun-version: latest
+
+      - name: Setup Node (npm auth for changeset publish)
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version: lts/*
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Publish packages
+        run: bun run release:publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
