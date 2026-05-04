@@ -1,16 +1,45 @@
-import { log } from "@clack/prompts";
+import type { Task } from "@clack/prompts";
 import { spawn, type SpawnOptions } from "node:child_process";
 import { env } from "node:process";
 import readline from "node:readline";
 
-export async function promisifiedSpawn({
+/**
+ * Clack {@link Task} that runs a subprocess; piped stdout/stderr lines are sent
+ * through the task `message` callback (not `log.message`).
+ */
+export function promisifiedSpawnTask({
+  title,
   command,
   args,
   options = {},
 }: {
+  title: string;
   command: string;
   args: Array<string>;
   options?: SpawnOptions;
+}): Task {
+  return {
+    title,
+    task: (message) =>
+      runPromisifiedSpawn({
+        command,
+        args,
+        options,
+        logLine: message,
+      }),
+  };
+}
+
+function runPromisifiedSpawn({
+  command,
+  args,
+  options,
+  logLine,
+}: {
+  command: string;
+  args: Array<string>;
+  options: SpawnOptions;
+  logLine: (line: string) => void;
 }) {
   const cp = spawn(command, args, {
     ...options,
@@ -22,17 +51,13 @@ export async function promisifiedSpawn({
     stdout &&
     (Array.isArray(options?.stdio) ? options?.stdio.at(1) : options?.stdio) !== "inherit"
   ) {
-    readline
-      .createInterface({ input: stdout })
-      .on("line", (line) => log.message(line, { spacing: 0 }));
+    readline.createInterface({ input: stdout }).on("line", logLine);
   }
   if (
     stderr &&
     (Array.isArray(options?.stdio) ? options?.stdio.at(2) : options?.stdio) !== "inherit"
   ) {
-    readline
-      .createInterface({ input: stderr })
-      .on("line", (line) => log.message(line, { spacing: 0 }));
+    readline.createInterface({ input: stderr }).on("line", logLine);
   }
 
   let cpError: Error | null = null;

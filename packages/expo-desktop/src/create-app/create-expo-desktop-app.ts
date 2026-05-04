@@ -1,6 +1,6 @@
 import type { ModPlatform } from "@expo/config-plugins";
 
-import { log } from "@clack/prompts";
+import { log, tasks } from "@clack/prompts";
 import { type } from "arktype";
 import { cyan, green, yellow } from "kleur/colors";
 import fs from "node:fs/promises";
@@ -10,7 +10,7 @@ import process from "node:process";
 import { AppJson, PackageJson } from "../common/app-json.ts";
 import { applyConfigPlugins } from "../common/apply-config-plugins.ts";
 import { makePrettySummary } from "../common/arktype.ts";
-import { promisifiedSpawn } from "../common/child-process.ts";
+import { promisifiedSpawnTask } from "../common/child-process.ts";
 import { title } from "../common/clack.ts";
 import { packageManagerExec } from "../common/npm.ts";
 
@@ -145,7 +145,14 @@ async function createExpoApp({
   console.log(`${cyan("◆")}  Running: ${yellow(`${command} ${args.join(" ")}`)}\n`);
 
   try {
-    await promisifiedSpawn({ command, args, options: { stdio: "inherit" } });
+    await tasks([
+      promisifiedSpawnTask({
+        title: "create-expo-app",
+        command,
+        args,
+        options: { stdio: "inherit" },
+      }),
+    ]);
   } catch (error) {
     log.error(
       `Error running ${yellow("create expo-app")}${error instanceof Error ? `: ${error.message}` : "."}`,
@@ -354,7 +361,14 @@ async function npmInstall({
   console.log(`${cyan("◆")}  Running: ${yellow(`${command} ${args.join(" ")}`)}\n`);
 
   try {
-    await promisifiedSpawn({ command, args, options: { cwd, stdio: "inherit" } });
+    await tasks([
+      promisifiedSpawnTask({
+        title: `${packageManager} install`,
+        command,
+        args,
+        options: { cwd, stdio: "inherit" },
+      }),
+    ]);
   } catch (error) {
     log.error(
       `Error running ${yellow(`${packageManager} install`)}${error instanceof Error ? `: ${error.message}` : "."}`,
@@ -413,7 +427,17 @@ async function addDesktopApp({
   console.log(`${cyan("◆")}  Running: ${yellow(printedCommand)}\n`);
 
   try {
-    await promisifiedSpawn({ command, args, options: { cwd, stdio: "inherit" } });
+    await tasks([
+      promisifiedSpawnTask({
+        title:
+          type === "macos"
+            ? "react-native-macos-init"
+            : `react-native init-windows (${name.filesafeName})`,
+        command,
+        args,
+        options: { cwd, stdio: "inherit" },
+      }),
+    ]);
   } catch (error) {
     log.error(
       `Error running ${yellow(printedCommand)}${error instanceof Error ? `: ${error.message}` : "."}`,
@@ -439,11 +463,14 @@ async function runPrebuildMobile({
   console.log(`${cyan("◆")}  Running: ${yellow(printedCommand)}\n`);
 
   try {
-    await promisifiedSpawn({
-      command,
-      args,
-      options: { cwd: projectPath, stdio: "inherit" },
-    });
+    await tasks([
+      promisifiedSpawnTask({
+        title: "expo prebuild (mobile)",
+        command,
+        args,
+        options: { cwd: projectPath, stdio: "inherit" },
+      }),
+    ]);
   } catch (error) {
     log.error(
       `Error running ${yellow(printedCommand)}${error instanceof Error ? `: ${error.message}` : "."}`,
@@ -514,11 +541,14 @@ async function podInstall({ projectPath, type }: { projectPath: string; type: "i
   console.log(`${cyan("◆")}  Running: ${yellow(printedCommand)}\n`);
 
   try {
-    await promisifiedSpawn({
-      command,
-      args,
-      options: { cwd: path.resolve(projectPath, type), stdio: "inherit" },
-    });
+    await tasks([
+      promisifiedSpawnTask({
+        title: `pod install (${type})`,
+        command,
+        args,
+        options: { cwd: path.resolve(projectPath, type), stdio: "inherit" },
+      }),
+    ]);
   } catch (error) {
     log.error(
       `Error running ${yellow(printedCommand)}${error instanceof Error ? `: ${error.message}` : "."}`,
