@@ -1,5 +1,11 @@
 # expo-desktop
 
+## 0.1.11
+
+### Patch Changes
+
+- Add dependency overrides
+
 ## 0.1.10
 
 ### Patch Changes
