@@ -134,15 +134,13 @@ async function createExpoApp({
     macos: string;
   };
 }) {
-  const command = packageManager;
-  // npm treats flags after `npm create <pkg> <name>` as its own unless we use
-  // `--`; otherwise e.g. `--template` is dropped and the template string becomes
-  // a bogus positional arg (create-expo-app then fails inside `npm pack`).
+  // `npm create` drops flags meant for create-expo-app unless you add `--`; use
+  // `npx --yes` instead to forward args correctly and skip prompts.
+  const command = packageManager === "npm" ? "npx" : packageManager;
   const args = [
-    "create",
-    "expo-app",
+    ...(packageManager === "npm" ? ["--yes", "create-expo-app"] : ["create", "expo-app"]),
     name.filesafeName,
-    ...(packageManager === "npm" ? ["--"] : []),
+    "--yes",
     "--template",
     `blank-typescript@${versions.expoBlankTypeScript}`,
     "--no-install",
@@ -157,7 +155,11 @@ async function createExpoApp({
         title: "create-expo-app",
         command,
         args,
-        options: { stdio: "inherit" },
+        options: {
+          stdio: "inherit",
+          // Suppresses npx/npm exec "Ok to proceed?" and similar yes/no prompts.
+          env: { npm_config_yes: "true" },
+        },
         debugLogDir: projectPath,
       }),
     ]);
