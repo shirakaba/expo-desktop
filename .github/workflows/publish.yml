@@ -68,25 +68,3 @@ jobs:
         uses: changesets/action@v1
         with:
           publish: node --run release:publish
-
-      - name: Publish failure diagnostics
-        if: failure()
-        run: |
-          echo "==== packages/expo-desktop/expo-desktop-build.log ===="
-          if [ -f packages/expo-desktop/expo-desktop-build.log ]; then
-            cat packages/expo-desktop/expo-desktop-build.log
-          else
-            echo "(missing — build script never started or wrong working tree)"
-          fi
-          echo "==== newest npm debug log (tail 400 lines) ===="
-          log=""
-          if [ -d "$HOME/.npm/_logs" ]; then
-            log="$(find "$HOME/.npm/_logs" -maxdepth 1 -name '*-debug-*.log' -type f -printf '%T@ %p\n' 2>/dev/null | sort -nr | head -1 | cut -d' ' -f2- || true)"
-          fi
-          if [ -n "${log}" ] && [ -f "${log}" ]; then
-            echo "--- ${log} ---"
-            tail -n 400 "${log}"
-          else
-            echo "(no npm debug log found)"
-            ls -la "$HOME/.npm/_logs" 2>/dev/null || true
-          fi
