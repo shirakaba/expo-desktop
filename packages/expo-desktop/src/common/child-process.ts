@@ -12,7 +12,10 @@ export async function promisifiedSpawn({
   args: Array<string>;
   options?: SpawnOptions;
 }) {
-  const cp = spawn(command, args, { env, ...options });
+  const cp = spawn(command, args, {
+    ...options,
+    env: envWithForcedColorIfPiped(options),
+  });
 
   const { stdout, stderr } = cp;
   if (
@@ -52,4 +55,24 @@ export async function promisifiedSpawn({
   });
 
   return promise;
+}
+
+/**
+ * When stdio is piped, the child sees non-TTY streams and most color libraries
+ * disable ANSI.
+ */
+function envWithForcedColorIfPiped(options: SpawnOptions | undefined): NodeJS.ProcessEnv {
+  const stdio = options?.stdio;
+  const stdoutMode = Array.isArray(stdio) ? stdio.at(1) : stdio;
+  const stderrMode = Array.isArray(stdio) ? stdio.at(2) : stdio;
+  const capturesOutput = stdoutMode !== "inherit" || stderrMode !== "inherit";
+
+  const base = { ...env, ...options?.env };
+  if (!capturesOutput || base.NO_COLOR !== undefined) {
+    return base;
+  }
+  if (base.FORCE_COLOR !== undefined && base.FORCE_COLOR !== "") {
+    return base;
+  }
+  return { ...base, FORCE_COLOR: "1" };
 }
