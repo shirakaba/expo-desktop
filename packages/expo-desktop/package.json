@@ -23,18 +23,19 @@
     "directory": "packages/expo-desktop"
   },
   "bin": {
-    "expo-desktop": "src/cli.ts"
+    "expo-desktop": "build/cli.js"
   },
   "files": [
-    "src",
-    "!src/fixtures",
-    "!src/**/*.test.ts"
+    "build"
   ],
   "type": "module",
   "exports": {
+    ".": "./build/cli.js",
     "./package.json": "./package.json"
   },
   "scripts": {
+    "build": "tsgo -p tsconfig.build.json",
+    "prepublishOnly": "node --run build",
     "generate-config": "node scripts/generate-config.ts",
     "schema": "node scripts/update-schema.ts",
     "start": "node src/cli.ts",
@@ -69,8 +70,5 @@
       "node --run schema",
       "oxfmt"
     ]
-  },
-  "engines": {
-    "node": ">=22.18.0"
   }
 }
