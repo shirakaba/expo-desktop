@@ -5,6 +5,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { env } from "node:process";
 import readline from "node:readline";
+import { stripVTControlCharacters } from "node:util";
 
 /**
  * Clack {@link Task} that runs a subprocess; piped stdout/stderr lines are sent
@@ -115,7 +116,7 @@ function runPromisifiedSpawn({
         await fs.mkdir(logDir, { recursive: true });
         const body =
           lineBuffer.length > 0
-            ? lineBuffer.join("\n")
+            ? lineBuffer.map((line) => stripVTControlCharacters(line)).join("\n")
             : "(no stdout/stderr lines were captured; streams may have been inherited or ignored.)";
         await fs.writeFile(absPath, `${header}${body}\n`, "utf-8");
         wrotePath = absPath;
