@@ -1,5 +1,14 @@
 # expo-desktop
 
+## 0.1.6
+
+### Patch Changes
+
+- Republish with pnpm to resolve workspaces/catalogs
+- Updated dependencies
+  - expo-desktop-config-plugins@1.1.16
+  - expo-desktop-prebuild-config@1.0.5
+
 ## 0.1.5
 
 ### Patch Changes

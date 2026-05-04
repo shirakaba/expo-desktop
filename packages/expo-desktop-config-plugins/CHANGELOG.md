@@ -1,5 +1,11 @@
 # expo-desktop-config-plugins
 
+## 1.1.16
+
+### Patch Changes
+
+- Republish with pnpm to resolve workspaces/catalogs
+
 ## 1.1.15
 
 ### Patch Changes
