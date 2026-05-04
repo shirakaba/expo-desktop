@@ -1,5 +1,11 @@
 # expo-desktop
 
+## 0.1.13
+
+### Patch Changes
+
+- Recommend pnpm for Windows
+
 ## 0.1.12
 
 ### Patch Changes
