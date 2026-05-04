@@ -1,3 +1,5 @@
+import type { ModPlatform } from "@expo/config-plugins";
+
 import { log } from "@clack/prompts";
 import { type } from "arktype";
 import { cyan, green, yellow } from "kleur/colors";
@@ -73,7 +75,17 @@ export async function createExpoDesktopApp({
   title("Running Expo Prebuild for the mobile apps…", { spacing: 1 });
   await runPrebuildMobile({ packageManager, projectPath });
 
-  // TODO: Run Prebuild for macOS (once we've invented it)
+  title("Running Expo Desktop Prebuild for the desktop apps…", { spacing: 1 });
+  if (localDev) {
+    await addApplyConfigPluginsScript({ projectPath });
+  }
+  await applyConfigPlugins({
+    projectRoot: projectPath,
+    displayName: name.displayName,
+    bundleIdentifier: name.rdns.replaceAll("_", "-"),
+    platforms: ["macos", "windows"] as unknown as Array<ModPlatform>,
+  });
+  console.log(`${green("◆")}  Applied config plugins.\n`);
 
   title("Improving the macOS app's gitignore file…", { spacing: 1 });
   await improveMacosGitignore({ projectPath });
@@ -92,19 +104,6 @@ export async function createExpoDesktopApp({
 
   title("Adding Expo support to the Babel config…", { spacing: 1 });
   await writeBabelConfig({ projectPath });
-
-  title("Applying config plugins to macOS and Windows projects…", { spacing: 1 });
-  if (localDev) {
-    await addApplyConfigPluginsScript({ projectPath });
-  }
-  await applyConfigPlugins({
-    projectRoot: projectPath,
-    displayName: name.displayName,
-    bundleIdentifier: name.rdns.replaceAll("_", "-"),
-    // @ts-expect-error Normally only accepts ios and android
-    platforms: ["macos", "windows"],
-  });
-  console.log(`${green("◆")}  Applied config plugins.\n`);
 
   // TODO: Set up Windows app.cpp entrypoint
 }
