@@ -8,8 +8,8 @@
  */
 
 import { spawnSync } from "node:child_process";
-import { createRequire } from "node:module";
 import fs from "node:fs";
+import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -57,39 +57,39 @@ if (!fs.existsSync(configPath)) {
 }
 log("tsconfig:", configPath);
 
-let tscJs;
+let nativeRoot;
 try {
-  tscJs = require.resolve("typescript/lib/tsc.js");
+  nativeRoot = path.dirname(require.resolve("@typescript/native-preview/package.json"));
 } catch (cause) {
-  emit(`[expo-desktop build] could not resolve typescript/lib/tsc.js (is typescript installed?)`);
+  emit("[expo-desktop build] could not resolve @typescript/native-preview (is it installed?)");
   emit(String(cause));
   process.exit(1);
 }
-log("tsc entry:", tscJs);
 
-const tsPkgPath = path.join(path.dirname(tscJs), "..", "package.json");
+const nativePkgPath = path.join(nativeRoot, "package.json");
+let tsgoVersion = "(unknown)";
 try {
-  const { version: tsVersion } = JSON.parse(fs.readFileSync(tsPkgPath, "utf8"));
-  log("typescript package version:", tsVersion);
+  tsgoVersion = JSON.parse(fs.readFileSync(nativePkgPath, "utf8")).version;
 } catch {
-  log("(could not read typescript package.json)");
+  // ignore
 }
+log("@typescript/native-preview version:", tsgoVersion);
 
-const tscArgs = [
-  tscJs,
-  "--project",
-  configPath,
-  "--pretty",
-  "--listEmittedFiles",
-  "--diagnostics",
-];
+const tsgoJs = path.join(nativeRoot, "bin", "tsgo.js");
+if (!fs.existsSync(tsgoJs)) {
+  emit(`[expo-desktop build] missing tsgo entry: ${tsgoJs}`);
+  process.exit(1);
+}
+log("tsgo entry:", tsgoJs);
+
+const tsgoArgs = ["-p", configPath, "--pretty", "--listEmittedFiles", "--diagnostics"];
 if (process.env.EXPO_DESKTOP_BUILD_EXPLAIN === "1") {
   log("EXPO_DESKTOP_BUILD_EXPLAIN=1 → adding --explainFiles");
-  tscArgs.push("--explainFiles");
+  tsgoArgs.push("--explainFiles");
 }
 
-log("spawning:", [process.execPath, ...tscArgs].join(" "));
-const result = spawnSync(process.execPath, tscArgs, {
+log("spawning:", [process.execPath, tsgoJs, ...tsgoArgs].join(" "));
+const result = spawnSync(process.execPath, [tsgoJs, ...tsgoArgs], {
   cwd: pkgRoot,
   encoding: "utf8",
   stdio: ["inherit", "pipe", "pipe"],
@@ -97,11 +97,11 @@ const result = spawnSync(process.execPath, tscArgs, {
 });
 
 if (result.stdout) {
-  emit("--- tsc stdout ---");
+  emit("--- tsgo stdout ---");
   emit(result.stdout.trimEnd());
 }
 if (result.stderr) {
-  emit("--- tsc stderr ---");
+  emit("--- tsgo stderr ---");
   emit(result.stderr.trimEnd());
 }
 
@@ -111,7 +111,7 @@ if (result.error) {
 }
 
 const code = result.status ?? 1;
-log("tsc finished with exit code:", String(code));
+log("tsgo finished with exit code:", String(code));
 
 const cliOut = path.join(pkgRoot, "build", "cli.js");
 if (code === 0 && !fs.existsSync(cliOut)) {

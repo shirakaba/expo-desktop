@@ -56,7 +56,7 @@
     "@tsconfig/node24": "catalog:base",
     "@types/bun": "^1.3.13",
     "@types/node": "catalog:base",
-    "typescript": "catalog:base"
+    "@typescript/native-preview": "catalog:base"
   },
   "peerDependencies": {
     "@expo/config": ">=12.0.0",
