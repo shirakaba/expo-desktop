@@ -1,5 +1,12 @@
 #!/usr/bin/env node
 
+/**
+ * Writes every line to:
+ * - stderr (unbuffered) so local terminals and some CI runners show it
+ * - packages/expo-desktop/expo-desktop-build.log so CI can `cat` it after a failed
+ *   `npm publish --json` (Changesets uses --json; npm often hides lifecycle stdout).
+ */
+
 import { spawnSync } from "node:child_process";
 import { createRequire } from "node:module";
 import fs from "node:fs";
@@ -8,19 +15,44 @@ import { fileURLToPath } from "node:url";
 
 const require = createRequire(import.meta.url);
 const pkgRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const logPath = path.join(pkgRoot, "expo-desktop-build.log");
+
+try {
+  fs.unlinkSync(logPath);
+} catch {
+  // ignore
+}
+
+function emit(line) {
+  const text = `${line}\n`;
+  try {
+    fs.appendFileSync(logPath, text, "utf8");
+  } catch {
+    // still try stderr
+  }
+  try {
+    fs.writeSync(2, text);
+  } catch {
+    // ignore EPIPE etc.
+  }
+}
 
 function log(...args) {
-  console.log("[expo-desktop build]", ...args);
+  emit(`[expo-desktop build] ${args.join(" ")}`);
 }
 
 log("starting");
 log("package root:", pkgRoot);
 log("process cwd:", process.cwd());
 log("node:", process.version);
+log("log file:", logPath);
+log("npm_lifecycle_event:", process.env.npm_lifecycle_event ?? "(unset)");
+log("npm_command:", process.env.npm_command ?? "(unset)");
+log("npm_lifecycle_script:", process.env.npm_lifecycle_script ?? "(unset)");
 
 const configPath = path.join(pkgRoot, "tsconfig.build.json");
 if (!fs.existsSync(configPath)) {
-  console.error("[expo-desktop build] missing config:", configPath);
+  emit(`[expo-desktop build] missing config: ${configPath}`);
   process.exit(1);
 }
 log("tsconfig:", configPath);
@@ -29,8 +61,8 @@ let tscJs;
 try {
   tscJs = require.resolve("typescript/lib/tsc.js");
 } catch (cause) {
-  console.error("[expo-desktop build] could not resolve typescript/lib/tsc.js (is typescript installed?)");
-  console.error(cause);
+  emit(`[expo-desktop build] could not resolve typescript/lib/tsc.js (is typescript installed?)`);
+  emit(String(cause));
   process.exit(1);
 }
 log("tsc entry:", tscJs);
@@ -59,21 +91,31 @@ if (process.env.EXPO_DESKTOP_BUILD_EXPLAIN === "1") {
 log("spawning:", [process.execPath, ...tscArgs].join(" "));
 const result = spawnSync(process.execPath, tscArgs, {
   cwd: pkgRoot,
-  stdio: "inherit",
+  encoding: "utf8",
+  stdio: ["inherit", "pipe", "pipe"],
   env: { ...process.env, FORCE_COLOR: process.stdout.isTTY ? "1" : process.env.FORCE_COLOR },
 });
 
+if (result.stdout) {
+  emit("--- tsc stdout ---");
+  emit(result.stdout.trimEnd());
+}
+if (result.stderr) {
+  emit("--- tsc stderr ---");
+  emit(result.stderr.trimEnd());
+}
+
 if (result.error) {
-  console.error("[expo-desktop build] spawn failed:", result.error);
+  emit(`[expo-desktop build] spawn failed: ${result.error}`);
   process.exit(1);
 }
 
 const code = result.status ?? 1;
-log("tsc finished with exit code:", code);
+log("tsc finished with exit code:", String(code));
 
 const cliOut = path.join(pkgRoot, "build", "cli.js");
 if (code === 0 && !fs.existsSync(cliOut)) {
-  console.error("[expo-desktop build] expected output missing after success:", cliOut);
+  emit(`[expo-desktop build] expected output missing after success: ${cliOut}`);
   process.exit(1);
 }
 if (code === 0) {

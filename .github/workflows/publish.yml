@@ -49,6 +49,20 @@ jobs:
       - name: Publish packages
         id: changesets
         # This action pushes the git tags after calling the publish command.
+        # Changesets runs `npm publish --json`; npm often buffers lifecycle output into
+        # ~/.npm/_logs instead of the job log, so we dump expo-desktop-build.log on failure.
         uses: changesets/action@v1
         with:
           publish: node --run release:publish
+
+      - name: expo-desktop build log (on failure)
+        if: failure()
+        run: |
+          echo "---- packages/expo-desktop/expo-desktop-build.log ----"
+          if [ -f packages/expo-desktop/expo-desktop-build.log ]; then
+            cat packages/expo-desktop/expo-desktop-build.log
+          else
+            echo "(log file missing — prepublishOnly may not have reached scripts/build-cli.mjs)"
+          fi
+          echo "---- npm debug log hint ----"
+          echo "npm also writes full logs under ~/.npm/_logs/ on the runner (path is printed in the publish error)."
