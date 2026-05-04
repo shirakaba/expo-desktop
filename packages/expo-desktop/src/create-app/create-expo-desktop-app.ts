@@ -135,10 +135,14 @@ async function createExpoApp({
   };
 }) {
   const command = packageManager;
+  // npm treats flags after `npm create <pkg> <name>` as its own unless we use
+  // `--`; otherwise e.g. `--template` is dropped and the template string becomes
+  // a bogus positional arg (create-expo-app then fails inside `npm pack`).
   const args = [
     "create",
     "expo-app",
     name.filesafeName,
+    ...(packageManager === "npm" ? ["--"] : []),
     "--template",
     `blank-typescript@${versions.expoBlankTypeScript}`,
     "--no-install",
