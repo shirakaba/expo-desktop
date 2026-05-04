@@ -310,8 +310,11 @@ async function updatePackageJson({
     if (localDev) {
       packageJson.dependencies["expo-desktop-config-plugins"] =
         "file:../../expo-desktop-config-plugins";
+      packageJson.dependencies["expo-desktop-prebuild-config"] =
+        "file:../../expo-desktop-prebuild-config";
     } else {
-      packageJson.dependencies["expo-desktop-config-plugins"] = "^1.1.11";
+      packageJson.dependencies["expo-desktop-config-plugins"] = "^1.1.12";
+      packageJson.dependencies["expo-desktop-prebuild-config"] = "^1.0.0";
     }
 
     packageJson.dependencies["react-native-macos"] = versions.macos;

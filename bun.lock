@@ -47,7 +47,7 @@
     },
     "packages/expo-desktop-config-plugins": {
       "name": "expo-desktop-config-plugins",
-      "version": "1.1.10",
+      "version": "1.1.12",
       "dependencies": {
         "@expo/json-file": "^10.0.13",
         "@expo/plist": "^0.4.8",
@@ -59,12 +59,12 @@
         "xcode": "^3.0.1",
       },
       "devDependencies": {
-        "@expo/config-plugins": "^54.0.4",
-        "@expo/config-types": "^54.0.10",
-        "@tsconfig/node24": "^24.0.4",
+        "@expo/config-plugins": "catalog:react-native-81",
+        "@expo/config-types": "catalog:react-native-81",
+        "@tsconfig/node24": "catalog:base",
         "@types/debug": "^4.1.7",
-        "@types/node": "^24.12.2",
-        "@typescript/native-preview": "^7.0.0-dev.20260425.1",
+        "@types/node": "catalog:base",
+        "@typescript/native-preview": "catalog:base",
       },
       "peerDependencies": {
         "@expo/config-plugins": ">=54.0.0",

@@ -25,9 +25,6 @@ module.exports = function withExpoDesktop(config, props) {
   config = withExpoAppDelegate(config, { windowTitle: props.displayName });
   config = withExpoXcodeBuildPhase(config, props);
 
-  // TODO: Set the Xcode PRODUCT_BUNDLE_IDENTIFIER build setting based on
-  //       props.bundleIdentifier.
-
   // TODO: We need a plugin to rename files like `myapp6.xcodeproj` to the
   //       actual filesafe name that the user requested. Some examples of
   //       handling that (for renaming the Android package namespace) using
