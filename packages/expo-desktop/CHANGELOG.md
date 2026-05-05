@@ -1,5 +1,11 @@
 # expo-desktop
 
+## 0.1.16
+
+### Patch Changes
+
+- CJS -> MJS
+
 ## 0.1.15
 
 ### Patch Changes
