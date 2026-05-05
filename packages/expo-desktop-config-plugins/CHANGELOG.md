@@ -1,5 +1,11 @@
 # expo-desktop-config-plugins
 
+## 1.1.17
+
+### Patch Changes
+
+- Release with WIP --template support
+
 ## 1.1.16
 
 ### Patch Changes

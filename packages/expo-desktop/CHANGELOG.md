@@ -1,5 +1,14 @@
 # expo-desktop
 
+## 0.1.14
+
+### Patch Changes
+
+- Release with WIP --template support
+- Updated dependencies
+  - expo-desktop-config-plugins@1.1.17
+  - expo-desktop-prebuild-config@1.0.6
+
 ## 0.1.13
 
 ### Patch Changes
