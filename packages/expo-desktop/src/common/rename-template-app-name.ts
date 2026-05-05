@@ -1,10 +1,7 @@
+import { MacOSConfig } from "expo-desktop-config-plugins";
 import { glob } from "glob";
 import fs from "node:fs";
 import path from "node:path";
-
-const {
-  MacOSConfig: { XcodeUtils },
-} = require("expo-desktop-config-plugins") as typeof import("expo-desktop-config-plugins");
 
 /**
  * Returns a list of files within a template matched by the resolved rename
@@ -155,8 +152,8 @@ export async function renameTemplateAppNameAsync(
       try {
         const replacement = contents
           .replace(/Hello App Display Name/g, safeName)
-          .replace(/HelloWorld/g, XcodeUtils.sanitizedName(safeName))
-          .replace(/helloworld/g, XcodeUtils.sanitizedName(safeName.toLowerCase()));
+          .replace(/HelloWorld/g, MacOSConfig.XcodeUtils.sanitizedName(safeName))
+          .replace(/helloworld/g, MacOSConfig.XcodeUtils.sanitizedName(safeName.toLowerCase()));
 
         if (replacement === contents) {
           return;
