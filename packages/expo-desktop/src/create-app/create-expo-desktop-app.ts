@@ -14,6 +14,7 @@ import { makePrettySummary } from "../common/arktype.ts";
 import { promisifiedSpawnTask, SPAWN_DEBUG_LOG_GLOB } from "../common/child-process.ts";
 import { title } from "../common/clack.ts";
 import { packageManagerExec } from "../common/npm.ts";
+import { applySelectedTemplatesAsync, type TemplateSelection } from "../common/template.ts";
 
 /**
  * A crude switch to use to help with local development.
@@ -28,6 +29,7 @@ export const localDev = false;
 export async function createExpoDesktopApp({
   name,
   packageManager,
+  templates,
   versions,
 }: {
   name: {
@@ -36,6 +38,7 @@ export async function createExpoDesktopApp({
     rdns: string;
   };
   packageManager: "npm" | "bun" | "pnpm";
+  templates: TemplateSelection;
   versions: {
     minor: number;
     expoMajor: number;
@@ -47,6 +50,30 @@ export async function createExpoDesktopApp({
 }) {
   const { projectPath } = await createExpoApp({ name, packageManager, versions });
   await appendRootGitignoreSpawnDebugLogs(projectPath);
+
+  const templateSelection = {
+    // https://github.com/expo/expo/blob/sdk-54/templates/expo-template-blank-typescript/package.json
+    template: templates.template,
+    "template-ios": templates["template-ios"],
+    "template-android": templates["template-android"],
+    // https://github.com/microsoft/react-native-macos/tree/main/packages/react-native/local-cli/generator-macos/templates/macos
+    "template-macos":
+      templates["template-macos"] ??
+      "microsoft/react-native-macos#main:packages/react-native/local-cli/generator-macos/templates",
+    // https://github.com/microsoft/react-native-windows/tree/main/vnext/templates/cpp-app
+    "template-windows":
+      templates["template-windows"] ??
+      "microsoft/react-native-windows#main:vnext/templates/cpp-app",
+  } satisfies TemplateSelection;
+
+  title("Applying templates…", { spacing: 1 });
+  await applySelectedTemplatesAsync({
+    projectRoot: projectPath,
+    selection: templateSelection,
+    enabledPlatforms: ["ios", "android", "macos", "windows"],
+    name,
+  });
+  console.log(`${green("◆")}  Applied templates.\n`);
 
   title("Altering app.json…", { spacing: 1 });
   await updateAppJson({ name, projectPath });
@@ -62,12 +89,6 @@ export async function createExpoDesktopApp({
   title("Installing dependencies…", { spacing: 1 });
   await npmInstall({ cwd: projectPath, packageManager });
 
-  title("Adding the Windows app…", { spacing: 1 });
-  await addDesktopApp({ cwd: projectPath, name, packageManager, type: "windows", versions });
-
-  title("Adding the macOS app…", { spacing: 1 });
-  await updatePackageJson({ name, projectPath, versions, task: { type: "pre-init-macos" } });
-  await addDesktopApp({ cwd: projectPath, name, packageManager, type: "macos", versions });
   await updatePackageJson({
     name,
     projectPath,
@@ -283,10 +304,7 @@ async function updatePackageJson({
     rdns: string;
   };
   projectPath: string;
-  task:
-    | { type: "create" }
-    | { type: "pre-init-macos" }
-    | { type: "post-init-macos"; name: string | undefined };
+  task: { type: "create" } | { type: "post-init-macos"; name: string | undefined };
   versions: {
     minor: number;
     expoMajor: number;
@@ -312,22 +330,7 @@ async function updatePackageJson({
 
   const nameBefore = packageJson.name;
 
-  if (task.type === "pre-init-macos") {
-    // create-expo-app shifts this to lowercase as per package.json rules, and
-    // then react-native-macos-init maddeningly uses it in preference over the
-    // app.json "name" value.
-    // https://github.com/microsoft/react-native-macos/blob/eb3bccb6e738650d617945770ec1319d5880084b/packages/react-native-macos-init/src/cli.ts#L74-L75
-    //
-    // If only the underlying generateMacOS() / copyProjectTemplateAndReplace()
-    // were exposed, we could just pass the name needed.
-    // https://github.com/microsoft/react-native-macos/blob/eb3bccb6e738650d617945770ec1319d5880084b/packages/react-native-macos-init/src/cli.ts#L398
-    // https://github.com/microsoft/react-native-macos/blob/eb3bccb6e738650d617945770ec1319d5880084b/packages/react-native/local-cli/generate-macos.js#L18
-    //
-    // But as it's not, our best option is to just write an invalid name into
-    // the package.json temporarily (or remove it altogether). We'll set it
-    // back to lower case later in the "restore-name" task.
-    packageJson.name = name.filesafeName;
-  } else if (task.type === "post-init-macos") {
+  if (task.type === "post-init-macos") {
     if (task.name) {
       packageJson.name = task.name;
     } else {
@@ -420,75 +423,6 @@ async function npmInstall({
   }
 
   console.log(`\n${green("◆")}  Installed dependencies.\n`);
-}
-
-async function addDesktopApp({
-  name,
-  packageManager,
-  versions,
-  type,
-  cwd,
-}: {
-  name: {
-    displayName: string;
-    filesafeName: string;
-    rdns: string;
-  };
-  packageManager: "npm" | "bun" | "pnpm";
-  type: "macos" | "windows";
-  versions: {
-    minor: number;
-    expoMajor: number;
-    expoBlankTypeScript: string;
-    mobile: string;
-    windows: string;
-    macos: string;
-  };
-  cwd?: string;
-}) {
-  const { args, command } = packageManagerExec(packageManager);
-
-  switch (type) {
-    case "macos":
-      args.push("react-native-macos-init", "--version", versions.macos);
-      break;
-    case "windows":
-      args.push(
-        "react-native",
-        "init-windows",
-        "--template",
-        "cpp-app",
-        "--namespace",
-        name.rdns.replaceAll(/[-_]/g, ""),
-        "--name",
-        name.filesafeName,
-      );
-      break;
-  }
-
-  const printedCommand = `${command} ${args.join(" ")}`;
-  console.log(`${cyan("◆")}  Running: ${yellow(printedCommand)}\n`);
-
-  try {
-    await tasks([
-      promisifiedSpawnTask({
-        title:
-          type === "macos"
-            ? "react-native-macos-init"
-            : `react-native init-windows (${name.filesafeName})`,
-        command,
-        args,
-        options: { cwd, stdio: "inherit" },
-      }),
-    ]);
-  } catch (error) {
-    log.error(
-      `Error running ${yellow(printedCommand)}${error instanceof Error ? `: ${error.message}` : "."}`,
-    );
-    process.exit(1);
-  }
-
-  console.log(`${green("◆")}  Added ${yellow(type)} app.\n`);
 }
 
 async function runPrebuildMobile({

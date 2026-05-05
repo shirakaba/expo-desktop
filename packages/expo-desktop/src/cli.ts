@@ -36,6 +36,31 @@ const main = defineCommand({
           description: `The ${kleur.bold("minor version")} of React Native to align on ${grey("(Examples: '0.80', 'latest')")}`,
           valueHint: "version",
         },
+        template: {
+          type: "string",
+          description: "Base template source (tarball, npm spec, or GitHub owner/repo#ref:subpath)",
+          valueHint: "template",
+        },
+        "template-ios": {
+          type: "string",
+          description: "iOS-specific template source",
+          valueHint: "template",
+        },
+        "template-android": {
+          type: "string",
+          description: "Android-specific template source",
+          valueHint: "template",
+        },
+        "template-macos": {
+          type: "string",
+          description: "macOS-specific template source",
+          valueHint: "template",
+        },
+        "template-windows": {
+          type: "string",
+          description: "Windows-specific template source",
+          valueHint: "template",
+        },
       },
       async run({ args }) {
         (await import("./create-app/command.ts")).newExpoDesktopProject(args);
@@ -72,6 +97,26 @@ const main = defineCommand({
           type: "string",
           description:
             "Project template to clone from. File path pointing to a local tar file, npm package or a github repo",
+          valueHint: "template",
+        },
+        "template-ios": {
+          type: "string",
+          description: "iOS-specific template source",
+          valueHint: "template",
+        },
+        "template-android": {
+          type: "string",
+          description: "Android-specific template source",
+          valueHint: "template",
+        },
+        "template-macos": {
+          type: "string",
+          description: "macOS-specific template source",
+          valueHint: "template",
+        },
+        "template-windows": {
+          type: "string",
+          description: "Windows-specific template source",
           valueHint: "template",
         },
         platform: {

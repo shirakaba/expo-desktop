@@ -13,6 +13,11 @@ export async function newExpoDesktopProject(args: {
   "display-name": string | undefined;
   rdns: string | undefined;
   version: string | undefined;
+  template: string | undefined;
+  "template-ios": string | undefined;
+  "template-android": string | undefined;
+  "template-macos": string | undefined;
+  "template-windows": string | undefined;
 }) {
   // A dev-time switch for skipping the questions
   const skip = localDev;
@@ -24,6 +29,13 @@ export async function newExpoDesktopProject(args: {
         rdns: "com.example.my-app-123",
       },
       packageManager: "bun",
+      templates: {
+        template: args.template,
+        "template-ios": args["template-ios"],
+        "template-android": args["template-android"],
+        "template-macos": args["template-macos"],
+        "template-windows": args["template-windows"],
+      },
       versions: {
         expoMajor: 54,
         expoBlankTypeScript: "54.0.45",
@@ -68,7 +80,18 @@ export async function newExpoDesktopProject(args: {
     process.exit(0);
   }
 
-  await createExpoDesktopApp({ name, packageManager, versions });
+  await createExpoDesktopApp({
+    name,
+    packageManager,
+    versions,
+    templates: {
+      template: args.template,
+      "template-ios": args["template-ios"],
+      "template-android": args["template-android"],
+      "template-macos": args["template-macos"],
+      "template-windows": args["template-windows"],
+    },
+  });
 }
 
 type Arg = string | symbol | undefined;

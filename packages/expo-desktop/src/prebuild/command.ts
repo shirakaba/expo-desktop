@@ -1,7 +1,12 @@
 import { log } from "@clack/prompts";
+import { type } from "arktype";
 import { default as kleur } from "kleur";
+import fs from "node:fs/promises";
+import path from "node:path";
 import { exit } from "node:process";
 
+import { AppJson } from "../common/app-json.ts";
+import { type TemplateSelection, applySelectedTemplatesAsync } from "../common/template.ts";
 import { resolvePackageManagerOptions } from "./resolve-options.ts";
 
 /**
@@ -22,6 +27,10 @@ export async function prebuild({
   bun,
   pnpm,
   template,
+  "template-ios": templateIos,
+  "template-android": templateAndroid,
+  "template-macos": templateMacos,
+  "template-windows": templateWindows,
   platform,
 }: {
   clean: boolean | undefined;
@@ -31,24 +40,16 @@ export async function prebuild({
   bun: boolean | undefined;
   pnpm: boolean | undefined;
   template: string | undefined;
+  "template-ios": string | undefined;
+  "template-android": string | undefined;
+  "template-macos": string | undefined;
+  "template-windows": string | undefined;
   platform: string | undefined;
 }) {
   log.info(`🏎️  Running ${kleur.yellow("expo-desktop prebuild")}.`, { withGuide: false });
 
   // TODO: if packageManager undefined, infer from lockfiles
   const _packageManager = resolvePackageManagerOptions({ noInstall, npm, yarn, bun, pnpm });
-
-  if (template) {
-    // macos:
-    // - https://github.com/microsoft/react-native-macos/blob/eb3bccb6e738650d617945770ec1319d5880084b/packages/react-native-macos-init/src/cli.ts#L398
-    // - https://github.com/microsoft/react-native-macos/blob/eb3bccb6e738650d617945770ec1319d5880084b/packages/react-native/local-cli/generate-macos.js#L18
-    // - https://github.com/microsoft/react-native-macos/tree/main/packages/react-native/local-cli/generator-macos/templates/macos
-    //
-    // windows:
-    // - https://github.com/microsoft/react-native-windows/blob/3d64f71ed8495da6a0dcfc1f97bcb8f761986594/packages/%40react-native-windows/cli/src/generator-windows/index.ts#L57
-    // - https://github.com/microsoft/react-native-windows/tree/main/vnext/templates/cpp-app
-    throw new Error("--template arg not yet implemented.");
-  }
 
   if (
     platform !== "macos" &&
@@ -70,6 +71,26 @@ export async function prebuild({
   }
   if (!platforms.length) {
     throw new Error("At least one platform must be enabled when syncing");
+  }
+
+  const templateSelection = {
+    template,
+    "template-ios": templateIos,
+    "template-android": templateAndroid,
+    "template-macos": templateMacos,
+    "template-windows": templateWindows,
+  } satisfies TemplateSelection;
+
+  if (clean && hasTemplateSelection(templateSelection)) {
+    const projectRoot = process.cwd();
+    const appName = await readAppNameFromConfigAsync(projectRoot);
+    await applySelectedTemplatesAsync({
+      projectRoot,
+      selection: templateSelection,
+      enabledPlatforms: platforms,
+      name: appName,
+    });
+    log.info("Applied project templates for clean prebuild.", { withGuide: false });
   }
 
   // TODO:
@@ -96,4 +117,32 @@ export async function prebuild({
 
   log.error(`${kleur.yellow("expo-desktop prebuild")} not yet implemented.`);
   return exit(1);
+}
+
+function hasTemplateSelection(selection: TemplateSelection) {
+  return Boolean(
+    selection.template ||
+    selection["template-ios"] ||
+    selection["template-android"] ||
+    selection["template-macos"] ||
+    selection["template-windows"],
+  );
+}
+
+async function readAppNameFromConfigAsync(projectRoot: string) {
+  const appJsonPath = path.join(projectRoot, "app.json");
+  const contents = await fs.readFile(appJsonPath, "utf8");
+  const parsed = AppJson(JSON.parse(contents));
+  if (parsed instanceof type.errors) {
+    throw new Error("Invalid app.json while resolving template replacements.");
+  }
+  const filesafeName = parsed.expo?.name ?? "HelloWorld";
+  const displayName = parsed.expo?.name ?? filesafeName;
+  const rdns =
+    parsed.expo?.ios?.bundleIdentifier ?? parsed.expo?.android?.package ?? "com.helloworld";
+  return {
+    filesafeName,
+    displayName,
+    rdns,
+  };
 }
