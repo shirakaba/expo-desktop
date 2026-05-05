@@ -1,5 +1,11 @@
 # expo-desktop
 
+## 0.1.15
+
+### Patch Changes
+
+- Fix import of sanitizedName()
+
 ## 0.1.14
 
 ### Patch Changes
