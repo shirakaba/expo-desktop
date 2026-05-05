@@ -120,7 +120,7 @@ function parseTemplateSource(template: string): TemplateSource {
   }
 
   const githubUrlMatch = template.match(
-    /^https:\/\/github\.com\/([^/]+)\/([^/#]+?)(?:\/tree\/([^/]+)(?:\/(.+))?)?$/,
+    /^https:\/\/github\.com\/([^/]+)\/([^/#]+?)(?:\/(?:tree|blob)\/([^/]+)(?:\/(.+))?)?$/,
   );
   if (githubUrlMatch) {
     const [, owner, repo, ref = "HEAD", subpath] = githubUrlMatch;
