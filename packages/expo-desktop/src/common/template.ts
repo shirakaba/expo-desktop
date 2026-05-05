@@ -5,33 +5,10 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 
 import { promisifiedSpawnTask } from "./child-process.ts";
-
-export type TemplatePlatform = "ios" | "android" | "macos" | "windows";
-
-export type TemplateSelection = {
-  template?: string | undefined;
-  "template-ios"?: string | undefined;
-  "template-android"?: string | undefined;
-  "template-macos"?: string | undefined;
-  "template-windows"?: string | undefined;
-};
-
-type TemplateDescriptor = {
-  key: "template" | "template-ios" | "template-android" | "template-macos" | "template-windows";
-  value: string;
-  forPlatform?: TemplatePlatform;
-};
-
-type TemplateSource =
-  | { type: "local-tarball"; path: string }
-  | { type: "github"; owner: string; repo: string; ref: string; subpath: string | null }
-  | { type: "npm"; spec: string };
-
-type TemplateConfig = {
-  files?: Array<{ from: string; to?: string }>;
-  replacements?: Record<string, string>;
-  pathReplacements?: Record<string, string>;
-};
+import {
+  getTemplateFilesToRenameAsync,
+  renameTemplateAppNameAsync,
+} from "./rename-template-app-name.ts";
 
 export async function applySelectedTemplatesAsync({
   projectRoot,
@@ -77,6 +54,22 @@ export async function applySelectedTemplatesAsync({
     }
   }
 }
+
+export type TemplateSelection = {
+  template?: string | undefined;
+  "template-ios"?: string | undefined;
+  "template-android"?: string | undefined;
+  "template-macos"?: string | undefined;
+  "template-windows"?: string | undefined;
+};
+
+type TemplateDescriptor = {
+  key: "template" | "template-ios" | "template-android" | "template-macos" | "template-windows";
+  value: string;
+  forPlatform?: TemplatePlatform;
+};
+
+export type TemplatePlatform = "ios" | "android" | "macos" | "windows";
 
 function getOrderedTemplateDescriptors(
   selection: TemplateSelection,
@@ -149,6 +142,11 @@ function parseTemplateSource(template: string): TemplateSource {
 
   return { type: "npm", spec: template };
 }
+
+type TemplateSource =
+  | { type: "local-tarball"; path: string }
+  | { type: "github"; owner: string; repo: string; ref: string; subpath: string | null }
+  | { type: "npm"; spec: string };
 
 async function prepareTemplateSourceAsync(source: TemplateSource): Promise<string> {
   const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), "expo-desktop-template-"));
@@ -233,6 +231,13 @@ async function loadTemplateConfigAsync(templateRoot: string): Promise<TemplateCo
   return imported.default ?? imported;
 }
 
+type TemplateConfig = {
+  files?: Array<{ from: string; to?: string }>;
+  replacements?: Record<string, string>;
+  pathReplacements?: Record<string, string>;
+  renameConfig?: string[];
+};
+
 async function copyTemplateFilesAsync({
   sourceRoot,
   projectRoot,
@@ -257,19 +262,34 @@ async function copyTemplateFilesAsync({
     ...(templateConfig?.pathReplacements ?? {}),
   };
 
+  const copiedRelativePaths = new Array<string>();
   for (const mapping of mappings) {
     const relativePath = replaceTokens(mapping.to, pathReplacements);
     const targetPath = path.join(projectRoot, relativePath);
     await fs.mkdir(path.dirname(targetPath), { recursive: true });
-    const content = await fs.readFile(mapping.from);
-    const rewritten = rewriteTemplateContent(content, {
-      displayName: name.displayName,
-      filesafeName: name.filesafeName,
-      rdns: name.rdns,
-      extra: templateConfig?.replacements ?? {},
-    });
-    await fs.writeFile(targetPath, rewritten);
+    await fs.copyFile(mapping.from, targetPath);
+    copiedRelativePaths.push(relativePath);
   }
+
+  if (templateConfig?.replacements && Object.keys(templateConfig.replacements).length > 0) {
+    await applyExtraReplacementsAsync({
+      cwd: projectRoot,
+      files: copiedRelativePaths,
+      replacements: templateConfig.replacements,
+    });
+  }
+
+  const filesFromRenameConfig = await getTemplateFilesToRenameAsync(projectRoot, {
+    renameConfig: templateConfig?.renameConfig,
+  });
+  const copiedSet = new Set(copiedRelativePaths.map(normalizeToPosixPath));
+  const filesToRename = filesFromRenameConfig.filter((file) =>
+    copiedSet.has(normalizeToPosixPath(file)),
+  );
+  await renameTemplateAppNameAsync(projectRoot, {
+    filesafeName: name.filesafeName,
+    files: filesToRename,
+  });
 }
 
 async function discoverAllFilesAsync(
@@ -299,32 +319,6 @@ async function walkFilesAsync(
   }
 }
 
-function rewriteTemplateContent(
-  content: Buffer,
-  context: {
-    displayName: string;
-    filesafeName: string;
-    rdns: string;
-    extra: Record<string, string>;
-  },
-) {
-  if (isLikelyBinary(content)) {
-    return content;
-  }
-
-  const text = content.toString("utf8");
-  const replacements: Record<string, string> = {
-    HelloWorld: context.filesafeName,
-    helloworld: context.filesafeName.toLowerCase(),
-    "Hello World": context.displayName,
-    "com.helloworld": context.rdns.replaceAll("-", "_"),
-    "org.reactjs.native.example": context.rdns.replaceAll("-", "_"),
-    ...context.extra,
-  };
-
-  return Buffer.from(replaceTokens(text, replacements), "utf8");
-}
-
 function replaceTokens(input: string, replacements: Record<string, string>): string {
   let output = input;
   for (const [from, to] of Object.entries(replacements)) {
@@ -333,12 +327,37 @@ function replaceTokens(input: string, replacements: Record<string, string>): str
   return output;
 }
 
-function isLikelyBinary(buffer: Buffer): boolean {
-  const sample = buffer.subarray(0, Math.min(buffer.length, 1024));
-  for (const byte of sample) {
-    if (byte === 0) {
-      return true;
+async function applyExtraReplacementsAsync({
+  cwd,
+  files,
+  replacements,
+}: {
+  cwd: string;
+  files: string[];
+  replacements: Record<string, string>;
+}) {
+  for (const file of files) {
+    const absolute = path.join(cwd, file);
+    let contents: string;
+    try {
+      contents = await fs.readFile(absolute, "utf8");
+    } catch (error) {
+      if (!(error instanceof Error) || !("code" in error) || error.code !== "ENOENT") {
+        throw error;
+      }
+
+      continue;
     }
+
+    const replacement = replaceTokens(contents, replacements);
+    if (replacement === contents) {
+      continue;
+    }
+
+    await fs.writeFile(absolute, replacement, "utf8");
   }
-  return false;
+}
+
+function normalizeToPosixPath(input: string): string {
+  return input.replaceAll(path.sep, "/");
 }

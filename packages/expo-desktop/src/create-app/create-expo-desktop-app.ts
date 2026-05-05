@@ -52,7 +52,7 @@ export async function createExpoDesktopApp({
   await appendRootGitignoreSpawnDebugLogs(projectPath);
 
   const templateSelection = {
-    // https://github.com/expo/expo/blob/sdk-54/templates/expo-template-blank-typescript/package.json
+    // https://github.com/expo/expo/blob/sdk-54/templates/expo-template-blank-typescript
     template: templates.template,
     "template-ios": templates["template-ios"],
     "template-android": templates["template-android"],
