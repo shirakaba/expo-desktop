@@ -1,5 +1,14 @@
 # expo-desktop
 
+## 0.1.19
+
+### Patch Changes
+
+- Support pnpm and Windows Config Plugins
+- Updated dependencies
+  - expo-desktop-config-plugins@1.1.19
+  - expo-desktop-prebuild-config@1.0.8
+
 ## 0.1.18
 
 ### Patch Changes
