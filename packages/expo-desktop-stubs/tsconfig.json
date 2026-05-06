@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    // Hermes still doesn't support ESM natively, but does support CJS:
+    // - https://github.com/facebook/hermes/issues/1382
+    // - https://github.com/facebook/hermes/discussions/1391
+    // - https://github.com/facebook/hermes/blob/main/doc/Modules.md
+    //
+    // Though, given the code is going to be bundled anyway, I think we should
+    // lean towards ESM to assist the bundler's static analysis.
+    "module": "commonjs",
+
+    // This target and lib is arbitrary. Not based on anything.
+    "target": "es2024",
+    "lib": [
+      "es2024",
+      "ESNext.Array",
+      "ESNext.Collection",
+      "ESNext.Error",
+      "ESNext.Iterator",
+      "ESNext.Promise"
+    ],
+
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "exactOptionalPropertyTypes": true
+  },
+  "include": ["src"]
+}
