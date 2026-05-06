@@ -305,6 +305,10 @@ async function copyTemplateFilesAsync({
     files: filesToRename,
   });
 
+  if (forPlatform === "macos") {
+    await renameMacosUnderscoreGitignore(projectRoot);
+  }
+
   if (forPlatform === "windows") {
     await applyWindowsCppAppTemplateAsync(projectRoot, name);
   }
@@ -378,4 +382,26 @@ async function applyExtraReplacementsAsync({
 
 function normalizeToPosixPath(input: string): string {
   return input.replaceAll(path.sep, "/");
+}
+
+async function renameMacosUnderscoreGitignore(projectRoot: string): Promise<void> {
+  const from = path.join(projectRoot, "macos", "_gitignore");
+  const to = path.join(projectRoot, "macos", ".gitignore");
+  try {
+    await fs.access(from);
+  } catch (error) {
+    if (!(error instanceof Error) || !("code" in error) || error.code !== "ENOENT") {
+      throw error;
+    }
+    return;
+  }
+  try {
+    await fs.rename(from, to);
+  } catch (error) {
+    if (error instanceof Error && "code" in error && error.code === "EEXIST") {
+      await fs.unlink(from);
+      return;
+    }
+    throw error;
+  }
 }

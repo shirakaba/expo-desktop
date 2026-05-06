@@ -1,8 +1,11 @@
+import { glob } from "glob";
 import mustache from "mustache";
 import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+
+import packageJson from "../../package.json" with { type: "json" };
 
 /**
  * Mirrors the effective behaviour of `vnext/templates/cpp-app/template.config.js`
@@ -34,6 +37,7 @@ export async function applyWindowsCppAppTemplateAsync(
 
   await renameCppAppPathsAsync(windowsRoot, name.filesafeName);
   await renderMustacheUnderWindowsAsync(windowsRoot, replacements);
+  await finalizeWindowsCppTemplateArtifacts(projectRoot, windowsRoot);
 }
 
 async function looksLikeCppAppTemplateAsync(windowsRoot: string): Promise<boolean> {
@@ -352,4 +356,73 @@ async function renderMustacheUnderWindowsAsync(
       }
     }),
   );
+}
+
+async function finalizeWindowsCppTemplateArtifacts(
+  projectRoot: string,
+  windowsRoot: string,
+): Promise<void> {
+  const gitignoreRelPaths = await glob("**/_gitignore", {
+    cwd: windowsRoot,
+    nodir: true,
+    dot: true,
+  });
+
+  for (const rel of gitignoreRelPaths.sort().reverse()) {
+    const fromAbs = path.join(windowsRoot, rel);
+    const toAbs = path.join(windowsRoot, path.dirname(rel), ".gitignore");
+    await renameIfExistsPreferDest(fromAbs, toAbs);
+  }
+
+  await renameIfExistsPreferDest(
+    path.join(projectRoot, "NuGet_Config"),
+    path.join(projectRoot, "NuGet.config"),
+  );
+
+  const version = packageJson.version;
+  const banner = `<!-- This project was created with expo-desktop ${version} -->`;
+  const reactNativeWindowsBanner =
+    /<!--\s*This project was created with react-native-windows[^\n\r]*-->/g;
+
+  const vcxprojRelPaths = await glob("windows/**/*.vcxproj", {
+    cwd: projectRoot,
+    nodir: true,
+    dot: true,
+  });
+
+  await Promise.all(
+    vcxprojRelPaths.map(async (relPath) => {
+      const absolutePath = path.join(projectRoot, relPath);
+      let contents: string;
+      try {
+        contents = await fs.readFile(absolutePath, "utf8");
+      } catch {
+        return;
+      }
+      const replaced = contents.replace(reactNativeWindowsBanner, banner);
+      if (replaced !== contents) {
+        await fs.writeFile(absolutePath, replaced, "utf8");
+      }
+    }),
+  );
+}
+
+async function renameIfExistsPreferDest(from: string, to: string): Promise<void> {
+  try {
+    await fs.access(from);
+  } catch (error) {
+    if (!(error instanceof Error) || !("code" in error) || error.code !== "ENOENT") {
+      throw error;
+    }
+    return;
+  }
+  try {
+    await fs.rename(from, to);
+  } catch (error) {
+    if (error instanceof Error && "code" in error && error.code === "EEXIST") {
+      await fs.unlink(from);
+      return;
+    }
+    throw error;
+  }
 }
