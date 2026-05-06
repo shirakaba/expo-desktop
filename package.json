@@ -17,7 +17,7 @@
     "oxfmt": "^0.47.0"
   },
   "lint-staged": {
-    "*.{css,html,js,jsx,json,md,toml,ts,tsx}": [
+    "*.{css,html,js,jsx,json,md,toml,ts,tsx,yaml}": [
       "oxfmt"
     ]
   }

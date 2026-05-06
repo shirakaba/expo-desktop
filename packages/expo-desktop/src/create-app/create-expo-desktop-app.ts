@@ -72,6 +72,12 @@ export async function createExpoDesktopApp({
     selection: templateSelection,
     enabledPlatforms: ["ios", "android", "macos", "windows"],
     name,
+    // I had originally hoped to consume the template.config.js file provided by
+    // the template, but the prototype in cpp-app imports dependencies like
+    // "chalk", "lodash", "username", and "../templateUtils" that it doesn't
+    // declare in any package.json, so we can't reliably support it. Will
+    // revisit the idea in future.
+    respectTemplateConfig: false,
   });
   console.log(`${green("◆")}  Applied templates.\n`);
 

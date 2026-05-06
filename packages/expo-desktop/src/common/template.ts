@@ -15,11 +15,13 @@ export async function applySelectedTemplatesAsync({
   selection,
   enabledPlatforms,
   name,
+  respectTemplateConfig,
 }: {
   projectRoot: string;
   selection: TemplateSelection;
   enabledPlatforms: readonly TemplatePlatform[];
   name: { displayName: string; filesafeName: string; rdns: string };
+  respectTemplateConfig: boolean;
 }) {
   const descriptors = getOrderedTemplateDescriptors(selection, enabledPlatforms);
   if (!descriptors.length) {
@@ -42,7 +44,9 @@ export async function applySelectedTemplatesAsync({
     const extracted = await prepareTemplateSourceAsync(source);
     try {
       const templateRoot = await resolveTemplateRootAsync(extracted, source);
-      const templateConfig = await loadTemplateConfigAsync(templateRoot);
+      const templateConfig = respectTemplateConfig
+        ? await loadTemplateConfigAsync(templateRoot)
+        : undefined;
       await copyTemplateFilesAsync({
         sourceRoot: templateRoot,
         projectRoot,
@@ -217,12 +221,12 @@ async function resolveTemplateRootAsync(
   return templateRoot;
 }
 
-async function loadTemplateConfigAsync(templateRoot: string): Promise<TemplateConfig | null> {
+async function loadTemplateConfigAsync(templateRoot: string): Promise<TemplateConfig | undefined> {
   const configPath = path.join(templateRoot, "template.config.js");
   try {
     await fs.access(configPath);
   } catch {
-    return null;
+    return;
   }
 
   const imported = (await import(pathToFileURL(configPath).href)) as {
@@ -247,7 +251,7 @@ async function copyTemplateFilesAsync({
   sourceRoot: string;
   projectRoot: string;
   name: { displayName: string; filesafeName: string; rdns: string };
-  templateConfig: TemplateConfig | null;
+  templateConfig?: TemplateConfig | undefined;
 }) {
   const mappings = templateConfig?.files?.length
     ? templateConfig.files.map((mapping) => ({
