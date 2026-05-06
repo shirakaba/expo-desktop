@@ -29,6 +29,7 @@
   "type": "module",
   "react-native": "src/index.ts",
   "scripts": {
+    "codegen:windows": "react-native codegen-windows",
     "build": "tsgo --declaration --emitDeclarationOnly --allowJs --outDir types"
   },
   "devDependencies": {
@@ -40,6 +41,10 @@
     "react-native-windows": "*"
   },
   "codegenConfig": {
+    "name": "ExpoDesktopStubsSpec",
+    "type": "modules",
+    "jsSrcDir": "src",
+    "includesGeneratedCode": false,
     "windows": {
       "namespace": "ExpoDesktopStubsCodegen",
       "outputDirectory": "windows/ExpoDesktopStubs/codegen",
