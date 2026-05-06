@@ -4,6 +4,7 @@ const { withDisplayName: withDisplayNameIos } = require("./ios/Name");
 const { withDisplayName: withDisplayNameMacos } = require("./macos/Name");
 const { withExpoAppDelegate } = require("./macos/withExpoAppDelegate");
 const { withExpoXcodeBuildPhase } = require("./macos/withExpoXcodeBuildPhase");
+const { withExpoAppCpp } = require("./windows/withExpoAppCpp");
 
 /**
  * @type {import("@expo/config-plugins").ConfigPlugin<{ displayName: string; bundleIdentifier?: string }>}
@@ -24,6 +25,8 @@ module.exports = function withExpoDesktop(config, props) {
   // with.
   config = withExpoAppDelegate(config, { windowTitle: props.displayName });
   config = withExpoXcodeBuildPhase(config, props);
+
+  config = withExpoAppCpp(config, { windowTitle: props.displayName });
 
   // TODO: We need a plugin to rename files like `myapp6.xcodeproj` to the
   //       actual filesafe name that the user requested. Some examples of
