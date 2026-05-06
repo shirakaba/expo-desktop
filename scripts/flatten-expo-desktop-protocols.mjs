@@ -4,6 +4,10 @@
  * Flatten or restore npm `workspace:` and `catalog:` specifiers in
  * `expo-desktop-config-plugins` and `expo-desktop-prebuild-config` only.
  *
+ * Catalog tables are read from `pnpm-workspace.yaml` with `js-yaml`
+ * (dependency of the `scripts` workspace package). Workspace package versions
+ * come from `pnpm list -r --depth -1 --json`.
+ *
  * Usage (from repo root):
  *   node scripts/flatten-expo-desktop-protocols.mjs flatten
  *   node scripts/flatten-expo-desktop-protocols.mjs restore
@@ -12,9 +16,11 @@
  * repo root (gitignored). Run `restore` before `flatten` again.
  */
 
+import cp from "node:child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
+import yaml from "js-yaml";
 
 const __dirname = import.meta.dirname;
 const REPO_ROOT = path.resolve(__dirname, "..");
@@ -46,29 +52,71 @@ async function readJson(p) {
   return JSON.parse(await fs.readFile(p, "utf8"));
 }
 
-async function loadWorkspaceVersions(rootDir) {
-  const rootPkg = await readJson(path.join(rootDir, "package.json"));
-  const workspaces = rootPkg.workspaces;
-  if (!Array.isArray(workspaces)) {
-    throw new Error("Root package.json has no workspaces array.");
+/**
+ * @param {string} absWorkspaceYaml
+ * @returns {Promise<Record<string, Record<string, string>>>}
+ */
+async function loadCatalogsFromPnpmWorkspace(absWorkspaceYaml) {
+  const text = await fs.readFile(absWorkspaceYaml, "utf8");
+  const doc = yaml.load(text);
+  const raw =
+    doc && typeof doc === "object" && !Array.isArray(doc) && "catalogs" in doc
+      ? /** @type {Record<string, unknown>} */ (doc).catalogs
+      : undefined;
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+    return {};
+  }
+  /** @type {Record<string, Record<string, string>>} */
+  const catalogs = {};
+  for (const [catalogName, table] of Object.entries(raw)) {
+    if (table && typeof table === "object" && !Array.isArray(table)) {
+      catalogs[catalogName] = /** @type {Record<string, string>} */ (table);
+    }
+  }
+  return catalogs;
+}
+
+function loadVersionsByNameFromPnpm(rootDir) {
+  let stdout;
+  try {
+    stdout = cp.execFileSync("pnpm", ["list", "-r", "--depth", "-1", "--json"], {
+      cwd: rootDir,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    throw new Error(
+      `Failed to run "pnpm list -r --depth -1 --json" (is pnpm installed and on PATH?). ${msg}`,
+    );
+  }
+  const list = JSON.parse(stdout);
+  if (!Array.isArray(list)) {
+    throw new Error("pnpm list JSON was not an array.");
   }
   /** @type {Map<string, string>} */
   const byName = new Map();
-  for (const ws of workspaces) {
-    const pkgPath = path.join(rootDir, ws, "package.json");
-    if (!(await pathExists(pkgPath))) {
-      continue;
-    }
-    try {
-      const pkg = await readJson(pkgPath);
-      if (typeof pkg.name === "string" && typeof pkg.version === "string") {
-        byName.set(pkg.name, pkg.version);
-      }
-    } catch {
-      // skip invalid workspace entries
+  for (const entry of list) {
+    if (
+      entry &&
+      typeof entry === "object" &&
+      typeof entry.name === "string" &&
+      typeof entry.version === "string"
+    ) {
+      byName.set(entry.name, entry.version);
     }
   }
-  return { catalogs: rootPkg.catalogs ?? {}, versionsByName: byName };
+  return byName;
+}
+
+async function loadWorkspaceVersions(rootDir) {
+  const wsPath = path.join(rootDir, "pnpm-workspace.yaml");
+  if (!(await pathExists(wsPath))) {
+    throw new Error(`Missing ${wsPath}.`);
+  }
+  const catalogs = await loadCatalogsFromPnpmWorkspace(wsPath);
+  const versionsByName = loadVersionsByNameFromPnpm(rootDir);
+  return { catalogs, versionsByName };
 }
 
 /**

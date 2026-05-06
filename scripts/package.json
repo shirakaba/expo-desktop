@@ -1,5 +1,5 @@
 {
-  "name": "expo-desktop-scripts",
+  "name": "expo-desktop-monorepo-scripts",
   "version": "0.1.0",
   "private": true,
   "devDependencies": {
