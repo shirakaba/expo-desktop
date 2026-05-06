@@ -14,6 +14,7 @@ import { makePrettySummary } from "../common/arktype.ts";
 import { promisifiedSpawnTask, SPAWN_DEBUG_LOG_GLOB } from "../common/child-process.ts";
 import { title } from "../common/clack.ts";
 import { packageManagerExec } from "../common/npm.ts";
+import { preserveFile } from "../common/preserve-file.ts";
 import { applySelectedTemplatesAsync, type TemplateSelection } from "../common/template.ts";
 
 export async function createExpoDesktopApp({
@@ -146,10 +147,12 @@ export async function createExpoDesktopApp({
 }
 
 async function createExpoApp({
+  localDev,
   name,
   packageManager,
   versions,
 }: {
+  localDev?: boolean | undefined;
   name: {
     displayName: string;
     filesafeName: string;
@@ -165,6 +168,21 @@ async function createExpoApp({
     macos: string;
   };
 }) {
+  // `create-expo-app` aggravatingly reconfigures your workspace to use
+  // `nodeLinker: hoisted`, which sucks when creating sample projects inside
+  // this monorepo during local dev. So we fight back.
+  //
+  // For non-local dev, it sounds like we can use `nodeLinker: isolated` as of
+  // Expo SDK 54, so I'm tempted to enforce that in created templates, too. But
+  // one thing at a time.
+  // - https://docs.expo.dev/more/create-expo/#pnpm
+  // - https://github.com/expo/expo/blob/222b3b12610d69784bab6c5a188a46ea388f866a/packages/create-expo/src/resolvePackageManager.ts#L109
+  const gen = preserveFile({
+    enable: !localDev,
+    filePath: localDev ? path.resolve(import.meta.dirname, "../../../../pnpm-workspace.yaml") : "",
+  });
+  await gen.next();
+
   // `npm create` drops flags meant for create-expo-app unless you add `--`; use
   // `npx --yes` instead to forward args correctly and skip prompts.
   const command = packageManager === "npm" ? "npx" : packageManager;
@@ -199,6 +217,8 @@ async function createExpoApp({
       `Error running ${yellow("create expo-app")}${error instanceof Error ? `: ${error.message}` : "."}`,
     );
     process.exit(1);
+  } finally {
+    await gen.next();
   }
 
   return { projectPath };
