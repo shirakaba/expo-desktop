@@ -443,10 +443,17 @@ async function npmInstall({
   // ancestor directory if there is one. This is particularly inconvenient
   // during local dev when we're creating samples inside the monorepo.
   if (asNewWorkspace && packageManager === "pnpm") {
-    await fs.writeFile(path.resolve(cwd, "pnpm-workspace.yaml"), "", {
-      flag: "x",
-      encoding: "utf-8",
-    });
+    // Ensure a file name pnpm-workspace.yaml exists.
+    try {
+      await fs.writeFile(path.resolve(cwd, "pnpm-workspace.yaml"), "", {
+        flag: "wx",
+        encoding: "utf-8",
+      });
+    } catch (error) {
+      if (!(error instanceof Error) || !("code" in error) || error.code !== "EEXIST") {
+        throw error;
+      }
+    }
   }
 
   try {
