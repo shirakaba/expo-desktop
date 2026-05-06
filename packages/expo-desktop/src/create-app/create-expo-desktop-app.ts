@@ -95,7 +95,7 @@ export async function createExpoDesktopApp({
   });
 
   title("Installing dependencies…", { spacing: 1 });
-  await npmInstall({ cwd: projectPath, packageManager });
+  await npmInstall({ asNewWorkspace: true, cwd: projectPath, packageManager });
 
   await updatePackageJson({
     name,
@@ -170,7 +170,8 @@ async function createExpoApp({
 }) {
   // `create-expo-app` aggravatingly reconfigures your workspace to use
   // `nodeLinker: hoisted`, which sucks when creating sample projects inside
-  // this monorepo during local dev. So we fight back.
+  // this monorepo during local dev (even with `--no-install`). So we fight
+  // back.
   //
   // For non-local dev, it sounds like we can use `nodeLinker: isolated` as of
   // Expo SDK 54, so I'm tempted to enforce that in created templates, too. But
@@ -424,16 +425,29 @@ async function updatePackageJson({
 }
 
 async function npmInstall({
+  asNewWorkspace,
   cwd,
   packageManager,
 }: {
-  cwd?: string;
+  /** WIP monorepo awareness. */
+  asNewWorkspace: boolean;
+  cwd: string;
   packageManager: "npm" | "bun" | "pnpm";
 }) {
   const command = packageManager;
   const args = ["install"];
 
   console.log(`${cyan("◆")}  Running: ${yellow(`${command} ${args.join(" ")}`)}\n`);
+
+  // Unlike npm and bun, pnpm climbs up to install dependencies in the closest
+  // ancestor directory if there is one. This is particularly inconvenient
+  // during local dev when we're creating samples inside the monorepo.
+  if (asNewWorkspace && packageManager === "pnpm") {
+    await fs.writeFile(path.resolve(cwd, "pnpm-workspace.yaml"), "", {
+      flag: "x",
+      encoding: "utf-8",
+    });
+  }
 
   try {
     await tasks([
