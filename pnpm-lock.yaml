@@ -178,6 +178,12 @@ importers:
         specifier: ^6.1.1
         version: 6.1.1
 
+  scripts:
+    devDependencies:
+      js-yaml:
+        specifier: ^4.1.1
+        version: 4.1.1
+
 packages:
 
   '@ark/schema@0.56.0':
