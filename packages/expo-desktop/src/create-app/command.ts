@@ -28,7 +28,7 @@ export async function newExpoDesktopProject(args: {
         filesafeName: "YourApp456",
         rdns: "uk.co.birchlabs.your-app-456",
       },
-      packageManager: "bun",
+      packageManager: "pnpm",
       templates: {
         template: args.template,
         "template-ios": args["template-ios"],
