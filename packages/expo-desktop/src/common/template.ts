@@ -4,6 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
+import { applyWindowsCppAppTemplateAsync } from "./apply-windows-cpp-app-template.ts";
 import { promisifiedSpawnTask } from "./child-process.ts";
 import {
   getTemplateFilesToRenameAsync,
@@ -55,6 +56,7 @@ export async function applySelectedTemplatesAsync({
         projectRoot,
         name,
         templateConfig,
+        forPlatform: descriptor.forPlatform,
       });
     } finally {
       await fs.rm(extracted, { recursive: true, force: true });
@@ -253,12 +255,14 @@ async function copyTemplateFilesAsync({
   projectRoot,
   name,
   templateConfig,
+  forPlatform,
 }: {
   sourceRoot: string;
   projectRoot: string;
   name: { displayName: string; filesafeName: string; rdns: string };
   templateConfig?: TemplateConfig | undefined;
-}) {
+  forPlatform?: TemplatePlatform | undefined;
+}): Promise<void> {
   const mappings = templateConfig?.files?.length
     ? templateConfig.files.map((mapping) => ({
         from: path.join(sourceRoot, mapping.from),
@@ -300,6 +304,10 @@ async function copyTemplateFilesAsync({
     filesafeName: name.filesafeName,
     files: filesToRename,
   });
+
+  if (forPlatform === "windows") {
+    await applyWindowsCppAppTemplateAsync(projectRoot, name);
+  }
 }
 
 async function discoverAllFilesAsync(
