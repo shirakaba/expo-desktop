@@ -7,7 +7,7 @@ const {
   withLegacyExpoPlugins,
   withVersionedExpoSDKPlugins,
 } = require("@expo/prebuild-config/build/plugins/withDefaultPlugins");
-const { withMacosExpoPlugins } = require("./withDefaultPlugins");
+const { withMacosExpoPlugins, withWindowsExpoPlugins } = require("./withDefaultPlugins");
 
 /**
  * @param {string} projectRoot
@@ -84,6 +84,14 @@ function getPrebuildConfig(
     config = withAndroidExpoPlugins(config, {
       package: config.android.package,
       projectRoot,
+    });
+  }
+
+  if (platforms.includes("windows")) {
+    if (!config.windows) config.windows = {};
+
+    config = withWindowsExpoPlugins(config, {
+      displayName,
     });
   }
 

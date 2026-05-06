@@ -27,6 +27,7 @@ const {
 const {
   withMacosJsEnginePodfileProps,
 } = require("expo-desktop-config-plugins/plugins/macos/withMacosJsEnginePodfileProps");
+const withExpoDesktop = require("expo-desktop-config-plugins/plugins/with-expo-desktop");
 
 const {
   getAutoPlugins,
@@ -94,6 +95,28 @@ function withMacosExpoPlugins(config, { bundleIdentifier, displayName }) {
 }
 module.exports.withMacosExpoPlugins = withMacosExpoPlugins;
 
+/**
+ * Config plugin to apply all of the custom Expo Windows config plugins we
+ * support by default.
+ *
+ * Skips when there is no `windows/` folder (e.g. mobile-only workflows).
+ *
+ * @type {import("@expo/config-plugins").ConfigPlugin<{ displayName?: string }>}
+ */
+function withWindowsExpoPlugins(config, { displayName } = {}) {
+  const projectRoot = config._internal?.projectRoot;
+  if (typeof projectRoot === "string" && !projectHasWindowsNativeTree(projectRoot)) {
+    return config;
+  }
+
+  if (!config.windows) {
+    config.windows = {};
+  }
+
+  return withPlugins(config, [[withExpoDesktop, { displayName: displayName ?? config.name }]]);
+}
+module.exports.withWindowsExpoPlugins = withWindowsExpoPlugins;
+
 function projectHasMacosNativeTree(projectRoot) {
   try {
     return fs.statSync(path.join(projectRoot, "macos")).isDirectory();
@@ -102,3 +125,12 @@ function projectHasMacosNativeTree(projectRoot) {
   }
 }
 module.exports.projectHasMacosNativeTree = projectHasMacosNativeTree;
+
+function projectHasWindowsNativeTree(projectRoot) {
+  try {
+    return fs.statSync(path.join(projectRoot, "windows")).isDirectory();
+  } catch {
+    return false;
+  }
+}
+module.exports.projectHasWindowsNativeTree = projectHasWindowsNativeTree;
