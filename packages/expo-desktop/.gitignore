@@ -1,5 +1,6 @@
 # I tend to test the CLI by creating an app under this directory.
 /MyApp*
+/YourApp*
 
 # The JS build from the TS sources (Node.js can't run TS from node_modules).
 /build

@@ -25,8 +25,8 @@ export async function newExpoDesktopProject(args: {
     await createExpoDesktopApp({
       name: {
         displayName: "My App Display Name",
-        filesafeName: "MyApp6",
-        rdns: "com.example.my-app-123",
+        filesafeName: "YourApp123",
+        rdns: "uk.co.birchlabs.your-app-123",
       },
       packageManager: "bun",
       templates: {
