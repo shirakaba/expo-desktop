@@ -4,7 +4,7 @@
   "private": true,
   "main": "index.ts",
   "scripts": {
-    "start": "expo start",
+    "start": "cross-env EXPO_NO_TYPESCRIPT_SETUP=1 expo start",
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
@@ -28,7 +28,8 @@
     "@react-native/metro-config": "catalog:react-native-81",
     "@rnx-kit/metro-config": "latest",
     "@types/react": "catalog:react-native-81",
-    "@typescript/native-preview": "catalog:base"
+    "@typescript/native-preview": "catalog:base",
+    "cross-env": "^10.1.0"
   },
   "overrides": {
     "react": "catalog:react-native-81",
