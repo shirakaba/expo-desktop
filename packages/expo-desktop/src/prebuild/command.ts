@@ -89,6 +89,7 @@ export async function prebuild({
       selection: templateSelection,
       enabledPlatforms: platforms,
       name: appName,
+      respectTemplateConfig: false,
     });
     log.info("Applied project templates for clean prebuild.", { withGuide: false });
   }
