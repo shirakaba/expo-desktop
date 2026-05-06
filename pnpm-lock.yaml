@@ -25,6 +25,12 @@ catalogs:
     '@expo/config-plugins':
       specifier: ^54.0.4
       version: 54.0.4
+    '@expo/config-types':
+      specifier: ^54.0.10
+      version: 54.0.10
+    '@expo/prebuild-config':
+      specifier: ^54.0.8
+      version: 54.0.8
 
 importers:
 
@@ -129,47 +135,47 @@ importers:
         version: 3.0.1
     devDependencies:
       '@expo/config-plugins':
-        specifier: ^54.0.4
+        specifier: catalog:react-native-81
         version: 54.0.4
       '@expo/config-types':
-        specifier: ^54.0.10
+        specifier: catalog:react-native-81
         version: 54.0.10
       '@tsconfig/node24':
-        specifier: ^24.0.4
+        specifier: catalog:base
         version: 24.0.4
       '@types/debug':
         specifier: ^4.1.7
         version: 4.1.13
       '@types/node':
-        specifier: ^24.12.2
+        specifier: catalog:base
         version: 24.12.2
       '@typescript/native-preview':
-        specifier: ^7.0.0-dev.20260425.1
+        specifier: catalog:base
         version: 7.0.0-dev.20260504.1
 
   packages/expo-desktop-prebuild-config:
     dependencies:
       expo-desktop-config-plugins:
-        specifier: ^1.1.17
-        version: 1.1.17(@expo/config-plugins@54.0.4)(@expo/config-types@55.0.5)
+        specifier: 'workspace:'
+        version: link:../expo-desktop-config-plugins
     devDependencies:
       '@expo/config':
-        specifier: ^12.0.13
+        specifier: catalog:react-native-81
         version: 12.0.13
       '@expo/config-plugins':
-        specifier: ^54.0.4
+        specifier: catalog:react-native-81
         version: 54.0.4
       '@expo/prebuild-config':
-        specifier: ^54.0.8
+        specifier: catalog:react-native-81
         version: 54.0.8(expo@55.0.19)
       '@tsconfig/node24':
-        specifier: ^24.0.4
+        specifier: catalog:base
         version: 24.0.4
       '@types/node':
-        specifier: ^24.12.2
+        specifier: catalog:base
         version: 24.12.2
       '@typescript/native-preview':
-        specifier: ^7.0.0-dev.20260425.1
+        specifier: catalog:base
         version: 7.0.0-dev.20260504.1
 
   packages/expo-desktop/scripts:
@@ -2069,12 +2075,6 @@ packages:
     peerDependencies:
       expo: '*'
       react-native: '*'
-
-  expo-desktop-config-plugins@1.1.17:
-    resolution: {integrity: sha512-WUysXNe5SMIQCFzo9i6wBOgZpNvEwYZNLM1ViebLNcUama7ztCLIXg9cVB/n0orIjinWg27CUFyefQQWNlC/PA==}
-    peerDependencies:
-      '@expo/config-plugins': '>=54.0.0'
-      '@expo/config-types': '>=54.0.0'
 
   expo-file-system@55.0.17:
     resolution: {integrity: sha512-d27K1cagUOt2BwxwPka9KW8Znu5kN1tnairozCzzCRZviZFtWnBxwFuJ3KU6MAbav/9UhSMkp5Ve/oZ+SR0UgQ==}
@@ -4815,7 +4815,7 @@ snapshots:
       '@jest/schemas': 29.6.3
       '@types/istanbul-lib-coverage': 2.0.6
       '@types/istanbul-reports': 3.0.4
-      '@types/node': 24.12.2
+      '@types/node': 25.6.0
       '@types/yargs': 17.0.35
       chalk: 4.1.2
 
@@ -5212,7 +5212,6 @@ snapshots:
   '@types/node@25.6.0':
     dependencies:
       undici-types: 7.19.2
-    optional: true
 
   '@types/yargs-parser@21.0.3': {}
 
@@ -5548,7 +5547,7 @@ snapshots:
 
   chrome-launcher@0.15.2:
     dependencies:
-      '@types/node': 24.12.2
+      '@types/node': 25.6.0
       escape-string-regexp: 4.0.0
       is-wsl: 2.2.0
       lighthouse-logger: 1.4.2
@@ -5557,7 +5556,7 @@ snapshots:
 
   chromium-edge-launcher@0.2.0:
     dependencies:
-      '@types/node': 24.12.2
+      '@types/node': 25.6.0
       escape-string-regexp: 4.0.0
       is-wsl: 2.2.0
       lighthouse-logger: 1.4.2
@@ -5568,7 +5567,7 @@ snapshots:
 
   chromium-edge-launcher@0.3.0:
     dependencies:
-      '@types/node': 24.12.2
+      '@types/node': 25.6.0
       escape-string-regexp: 4.0.0
       is-wsl: 2.2.0
       lighthouse-logger: 1.4.2
@@ -5804,21 +5803,6 @@ snapshots:
       '@expo/env': 2.1.1
       expo: 55.0.19(@babel/core@7.29.0)(@expo/dom-webview@55.0.5)(react-native@0.85.2(@babel/core@7.29.0)(react@19.2.5))(react@19.2.5)
       react-native: 0.85.2(@babel/core@7.29.0)(react@19.2.5)
-    transitivePeerDependencies:
-      - supports-color
-
-  expo-desktop-config-plugins@1.1.17(@expo/config-plugins@54.0.4)(@expo/config-types@55.0.5):
-    dependencies:
-      '@expo/config-plugins': 54.0.4
-      '@expo/config-types': 55.0.5
-      '@expo/json-file': 10.0.13
-      '@expo/plist': 0.4.8
-      chalk: 4.1.2
-      debug: 4.4.3
-      glob: 10.5.0
-      slash: 3.0.0
-      slugify: 1.6.9
-      xcode: 3.0.1
     transitivePeerDependencies:
       - supports-color
 
@@ -6155,7 +6139,7 @@ snapshots:
   jest-util@29.7.0:
     dependencies:
       '@jest/types': 29.6.3
-      '@types/node': 24.12.2
+      '@types/node': 25.6.0
       chalk: 4.1.2
       ci-info: 3.9.0
       graceful-fs: 4.2.11
@@ -6172,7 +6156,7 @@ snapshots:
 
   jest-worker@29.7.0:
     dependencies:
-      '@types/node': 24.12.2
+      '@types/node': 25.6.0
       jest-util: 29.7.0
       merge-stream: 2.0.0
       supports-color: 8.1.1
@@ -7360,8 +7344,7 @@ snapshots:
 
   undici-types@7.16.0: {}
 
-  undici-types@7.19.2:
-    optional: true
+  undici-types@7.19.2: {}
 
   unicode-canonical-property-names-ecmascript@2.0.1: {}
 
