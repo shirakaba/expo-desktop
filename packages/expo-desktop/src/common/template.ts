@@ -39,9 +39,12 @@ export async function applySelectedTemplatesAsync({
   // windows:
   // - https://github.com/microsoft/react-native-windows/blob/3d64f71ed8495da6a0dcfc1f97bcb8f761986594/packages/%40react-native-windows/cli/src/generator-windows/index.ts#L57
   // - https://github.com/microsoft/react-native-windows/tree/main/vnext/templates/cpp-app
-  for (const descriptor of descriptors) {
+  for (const [index, descriptor] of Object.entries(descriptors)) {
     const source = parseTemplateSource(descriptor.value);
-    const extracted = await prepareTemplateSourceAsync(source);
+    const extracted = await prepareTemplateSourceAsync(
+      `Extracting template ${parseInt(index) + 1}/${descriptors.length} (--template ${descriptor.key})`,
+      source,
+    );
     try {
       const templateRoot = await resolveTemplateRootAsync(extracted, source);
       const templateConfig = respectTemplateConfig
@@ -152,7 +155,10 @@ type TemplateSource =
   | { type: "github"; owner: string; repo: string; ref: string; subpath: string | null }
   | { type: "npm"; spec: string };
 
-async function prepareTemplateSourceAsync(source: TemplateSource): Promise<string> {
+async function prepareTemplateSourceAsync(
+  taskTitle: string,
+  source: TemplateSource,
+): Promise<string> {
   const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), "expo-desktop-template-"));
   const archivePath = path.join(tempRoot, "template.tgz");
   switch (source.type) {
@@ -190,7 +196,7 @@ async function prepareTemplateSourceAsync(source: TemplateSource): Promise<strin
 
   await tasks([
     promisifiedSpawnTask({
-      title: "extracting template",
+      title: taskTitle,
       command: "tar",
       args: ["-xzf", archivePath, "-C", tempRoot],
     }),
