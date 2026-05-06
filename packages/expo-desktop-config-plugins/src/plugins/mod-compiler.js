@@ -4,6 +4,7 @@ const { assertModResults } = require("@expo/config-plugins/build/plugins/createB
 const { withAndroidBaseMods } = require("@expo/config-plugins/build/plugins/withAndroidBaseMods");
 const { withIosBaseMods } = require("@expo/config-plugins/build/plugins/withIosBaseMods");
 const { withMacosBaseMods } = require("./macos/withMacosBaseMods");
+const { withWindowsBaseMods } = require("./windows/withWindowsBaseMods");
 const { getHackyProjectName } = require("./macos/Xcodeproj");
 const { sortMods } = require("@expo/config-plugins/build/plugins/mod-compiler");
 const { PluginError } = require("@expo/config-plugins");
@@ -20,6 +21,7 @@ function withDefaultBaseMods(config, props = {}) {
   config = withIosBaseMods(config, props);
   config = withAndroidBaseMods(config, props);
   config = withMacosBaseMods(config, props);
+  config = withWindowsBaseMods(config, props);
   return config;
 }
 module.exports.withDefaultBaseMods = withDefaultBaseMods;
@@ -73,6 +75,11 @@ function withIntrospectionBaseMods(config, props = {}) {
     skipEmptyMod: false,
     ...props,
   });
+  config = withWindowsBaseMods(config, {
+    saveToInternal: true,
+    skipEmptyMod: false,
+    ...props,
+  });
 
   if (config.mods) {
     // Remove all mods that don't have an introspection base mod, for instance
@@ -119,6 +126,10 @@ const precedences = {
     // run the XcodeProject mod second because many plugins attempt to read from it.
     xcodeproj: -1,
     // put the finalized mod at the last
+    finalized: 1,
+  },
+  windows: {
+    dangerous: -2,
     finalized: 1,
   },
 };
