@@ -45,27 +45,27 @@ This is a project to bring best-effort support for react-native-macos and react-
 pnpm install
 ```
 
-## Running
+## Development workflow
 
-To run the `create-app` command, I optionally set `localDev: true` defined and explained in `packages/expo-desktop/src/create-app/create-expo-desktop-app.ts` (without committing), then:
+To run the `create-app` command locally:
 
 ```sh
 cd apps/expo-desktop
 
-# (1a) If using `localDev: true`, resolve the `workspace:` and `catalog:`
-#      protocols in our monorepo packages so that we can install them via
-#      `file:` to do local development. Avoids having to publish to npm to test.
+# (1) Resolve the `workspace:` and `catalog:` protocols in our monorepo packages
+#     so that we can install them via `file:` to do local development. Avoids
+#     having to publish to npm to test. Don't commit the changes to package.json
+#     caused by this command.
 pnpm -w run flatten:y
-
-# (1b) If using `localDev: false`, or just want to clean up from a
-#      `localDev: true` run, you can restore those protocols with this command.
-pnpm -w run flatten:n
 
 # (2) If you have a MyApp folder from a previous run that you want to clean up:
 rm -rf MyApp*
 
-# (3) Run the `create-app` command.
-node --run start -- create-app
+# (3) Run the `create-app` command in local dev mode.
+node --run start -- create-app --local-dev
+
+# (4) To clean up after having flattened the protocols earlier.
+pnpm -w run flatten:n
 ```
 
 ## Developing

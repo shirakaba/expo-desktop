@@ -26,6 +26,12 @@ const main = defineCommand({
           description: `The ${kleur.bold("display name")} for the app ${grey("(Examples: 'My App 123', '俺のアプリ')")}`,
           valueHint: "name",
         },
+        "local-dev": {
+          type: "boolean",
+          description:
+            "An undocumented switch for use during development to skip the questionnaire.",
+          hidden: true,
+        },
         rdns: {
           type: "string",
           description: `The ${kleur.bold("reverse DNS")} for the app ${grey("(Example: 'com.example.my-app-123')")}`,

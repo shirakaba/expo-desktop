@@ -16,22 +16,22 @@ import { title } from "../common/clack.ts";
 import { packageManagerExec } from "../common/npm.ts";
 import { applySelectedTemplatesAsync, type TemplateSelection } from "../common/template.ts";
 
-/**
- * A crude switch to use to help with local development.
- *
- * - Skips the questionnaire at the start.
- * - Installs the local copy of expo-desktop-config-plugins rather than pinning
- *   to a published release.
- * - Adds the apply-config-plugins.mjs script.
- */
-export const localDev = false;
-
 export async function createExpoDesktopApp({
+  localDev,
   name,
   packageManager,
   templates,
   versions,
 }: {
+  /**
+   * A crude switch to use to help with local development.
+   *
+   * - Skips the questionnaire at the start.
+   * - Installs the local copy of expo-desktop-config-plugins rather than pinning
+   *   to a published release.
+   * - Adds the apply-config-plugins.mjs script.
+   */
+  localDev?: boolean | undefined;
   name: {
     displayName: string;
     filesafeName: string;
@@ -86,6 +86,7 @@ export async function createExpoDesktopApp({
 
   title("Altering package.json…", { spacing: 1 });
   const { name: packageJsonName } = await updatePackageJson({
+    localDev,
     name,
     projectPath,
     versions,
@@ -299,11 +300,13 @@ async function updateAppJson({
 }
 
 async function updatePackageJson({
+  localDev,
   name,
   projectPath,
   task,
   versions,
 }: {
+  localDev?: boolean | undefined;
   name: {
     displayName: string;
     filesafeName: string;

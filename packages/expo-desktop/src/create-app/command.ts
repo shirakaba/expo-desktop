@@ -4,11 +4,12 @@ import { green, grey } from "kleur/colors";
 import { platform } from "node:process";
 
 import { title } from "../common/clack.ts";
-import { createExpoDesktopApp, localDev } from "./create-expo-desktop-app.ts";
+import { createExpoDesktopApp } from "./create-expo-desktop-app.ts";
 import { previewFileTree } from "./preview-file-tree.ts";
 import { promptForVersion } from "./prompt-for-version.ts";
 
 export async function newExpoDesktopProject(args: {
+  "local-dev": boolean | undefined;
   "filesafe-name": string | undefined;
   "display-name": string | undefined;
   rdns: string | undefined;
@@ -19,9 +20,9 @@ export async function newExpoDesktopProject(args: {
   "template-macos": string | undefined;
   "template-windows": string | undefined;
 }) {
-  // A dev-time switch for skipping the questions
-  const skip = localDev;
-  if (skip) {
+  // A switch for skipping the questions
+  const localDev = args["local-dev"];
+  if (localDev) {
     await createExpoDesktopApp({
       name: {
         displayName: "Your App Display Name",
@@ -81,6 +82,7 @@ export async function newExpoDesktopProject(args: {
   }
 
   await createExpoDesktopApp({
+    localDev,
     name,
     packageManager,
     versions,

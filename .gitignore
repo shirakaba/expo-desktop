@@ -1,5 +1,7 @@
 .DS_Store
 node_modules
+# Seems to be used instead of ~/Library/pnpm/store when installing in worktrees.
+.pnpm-store
 
-# flatten-expo-desktop-protocols.mjs backup
+# Backup created by flatten-expo-desktop-protocols.mjs
 .flatten-expo-desktop-protocol-backup.json
