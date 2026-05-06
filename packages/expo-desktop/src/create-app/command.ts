@@ -24,6 +24,7 @@ export async function newExpoDesktopProject(args: {
   const localDev = args["local-dev"];
   if (localDev) {
     await createExpoDesktopApp({
+      localDev,
       name: {
         displayName: "Your App Display Name",
         filesafeName: "YourApp456",

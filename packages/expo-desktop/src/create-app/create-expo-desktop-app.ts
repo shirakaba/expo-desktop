@@ -49,7 +49,7 @@ export async function createExpoDesktopApp({
     macos: string;
   };
 }) {
-  const { projectPath } = await createExpoApp({ name, packageManager, versions });
+  const { projectPath } = await createExpoApp({ localDev, name, packageManager, versions });
   await appendRootGitignoreSpawnDebugLogs(projectPath);
 
   const templateSelection = {
@@ -178,7 +178,7 @@ async function createExpoApp({
   // - https://docs.expo.dev/more/create-expo/#pnpm
   // - https://github.com/expo/expo/blob/222b3b12610d69784bab6c5a188a46ea388f866a/packages/create-expo/src/resolvePackageManager.ts#L109
   const gen = preserveFile({
-    enable: !localDev,
+    enable: localDev,
     filePath: localDev ? path.resolve(import.meta.dirname, "../../../../pnpm-workspace.yaml") : "",
   });
   await gen.next();
