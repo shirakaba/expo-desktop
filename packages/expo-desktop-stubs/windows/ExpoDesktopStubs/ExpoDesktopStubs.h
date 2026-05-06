@@ -19,8 +19,6 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
-namespace jsi = facebook::jsi;
-
 namespace winrt::ExpoDesktopStubs {
 
 void DebugWriteLine(const std::string &message) noexcept {
@@ -50,10 +48,13 @@ struct DataMarshallingExamples {
  private:
   winrt::Microsoft::ReactNative::ReactContext m_reactContext;
 
+ public:
   // https://github.com/microsoft/react-native-windows/blob/2c3604ceaf073de3aec7e3e56c2286ea1b15287d/vnext/Shared/Modules/BlobModule.cpp#L31
   REACT_INIT(Initialize)
   void Initialize(winrt::Microsoft::ReactNative::ReactContext const &reactContext, facebook::jsi::Runtime &runtime) noexcept {
     m_reactContext = reactContext;
+
+    namespace jsi = facebook::jsi;
 
     // Install empty expo object so that expo JS runs enough to allow Expo modules to load using TurboModules
     auto mainObject = std::make_shared<facebook::jsi::Object>(runtime);
