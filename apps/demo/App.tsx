@@ -1,7 +1,21 @@
 import { StatusBar } from "expo-status-bar";
-import { StyleSheet, Text, View } from "react-native";
+import { useEffect } from "react";
+import { StyleSheet, Text, View, TurboModuleRegistry } from "react-native";
+// import {} from "expo-desktop-stubs"
 
 export default function App() {
+  useEffect(() => {
+    console.log(
+      "Checking",
+      TurboModuleRegistry.get<any>("DataMarshallingExamples").ExplicitPrimitiveArgs(
+        true,
+        1,
+        2.0,
+        "s",
+      ),
+    );
+  }, []);
+
   return (
     <View style={styles.container}>
       <Text>Open up App.tsx to start working on your app!</Text>
