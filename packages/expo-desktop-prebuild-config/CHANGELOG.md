@@ -1,5 +1,13 @@
 # expo-desktop-prebuild-config
 
+## 1.0.7
+
+### Patch Changes
+
+- Iron out template support
+- Updated dependencies
+  - expo-desktop-config-plugins@1.1.18
+
 ## 1.0.6
 
 ### Patch Changes

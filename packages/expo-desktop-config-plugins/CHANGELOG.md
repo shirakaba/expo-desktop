@@ -1,5 +1,11 @@
 # expo-desktop-config-plugins
 
+## 1.1.18
+
+### Patch Changes
+
+- Iron out template support
+
 ## 1.1.17
 
 ### Patch Changes
