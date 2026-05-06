@@ -4,6 +4,7 @@ packages:
   - packages/expo-desktop/scripts
   - packages/expo-desktop-config-plugins
   - packages/expo-desktop-prebuild-config
+  - packages/expo-desktop-stubs
   - packages/demo-expo-desktop
   - scripts
 

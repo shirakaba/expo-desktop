@@ -9,11 +9,13 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "macos": "rnc-cli run-macos",
+    "autolink:windows": "react-native autolink-windows",
     "windows": "rnc-cli run-windows"
   },
   "dependencies": {
     "expo": "catalog:react-native-81",
     "expo-desktop-prebuild-config": "workspace:",
+    "expo-desktop-stubs": "workspace:",
     "expo-status-bar": "~3.0.9",
     "react": "catalog:react-native-81",
     "react-native": "catalog:react-native-81",
