@@ -443,9 +443,23 @@ async function npmInstall({
   // ancestor directory if there is one. This is particularly inconvenient
   // during local dev when we're creating samples inside the monorepo.
   if (asNewWorkspace && packageManager === "pnpm") {
-    // Ensure a file name pnpm-workspace.yaml exists.
+    // (1) Ensure a file name pnpm-workspace.yaml exists.
+    //
+    // (2) Also ensure that it uses nodeLinker: hoisted, as otherwise
+    // `:path => "#{config[:reactNativePath]}-macos"` predicts that there will
+    // be a react-native-macos directory right beside the react-native
+    // directory by just optimistically appending "-macos" on the end, like so:
+    // "../node_modules/.pnpm/react-native@0.81.5_@babel+core@7.29.0_@react-native-community+cli@20.1.3_typescript@5._941d99d35895d1a3626e14fd9f3b3666/node_modules/react-native" + "-macos"
+    //
+    //     As this is not true with pnpm's default `nodeLinker: isolated`, we
+    //     need to stick to `nodeLinker: hoisted` until we can rewrite the
+    //     Podfile script to resolve it properly.
+    //
+    //     This is consistent with what the Expo team do for pnpm and yarn:
+    //     - https://docs.expo.dev/more/create-expo/#pnpm
+    //     - https://github.com/expo/expo/blob/222b3b12610d69784bab6c5a188a46ea388f866a/packages/create-expo/src/resolvePackageManager.ts#L109
     try {
-      await fs.writeFile(path.resolve(cwd, "pnpm-workspace.yaml"), "", {
+      await fs.writeFile(path.resolve(cwd, "pnpm-workspace.yaml"), "nodeLinker: hoisted\n", {
         flag: "wx",
         encoding: "utf-8",
       });
