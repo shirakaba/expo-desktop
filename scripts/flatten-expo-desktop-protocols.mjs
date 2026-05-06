@@ -16,11 +16,11 @@
  * repo root (gitignored). Run `restore` before `flatten` again.
  */
 
+import yaml from "js-yaml";
 import cp from "node:child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
-import yaml from "js-yaml";
 
 const __dirname = import.meta.dirname;
 const REPO_ROOT = path.resolve(__dirname, "..");
