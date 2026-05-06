@@ -1,5 +1,11 @@
 # expo-desktop
 
+## 0.1.17
+
+### Patch Changes
+
+- forgot createRequire()
+
 ## 0.1.16
 
 ### Patch Changes
