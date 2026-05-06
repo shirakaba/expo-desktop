@@ -32,7 +32,7 @@ export async function applyWindowsCppAppTemplateAsync(
 
   const replacements = await buildReplacementsRecord(projectRoot, name);
 
-  await renameCppAppPathsAsync(projectRoot, windowsRoot, name.filesafeName);
+  await renameCppAppPathsAsync(windowsRoot, name.filesafeName);
   await renderMustacheUnderWindowsAsync(windowsRoot, replacements);
 }
 
@@ -191,39 +191,82 @@ async function collectWindowsPathsAsync(windowsRoot: string): Promise<Array<stri
   return out;
 }
 
-async function renameCppAppPathsAsync(
-  projectRoot: string,
-  windowsRoot: string,
-  filesafeName: string,
-) {
-  const allPaths = await collectWindowsPathsAsync(windowsRoot);
-  const toRename = allPaths
-    .filter((abs) => {
-      const rel = path.relative(windowsRoot, abs);
-      return rel.includes("MyApp");
-    })
-    .sort((a, b) => pathDepth(b) - pathDepth(a));
+/**
+ * Renames cpp-app paths containing `MyApp` → filesafeName. Uses iterative
+ * shallow-first ordering (directories before files at the same depth). Deeper
+ * fixes caused ENOTEMPTY: files were renamed into `*.Package/Images` before the
+ * directory `MyApp.Package/Images` moved, leaving a non-empty destination.
+ */
+async function renameCppAppPathsAsync(windowsRoot: string, filesafeName: string): Promise<void> {
+  for (;;) {
+    const allPaths = await collectWindowsPathsAsync(windowsRoot);
+    const candidates: Array<{ abs: string; rel: string; depth: number; isDir: boolean }> = [];
 
-  for (const abs of toRename) {
-    try {
-      await fs.access(abs);
-    } catch (error) {
-      if (!(error instanceof Error) || !("code" in error) || error.code !== "ENOENT") {
-        throw error;
+    for (const abs of allPaths) {
+      const rel = path.relative(windowsRoot, abs);
+      if (!rel || rel.includes("..")) {
+        continue;
       }
-      continue;
+      if (!rel.includes("MyApp")) {
+        continue;
+      }
+
+      let stat;
+      try {
+        stat = await fs.lstat(abs);
+      } catch (error) {
+        if (!(error instanceof Error) || !("code" in error) || error.code !== "ENOENT") {
+          throw error;
+        }
+        continue;
+      }
+
+      if (stat.isSymbolicLink()) {
+        continue;
+      }
+
+      candidates.push({
+        abs,
+        rel,
+        depth: pathDepth(rel),
+        isDir: stat.isDirectory(),
+      });
     }
-    const relWin = path.relative(windowsRoot, abs);
-    const newRelWin = cppAppRelativePathTransform(relWin, filesafeName);
-    if (newRelWin === relWin) {
-      continue;
+
+    if (!candidates.length) {
+      break;
     }
+
+    candidates.sort((a, b) => {
+      if (a.depth !== b.depth) {
+        return a.depth - b.depth;
+      }
+      if (a.isDir !== b.isDir) {
+        return a.isDir ? -1 : 1;
+      }
+      return a.rel.localeCompare(b.rel);
+    });
+
+    const chosen = candidates[0];
+    const newRelWin = cppAppRelativePathTransform(chosen.rel, filesafeName);
+    if (newRelWin === chosen.rel) {
+      throw new Error(
+        `Windows cpp-app rename: expected path containing MyApp to change: "${chosen.rel}"`,
+      );
+    }
+
     const newAbs = path.join(windowsRoot, newRelWin);
-    if (newAbs === abs) {
+    if (newAbs === chosen.abs) {
       continue;
     }
+
     await fs.mkdir(path.dirname(newAbs), { recursive: true });
-    await fs.rename(abs, newAbs);
+
+    try {
+      await fs.rename(chosen.abs, newAbs);
+    } catch (cause) {
+      throw new Error(`Failed to rename "${chosen.abs}" -> "${newAbs}"`, { cause });
+    }
   }
 }
 
