@@ -50,7 +50,8 @@ jobs:
           cache: pnpm
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --filter expo-desktop --filter
+          expo-desktop-config-plugins --filter expo-desktop-prebuild-config
 
       # Build in order of dependency graph:
       # config-plugins → prebuild-config → expo-desktop.

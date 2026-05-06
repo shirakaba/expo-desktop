@@ -1,0 +1,45 @@
+{
+  "expo": {
+    "name": "demo",
+    "slug": "demo",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "uk.co.birchlabs.expo-desktop-demo"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false,
+      "package": "uk.co.birchlabs.expo_desktop_demo"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "platforms": ["android", "ios", "macos", "windows"],
+    "macos": {
+      "bundleIdentifier": "uk.co.birchlabs.expo-desktop-demo"
+    },
+    "plugins": [
+      [
+        "expo-desktop-config-plugins",
+        {
+          "displayName": "Expo Desktop Demo App",
+          "bundleIdentifier": "uk.co.birchlabs.expo-desktop-demo"
+        }
+      ]
+    ]
+  }
+}
