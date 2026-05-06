@@ -55,11 +55,11 @@ cd apps/expo-desktop
 # (1a) If using `localDev: true`, resolve the `workspace:` and `catalog:`
 #      protocols in our monorepo packages so that we can install them via
 #      `file:` to do local development. Avoids having to publish to npm to test.
-node ../../scripts/flatten-expo-desktop-protocols.mjs flatten
+pnpm -w run flatten:y
 
 # (1b) If using `localDev: false`, or just want to clean up from a
 #      `localDev: true` run, you can restore those protocols with this command.
-node ../../scripts/flatten-expo-desktop-protocols.mjs restore
+pnpm -w run flatten:n
 
 # (2) If you have a MyApp folder from a previous run that you want to clean up:
 rm -rf MyApp*
