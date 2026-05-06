@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "expo": "catalog:react-native-81",
+    "expo-desktop-config-plugins": "workspace:",
     "expo-desktop-prebuild-config": "workspace:",
     "expo-desktop-stubs": "workspace:",
     "expo-status-bar": "~3.0.9",
