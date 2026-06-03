@@ -461,13 +461,44 @@ async function updatePackageJson({
       packageJson.overrides = {};
     }
 
-    // react-native-macos and react-native-windows may declare conflicting peer
-    // dependency ranges to what the Expo template provides.
-    if (packageJson.dependencies.react) {
-      packageJson.overrides.react = packageJson.dependencies.react;
+    // The "react" version in expo-template-blank-typescript for SDK 54 is
+    // 19.1.0, but it needs to be 19.1.4 to satisfy react-native-macos and
+    // react-native-windows. We find that the React Native HelloWorld template
+    // is more reliable as a source of truth for the best "react" and
+    // "react-native" versions to satisfy them, but it's still a best of a bad
+    // job.
+    let facebookDeps: { react: string; "react-native": string } | undefined;
+    try {
+      const packageJson = (await getReactNativePackageJson(versions.minor)) as ReturnType<
+        JSON["parse"]
+      >;
+      facebookDeps = {
+        react: packageJson.dependencies.react,
+        "react-native": packageJson.dependencies["react-native"],
+      };
+    } catch (error) {
+      // It's totally possible to get rate-limited by the GitHub API, so we'll
+      // avoid failing the entire command just for a bad fetch here.
+      console.warn(
+        `Unable to get the ideal dependency versions for "react" and "react-native" from the official React Native HelloWorld template, so will use the ones from the Expo template as-is.`,
+        error,
+      );
     }
-    if (packageJson.dependencies["react-native"]) {
-      packageJson.overrides["react-native"] = packageJson.dependencies["react-native"];
+
+    if (facebookDeps) {
+      packageJson.dependencies.react = facebookDeps.react;
+      packageJson.overrides.react = facebookDeps.react;
+      packageJson.dependencies["react-native"] = facebookDeps["react-native"];
+      packageJson.overrides["react-native"] = facebookDeps["react-native"];
+    } else {
+      // react-native-macos and react-native-windows may declare conflicting
+      // peer dependency ranges to what the Expo template provides.
+      if (packageJson.dependencies.react) {
+        packageJson.overrides.react = packageJson.dependencies.react;
+      }
+      if (packageJson.dependencies["react-native"]) {
+        packageJson.overrides["react-native"] = packageJson.dependencies["react-native"];
+      }
     }
   }
 
@@ -480,6 +511,13 @@ async function updatePackageJson({
   console.log(`${green("◆")}  Altered package.json.\n`);
 
   return { name: nameBefore };
+}
+
+async function getReactNativePackageJson(minor: number) {
+  const response = await fetch(
+    `https://raw.githubusercontent.com/facebook/react-native/refs/heads/0.${minor}-stable/private/helloworld/package.json`,
+  );
+  return await response.json();
 }
 
 async function npmInstall({
