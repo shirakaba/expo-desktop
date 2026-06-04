@@ -29,6 +29,7 @@ export const AppJson = type({
 export const PackageJson = type({
   "name?": "string",
   "scripts?": "Record<string, string>",
+  "expo?": "Record<string, unknown.any>",
   "dependencies?": "Record<string, string>",
   "devDependencies?": "Record<string, string>",
   "peerDependencies?": "Record<string, string>",

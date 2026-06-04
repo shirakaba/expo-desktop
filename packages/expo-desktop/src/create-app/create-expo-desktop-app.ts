@@ -507,6 +507,26 @@ async function updatePackageJson({
         packageJson.overrides["react-native"] = packageJson.dependencies["react-native"];
       }
     }
+
+    if (!packageJson.expo) {
+      packageJson.expo = {};
+    }
+    if (!packageJson.expo.install) {
+      packageJson.expo.install = {};
+    }
+    if (!packageJson.expo.install.exclude) {
+      packageJson.expo.install.exclude = [];
+    }
+
+    // Stop `expo start` erroneously warning about our overrides.
+    // - https://github.com/shirakaba/expo-desktop/issues/15
+    // - https://docs.expo.dev/versions/latest/config/package-json/#installexclude
+    if (!packageJson.expo.install.exclude.includes("react")) {
+      packageJson.expo.install.exclude.push("react");
+    }
+    if (!packageJson.expo.install.exclude.includes("react-native")) {
+      packageJson.expo.install.exclude.push("react-native");
+    }
   }
 
   try {
