@@ -4,6 +4,7 @@ import { log, tasks } from "@clack/prompts";
 import { type } from "arktype";
 import { glob } from "glob";
 import { cyan, green, yellow } from "kleur/colors";
+import { spawn } from "node:child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { platform } from "node:process";
@@ -14,6 +15,7 @@ import { applyConfigPlugins } from "../common/apply-config-plugins.ts";
 import { makePrettySummary } from "../common/arktype.ts";
 import { promisifiedSpawnTask, SPAWN_DEBUG_LOG_GLOB } from "../common/child-process.ts";
 import { title } from "../common/clack.ts";
+import { hasGitStagedChangesAsync, isInsideGitRepoAsync } from "../common/git.ts";
 import { packageManagerExec } from "../common/npm.ts";
 import { preserveFile } from "../common/preserve-file.ts";
 import { applySelectedTemplatesAsync, type TemplateSelection } from "../common/template.ts";
@@ -158,6 +160,9 @@ export async function createExpoDesktopApp({
 
   title("Improving App.tsx…", { spacing: 1 });
   await improveAppTsx({ projectPath });
+
+  title("Committing changes…", { spacing: 1 });
+  await commitChanges({ projectPath });
 
   logProjectReady({ cdPath: name.filesafeName, packageManager });
 }
@@ -898,6 +903,59 @@ const styles = StyleSheet.create({
   }
 
   console.log(`\n${green("◆")}  Overwrote App.tsx.\n`);
+}
+
+/**
+ * Stage and commit all changes.
+ *
+ * @see https://github.com/expo/expo/blob/main/packages/create-expo/src/utils/git.ts
+ */
+async function commitChanges({ projectPath }: { projectPath: string }) {
+  if (!(await isInsideGitRepoAsync(projectPath))) {
+    console.warn(
+      `\n${yellow("⚠")}  Skipping git commit: project is not inside a Git repository.\n`,
+    );
+    return;
+  }
+
+  try {
+    await tasks([
+      promisifiedSpawnTask({
+        title: "git add",
+        command: "git",
+        args: ["add", "-A"],
+        options: { cwd: projectPath, stdio: "ignore" },
+      }),
+    ]);
+  } catch (error) {
+    log.error(
+      `Error running ${yellow("git add -A")}${error instanceof Error ? `: ${error.message}` : "."}`,
+    );
+    process.exit(1);
+  }
+
+  if (!(await hasGitStagedChangesAsync(projectPath))) {
+    console.log(`\n${green("◆")}  Nothing to commit.\n`);
+    return;
+  }
+
+  try {
+    await tasks([
+      promisifiedSpawnTask({
+        title: "git commit",
+        command: "git",
+        args: ["commit", "-m", "Set up with expo-desktop"],
+        options: { cwd: projectPath, stdio: "ignore" },
+      }),
+    ]);
+  } catch (error) {
+    log.error(
+      `Error running ${yellow("git commit")}${error instanceof Error ? `: ${error.message}` : "."}`,
+    );
+    process.exit(1);
+  }
+
+  console.log(`\n${green("◆")}  Committed changes.\n`);
 }
 
 /**
