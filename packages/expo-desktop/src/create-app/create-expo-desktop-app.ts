@@ -4,7 +4,6 @@ import { log, tasks } from "@clack/prompts";
 import { type } from "arktype";
 import { glob } from "glob";
 import { cyan, green, yellow } from "kleur/colors";
-import { spawn } from "node:child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { platform } from "node:process";
@@ -15,7 +14,7 @@ import { applyConfigPlugins } from "../common/apply-config-plugins.ts";
 import { makePrettySummary } from "../common/arktype.ts";
 import { promisifiedSpawnTask, SPAWN_DEBUG_LOG_GLOB } from "../common/child-process.ts";
 import { title } from "../common/clack.ts";
-import { hasGitStagedChangesAsync, isInsideGitRepoAsync } from "../common/git.ts";
+import { hasGitStagedChangesAsync, hasProjectGitRepositoryAsync } from "../common/git.ts";
 import { packageManagerExec } from "../common/npm.ts";
 import { preserveFile } from "../common/preserve-file.ts";
 import { applySelectedTemplatesAsync, type TemplateSelection } from "../common/template.ts";
@@ -911,9 +910,9 @@ const styles = StyleSheet.create({
  * @see https://github.com/expo/expo/blob/main/packages/create-expo/src/utils/git.ts
  */
 async function commitChanges({ projectPath }: { projectPath: string }) {
-  if (!(await isInsideGitRepoAsync(projectPath))) {
+  if (!(await hasProjectGitRepositoryAsync(projectPath))) {
     console.warn(
-      `\n${yellow("⚠")}  Skipping git commit: project is not inside a Git repository.\n`,
+      `\n${yellow("⚠")}  Skipping git commit: create-expo-app did not initialize a Git repository in this project (this happens when creating inside an existing repo, e.g. in a monorepo).\n`,
     );
     return;
   }

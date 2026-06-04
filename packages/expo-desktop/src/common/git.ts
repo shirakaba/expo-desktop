@@ -1,11 +1,17 @@
 import { spawn } from "node:child_process";
+import fs from "node:fs/promises";
+import path from "node:path";
 
-export async function isInsideGitRepoAsync(projectPath: string) {
+/** True when the project root has its own `.git` (from create-expo-app's init). */
+export async function hasProjectGitRepositoryAsync(projectPath: string) {
   try {
-    await runGitAsync(projectPath, ["rev-parse", "--is-inside-work-tree"]);
+    await fs.lstat(path.join(projectPath, ".git"));
     return true;
-  } catch {
-    return false;
+  } catch (error) {
+    if (error instanceof Error && "code" in error && error.code === "ENOENT") {
+      return false;
+    }
+    throw error;
   }
 }
 
