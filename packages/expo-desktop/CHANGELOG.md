@@ -1,5 +1,14 @@
 # expo-desktop
 
+## 0.1.36
+
+### Patch Changes
+
+- Declare @expo/\* dependencies as direct dependencies rather than peerDependencies
+- Updated dependencies
+  - expo-desktop-config-plugins@1.1.33
+  - expo-desktop-prebuild-config@1.0.19
+
 ## 0.1.35
 
 ### Patch Changes

@@ -1,6 +1,6 @@
 {
   "name": "expo-desktop-stubs",
-  "version": "54.0.11",
+  "version": "54.0.12",
   "description": "Stubs for supporting Expo on Expo Desktop",
   "keywords": [
     "android",
@@ -34,12 +34,12 @@
     "codegen-windows": "react-native codegen-windows"
   },
   "devDependencies": {
-    "expo-desktop-modules-core": "workspace:^54.0.11",
+    "expo-desktop-modules-core": "workspace:^54.0.12",
     "react-native": "catalog:react-native-81",
     "react-native-windows": "catalog:react-native-81"
   },
   "peerDependencies": {
-    "expo-desktop-modules-core": "^54.0.11",
+    "expo-desktop-modules-core": "^54.0.12",
     "react-native": "*",
     "react-native-windows": "*"
   },

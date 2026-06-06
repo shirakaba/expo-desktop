@@ -1,6 +1,6 @@
 {
   "name": "expo-desktop",
-  "version": "0.1.35",
+  "version": "0.1.36",
   "description": "Best-effort desktop support for Expo",
   "keywords": [
     "android",
@@ -44,8 +44,8 @@
     "@clack/prompts": "^1.2.0",
     "arktype": "^2.2.0",
     "citty": "^0.2.2",
-    "expo-desktop-config-plugins": "workspace:^1.1.32",
-    "expo-desktop-prebuild-config": "workspace:^1.0.18",
+    "expo-desktop-config-plugins": "workspace:^1.1.33",
+    "expo-desktop-prebuild-config": "workspace:^1.0.19",
     "glob": "^10.5.0",
     "kleur": "^4.1.5",
     "mustache": "^4.2.0",

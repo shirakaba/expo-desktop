@@ -1,5 +1,11 @@
 # expo-desktop-modules-core
 
+## 54.0.12
+
+### Patch Changes
+
+- Declare @expo/\* dependencies as direct dependencies rather than peerDependencies
+
 ## 54.0.11
 
 ### Patch Changes

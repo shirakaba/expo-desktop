@@ -1,6 +1,6 @@
 {
   "name": "expo-desktop-prebuild-config",
-  "version": "1.0.18",
+  "version": "1.0.19",
   "description": "Desktop-friendly Expo prebuild config",
   "keywords": [
     "android",
@@ -41,7 +41,7 @@
     "@expo/config": "catalog:expo-latest",
     "@expo/config-plugins": "catalog:expo-latest",
     "@expo/prebuild-config": "catalog:expo-latest",
-    "expo-desktop-config-plugins": "workspace:^1.1.32"
+    "expo-desktop-config-plugins": "workspace:^1.1.33"
   },
   "devDependencies": {
     "@tsconfig/node24": "catalog:base",
