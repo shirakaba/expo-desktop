@@ -41,7 +41,7 @@
     "@expo/config": "catalog:expo-latest",
     "@expo/config-plugins": "catalog:expo-latest",
     "@expo/prebuild-config": "catalog:expo-latest",
-    "expo-desktop-config-plugins": "workspace:^1.1.34"
+    "expo-desktop-config-plugins": "workspace:^"
   },
   "devDependencies": {
     "@tsconfig/node24": "catalog:base",

@@ -34,7 +34,7 @@
     "codegen-windows": "react-native codegen-windows"
   },
   "devDependencies": {
-    "expo-desktop-modules-core": "workspace:^54.0.13",
+    "expo-desktop-modules-core": "workspace:^",
     "react-native": "catalog:react-native-81",
     "react-native-windows": "catalog:react-native-81"
   },
