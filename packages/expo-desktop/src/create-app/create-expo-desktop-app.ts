@@ -4,6 +4,7 @@ import { log, tasks } from "@clack/prompts";
 import { type } from "arktype";
 import { glob } from "glob";
 import { cyan, green, yellow } from "kleur/colors";
+import { spawn, type SpawnOptions } from "node:child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { platform } from "node:process";
@@ -440,18 +441,39 @@ async function updatePackageJson({
       packageJson.dependencies = {};
     }
 
-    const monorepoDeps = {
-      // expo-desktop-prebuild-config itself depends on
-      // expo-desktop-config-plugins.
-      ["expo-desktop-prebuild-config"]: "^1.0.0",
-      ["expo-desktop-modules-core"]: `^${versions.expoMajor}.0.0`,
-      ["expo-desktop-stubs"]: `^${versions.expoMajor}.0.0`,
-    };
-    for (const [key, value] of Object.entries(monorepoDeps)) {
-      // TODO: Try replacing this `localDev` logic with `linkWorkspacePackages`:
-      // - https://pnpm.io/workspaces#linkworkspacepackages
-      // - https://pnpm.io/workspaces#workspace-protocol-workspace
-      packageJson.dependencies[key] = localDev ? `file:../../${key}` : value;
+    // Here, we set the dependencies on each of the deps from our monorepo.
+    //
+    // In localDev mode, we make create tarballs of our monorepo deps via
+    // `pnpm pack` and configure the created app to depend on those tarballs.
+    if (localDev) {
+      const monorepoRoot = path.resolve(import.meta.dirname, "../../../..");
+
+      for (const packageName of [
+        // Outside of localDev mode, there's no need to add config-plugins
+        // explicitly (it's already provided implicitly, as prebuild-config
+        // depends on it). But as our tarballs don't bring any subdeps along
+        // with them, we have to add it in localDev mode.
+        "expo-desktop-config-plugins",
+        "expo-desktop-prebuild-config",
+        "expo-desktop-modules-core",
+        "expo-desktop-stubs",
+      ]) {
+        const packagePath = path.resolve(monorepoRoot, "packages", packageName);
+        const stdout = await pnpmPack({ cwd: packagePath });
+        const fileName = stdout.trim().split("\n").at(-1);
+        if (!fileName) {
+          throw new Error("Expected to get filename for tarball, but it was unexpectedly falsy.");
+        }
+        packageJson.dependencies[packageName] = `file:${path.resolve(packagePath, fileName)}`;
+      }
+    } else {
+      for (const [packageName, version] of Object.entries({
+        ["expo-desktop-prebuild-config"]: "^1.0.0",
+        ["expo-desktop-modules-core"]: `^${versions.expoMajor}.0.0`,
+        ["expo-desktop-stubs"]: `^${versions.expoMajor}.0.0`,
+      })) {
+        packageJson.dependencies[packageName] = version;
+      }
     }
 
     packageJson.dependencies["react-native-macos"] = versions.macos;
@@ -538,6 +560,30 @@ async function updatePackageJson({
   console.log(`${green("◆")}  Altered package.json.\n`);
 
   return { name: nameBefore };
+}
+
+/**
+ * Run `pnpm pack` and return the stdout.
+ */
+function pnpmPack(options: SpawnOptions) {
+  return new Promise<string>((resolve, reject) => {
+    const child = spawn("pnpm", ["pack"], { ...options, stdio: "pipe" });
+    let stdout = "";
+    child.stdout.on("data", (buffer) => {
+      stdout += buffer.toString();
+    });
+    child.on("close", (code) => {
+      if (code !== 0) {
+        return reject(
+          new Error(
+            `\`pnpm pack\`${options.cwd ? ` in "${options.cwd}"` : ""} exited with code ${code}`,
+          ),
+        );
+      }
+
+      resolve(stdout);
+    });
+  });
 }
 
 async function getReactNativePackageJson(minor: number) {

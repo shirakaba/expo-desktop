@@ -1,3 +1,7 @@
 # We have set `includesGeneratedCode: false`, so intend the consumer to run the
 # codegen, rather than prebuilding and distributing it from the library.
 codegen
+
+# `pnpm pack` outputs
+expo-desktop-modules-core-*.tgz
+package

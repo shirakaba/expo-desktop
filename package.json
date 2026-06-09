@@ -5,8 +5,6 @@
   "scripts": {
     "prepare": "husky",
     "lint-staged": "lint-staged",
-    "flatten:y": "node scripts/flatten-expo-desktop-protocols.mjs flatten",
-    "flatten:n": "node scripts/flatten-expo-desktop-protocols.mjs restore",
     "format": "oxfmt",
     "changeset": "changeset",
     "release:version": "changeset version && pnpm install --lockfile-only",

@@ -8,7 +8,6 @@ This is a project to bring best-effort support for react-native-macos and react-
 .
 ├── .github                     # CI
 ├── packages
-│   ├── demo-expo-desktop       # Not really in use anymore.
 │   ├── expo-desktop            # Analogous to @expo/cli.
 │   │   └── src
 │   │       ├── add-app         # WIP command to add an app to an existing repo.
@@ -50,22 +49,11 @@ pnpm install
 To run the `create-app` command locally:
 
 ```sh
-cd apps/expo-desktop
+cd packages/expo-desktop
 
-# (1) Resolve the `workspace:` and `catalog:` protocols in our monorepo packages
-#     so that we can install them via `file:` to do local development. Avoids
-#     having to publish to npm to test. Don't commit the changes to package.json
-#     caused by this command.
-pnpm -w run flatten:y
-
-# (2) If you have a MyApp folder from a previous run that you want to clean up:
-rm -rf MyApp*
-
-# (3) Run the `create-app` command in local dev mode.
+# Run the `create-app` command in local dev mode (which packs the monorepo
+# workspaces into tarballs for installation).
 node --run start -- create-app --local-dev
-
-# (4) To clean up after having flattened the protocols earlier.
-pnpm -w run flatten:n
 ```
 
 ## Developing

@@ -2,7 +2,9 @@
   "name": "expo-desktop-monorepo-scripts",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "devDependencies": {
-    "js-yaml": "^4.1.1"
+    "@tsconfig/node24": "catalog:base",
+    "@types/node": "catalog:base"
   }
 }
