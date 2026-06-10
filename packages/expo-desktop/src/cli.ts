@@ -131,6 +131,12 @@ const main = defineCommand({
           valueHint: "desktop|macos|windows",
           alias: "p",
         },
+        "skip-dependency-update": {
+          type: "boolean",
+          valueHint: "dependencies",
+          description:
+            "Preserves versions of listed packages in package.json (comma separated list)",
+        },
       },
       async run({ args }) {
         (await import("./prebuild/command.ts")).prebuild(args);

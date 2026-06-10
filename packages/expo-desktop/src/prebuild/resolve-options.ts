@@ -1,6 +1,3 @@
-import type { ModPlatform } from "@expo/config-plugins";
-
-import chalk from "chalk";
 import assert from "node:assert";
 import fs from "node:fs";
 import path from "node:path";
@@ -42,6 +39,14 @@ export function resolvePackageManagerOptions({
     }
     return manager as "npm" | "yarn" | "bun" | "pnpm";
   }
+}
+
+/** Resolves dependencies to skip from a string joined by `,`. Example: `react-native,expo,lodash` */
+export function resolveSkipDependencyUpdate(value: any) {
+  if (!value || typeof value !== "string") {
+    return [];
+  }
+  return value.split(",");
 }
 
 /** Resolves a template option as a URL or file path pointing to a tar file. */
