@@ -1,5 +1,5 @@
 import { log } from "@clack/prompts";
-import { getConfig } from "@expo/config";
+import { getConfig, type ExpoConfig } from "@expo/config";
 import { type } from "arktype";
 import { default as kleur } from "kleur";
 import fs from "node:fs/promises";
@@ -11,7 +11,8 @@ import { loadEnvFiles, setNodeEnv } from "../common/node-env.ts";
 import { type TemplateSelection, applySelectedTemplatesAsync } from "../common/template.ts";
 import { clearNativeFolder } from "./clear-native-folder.ts";
 import { ensureConfigAsync } from "./ensure-config-async.ts";
-import { resolvePackageManagerOptions } from "./resolve-options.ts";
+import { resolvePackageManagerOptions, resolveTemplateOption } from "./resolve-options.ts";
+import { updateFromTemplateAsync } from "./update-from-template-async.ts";
 
 /**
  * The entrypoint for `npx expo prebuild` is here:
@@ -88,6 +89,17 @@ export async function prebuild({
   }
 
   const { exp, pkg } = await ensureConfigAsync(projectRoot, { platforms });
+  const appName = readAppNameFromConfig(exp);
+
+  // Create native projects from template.
+  // const { hasNewProjectFiles, needsPodInstall, templateChecksum, changedDependencies } =
+  //   await updateFromTemplateAsync(projectRoot, {
+  //     exp,
+  //     pkg,
+  //     template: options.template != null ? resolveTemplateOption(template) : undefined,
+  //     platforms,
+  //     skipDependencyUpdate: options.skipDependencyUpdate,
+  //   });
 
   // TODO: refactor the below to match updateFromTemplateAsync()
   // https://github.com/expo/expo/blob/8dd645080f52927e2a8bf406167da7241a1d46d8/packages/%40expo/cli/src/prebuild/prebuildAsync.ts#L112-L120
@@ -101,7 +113,6 @@ export async function prebuild({
     "template-windows": templateWindows,
   } satisfies TemplateSelection;
   if (clean && hasTemplateSelection(templateSelection)) {
-    const appName = await readAppNameFromConfigAsync(projectRoot);
     await applySelectedTemplatesAsync({
       projectRoot,
       selection: templateSelection,
@@ -179,17 +190,19 @@ function hasTemplateSelection(selection: TemplateSelection) {
   );
 }
 
-async function readAppNameFromConfigAsync(projectRoot: string) {
-  const appJsonPath = path.join(projectRoot, "app.json");
-  const contents = await fs.readFile(appJsonPath, "utf8");
-  const parsed = AppJson(JSON.parse(contents));
-  if (parsed instanceof type.errors) {
-    throw new Error("Invalid app.json while resolving template replacements.");
-  }
-  const filesafeName = parsed.expo?.name ?? "HelloWorld";
-  const displayName = parsed.expo?.name ?? filesafeName;
+function readAppNameFromConfig(expoConfig: ExpoConfig) {
+  const filesafeName = expoConfig.name;
+  const expoDesktopConfigPluginsArgs = expoConfig.plugins?.find(
+    (plugin) => Array.isArray(plugin) && plugin[0] === "expo-desktop-config-plugins",
+  )?.[1] as { displayName?: string; bundleIdentifier?: string } | undefined;
+
+  const displayName = expoDesktopConfigPluginsArgs?.displayName ?? filesafeName;
   const rdns =
-    parsed.expo?.ios?.bundleIdentifier ?? parsed.expo?.android?.package ?? "com.helloworld";
+    expoDesktopConfigPluginsArgs?.bundleIdentifier ??
+    expoConfig?.ios?.bundleIdentifier ??
+    expoConfig?.android?.package ??
+    "com.helloworld";
+
   return {
     filesafeName,
     displayName,
