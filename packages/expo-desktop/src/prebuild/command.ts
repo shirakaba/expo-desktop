@@ -1,4 +1,5 @@
 import { log } from "@clack/prompts";
+import { getConfig } from "@expo/config";
 import { type } from "arktype";
 import { default as kleur } from "kleur";
 import fs from "node:fs/promises";
@@ -8,6 +9,7 @@ import { exit } from "node:process";
 import { AppJson } from "../common/app-json.ts";
 import { loadEnvFiles, setNodeEnv } from "../common/node-env.ts";
 import { type TemplateSelection, applySelectedTemplatesAsync } from "../common/template.ts";
+import { clearNativeFolder } from "./clear-native-folder.ts";
 import { resolvePackageManagerOptions } from "./resolve-options.ts";
 
 /**
@@ -52,27 +54,7 @@ export async function prebuild({
   // TODO: if packageManager undefined, infer from lockfiles
   const _packageManager = resolvePackageManagerOptions({ noInstall, npm, yarn, bun, pnpm });
 
-  if (
-    platform !== "macos" &&
-    platform !== "windows" &&
-    platform !== "desktop" &&
-    typeof platform !== "undefined"
-  ) {
-    throw new Error(
-      "Expected --platform arg to be one of: macos | windows | desktop | <undefined>",
-    );
-  }
-
-  const platforms = new Array<"macos" | "windows">();
-  if (platform === "desktop" || platform === "macos") {
-    platforms.push("macos");
-  }
-  if (platform === "desktop" || platform === "windows") {
-    platforms.push("windows");
-  }
-  if (!platforms.length) {
-    throw new Error("At least one platform must be enabled when syncing");
-  }
+  let platforms = resolvePlatformsOption(platform);
 
   const templateSelection = {
     template,
@@ -97,6 +79,35 @@ export async function prebuild({
 
   setNodeEnv("development");
   loadEnvFiles(projectRoot);
+
+  // Filter out platforms that aren't in the app.json.
+  // https://github.com/expo/expo/blob/8dd645080f52927e2a8bf406167da7241a1d46d8/packages/%40expo/cli/src/prebuild/prebuildAsync.ts#L74
+  const expoConfig = getConfig(projectRoot).exp;
+  if (expoConfig.platforms?.length) {
+    const finalPlatforms = platforms.filter((platform) =>
+      (expoConfig.platforms as Array<"ios" | "android" | "web" | "macos" | "windows">).includes(
+        platform,
+      ),
+    );
+    if (finalPlatforms.length > 0) {
+      platforms = finalPlatforms;
+    } else {
+      const requestedPlatforms = platforms.join(", ");
+      console.warn(
+        `⚠️  Requested prebuild for "${requestedPlatforms}", but only "${expoConfig.platforms.join(", ")}" is present in app config ("expo.platforms" entry). Continuing with "${requestedPlatforms}".`,
+      );
+    }
+  }
+
+  if (clean) {
+    // TODO: maybeBailOnGitStatusAsync()
+    // TODO: maybeBailOnNativeModuleAsync()
+
+    // Clear the native folders before syncing
+    await clearNativeFolder(projectRoot, platforms);
+  } else {
+    // TODO: Check if the existing project folders are malformed.
+  }
 
   // TODO:
   // - prebuildAsync()
@@ -124,6 +135,32 @@ export async function prebuild({
 
   log.error(`${kleur.yellow("expo-desktop prebuild")} not yet implemented.`);
   return exit(1);
+}
+
+function resolvePlatformsOption(platform: string | undefined) {
+  if (
+    platform !== "macos" &&
+    platform !== "windows" &&
+    platform !== "desktop" &&
+    typeof platform !== "undefined"
+  ) {
+    throw new Error(
+      "Expected --platform arg to be one of: macos | windows | desktop | <undefined>",
+    );
+  }
+
+  const platforms = new Array<"macos" | "windows">();
+  if (platform === "desktop" || platform === "macos") {
+    platforms.push("macos");
+  }
+  if (platform === "desktop" || platform === "windows") {
+    platforms.push("windows");
+  }
+  if (!platforms.length) {
+    throw new Error("At least one platform must be enabled when syncing");
+  }
+
+  return platforms;
 }
 
 function hasTemplateSelection(selection: TemplateSelection) {
