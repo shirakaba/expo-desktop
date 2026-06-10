@@ -6,6 +6,7 @@ import path from "node:path";
 import { exit } from "node:process";
 
 import { AppJson } from "../common/app-json.ts";
+import { loadEnvFiles, setNodeEnv } from "../common/node-env.ts";
 import { type TemplateSelection, applySelectedTemplatesAsync } from "../common/template.ts";
 import { resolvePackageManagerOptions } from "./resolve-options.ts";
 
@@ -81,8 +82,8 @@ export async function prebuild({
     "template-windows": templateWindows,
   } satisfies TemplateSelection;
 
+  const projectRoot = process.cwd();
   if (clean && hasTemplateSelection(templateSelection)) {
-    const projectRoot = process.cwd();
     const appName = await readAppNameFromConfigAsync(projectRoot);
     await applySelectedTemplatesAsync({
       projectRoot,
@@ -94,10 +95,15 @@ export async function prebuild({
     log.info("Applied project templates for clean prebuild.", { withGuide: false });
   }
 
+  setNodeEnv("development");
+  loadEnvFiles(projectRoot);
+
   // TODO:
   // - prebuildAsync()
   //   - https://github.com/expo/expo/blob/8dd645080f52927e2a8bf406167da7241a1d46d8/packages/%40expo/cli/src/prebuild/prebuildAsync.ts#L49
-  //   - getConfig() from expo-desktop-config
+  //   - getConfig()
+  //     - https://github.com/expo/expo/blob/8dd645080f52927e2a8bf406167da7241a1d46d8/packages/%40expo/config/src/Config.ts#L113
+  //     - Not sure whether we want to create expo-desktop-config for this
   //   - ensureConfigAsync() is easy to port
   //   - updateFromTemplateAsync() will involve the macos/windows templates
   //   - install node_modules via chosen package manager

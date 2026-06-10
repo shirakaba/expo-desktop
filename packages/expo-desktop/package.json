@@ -44,6 +44,7 @@
     "@clack/prompts": "^1.2.0",
     "@expo/config": "catalog:expo-latest",
     "@expo/config-plugins": "catalog:expo-latest",
+    "@expo/env": "catalog:expo-latest",
     "arktype": "^2.2.0",
     "citty": "^0.2.2",
     "expo-desktop-config-plugins": "workspace:^",
