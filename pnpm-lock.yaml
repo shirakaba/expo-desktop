@@ -149,9 +149,15 @@ importers:
       arktype:
         specifier: ^2.2.0
         version: 2.2.0
+      chalk:
+        specifier: ^4.1.2
+        version: 4.1.2
       citty:
         specifier: ^0.2.2
         version: 0.2.2
+      debug:
+        specifier: ^4.4.3
+        version: 4.4.3
       expo-desktop-config-plugins:
         specifier: workspace:^
         version: link:../expo-desktop-config-plugins
