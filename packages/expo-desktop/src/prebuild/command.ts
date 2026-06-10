@@ -11,7 +11,11 @@ import { loadEnvFiles, setNodeEnv } from "../common/node-env.ts";
 import { type TemplateSelection, applySelectedTemplatesAsync } from "../common/template.ts";
 import { clearNativeFolder } from "./clear-native-folder.ts";
 import { ensureConfigAsync } from "./ensure-config-async.ts";
-import { resolvePackageManagerOptions, resolveTemplateOption } from "./resolve-options.ts";
+import {
+  resolvePackageManagerOptions,
+  resolveSkipDependencyUpdate,
+  resolveTemplateOption,
+} from "./resolve-options.ts";
 import { updateFromTemplateAsync } from "./update-from-template-async.ts";
 
 /**
@@ -37,6 +41,7 @@ export async function prebuild({
   "template-macos": templateMacos,
   "template-windows": templateWindows,
   platform,
+  "skip-dependency-update": skipDependencyUpdate,
 }: {
   clean: boolean | undefined;
   "no-install": boolean | undefined;
@@ -50,6 +55,7 @@ export async function prebuild({
   "template-macos": string | undefined;
   "template-windows": string | undefined;
   platform: string | undefined;
+  "skip-dependency-update": boolean | undefined;
 }) {
   log.info(`🏎️  Running ${kleur.yellow("expo-desktop prebuild")}.`, { withGuide: false });
 
@@ -89,21 +95,6 @@ export async function prebuild({
   }
 
   const { exp, pkg } = await ensureConfigAsync(projectRoot, { platforms });
-  const appName = readAppNameFromConfig(exp);
-
-  // Create native projects from template.
-  // const { hasNewProjectFiles, needsPodInstall, templateChecksum, changedDependencies } =
-  //   await updateFromTemplateAsync(projectRoot, {
-  //     exp,
-  //     pkg,
-  //     template: options.template != null ? resolveTemplateOption(template) : undefined,
-  //     platforms,
-  //     skipDependencyUpdate: options.skipDependencyUpdate,
-  //   });
-
-  // TODO: refactor the below to match updateFromTemplateAsync()
-  // https://github.com/expo/expo/blob/8dd645080f52927e2a8bf406167da7241a1d46d8/packages/%40expo/cli/src/prebuild/prebuildAsync.ts#L112-L120
-  // https://github.com/expo/expo/blob/e2aa8935077d88fbbb22b1f4dc1f8a1586080b97/packages/%40expo/cli/src/prebuild/updateFromTemplate.ts#L23
 
   const templateSelection = {
     template,
@@ -112,16 +103,18 @@ export async function prebuild({
     "template-macos": templateMacos,
     "template-windows": templateWindows,
   } satisfies TemplateSelection;
-  if (clean && hasTemplateSelection(templateSelection)) {
-    await applySelectedTemplatesAsync({
-      projectRoot,
-      selection: templateSelection,
-      enabledPlatforms: platforms,
-      name: appName,
-      respectTemplateConfig: false,
+
+  // Create native projects from template.
+  // https://github.com/expo/expo/blob/8dd645080f52927e2a8bf406167da7241a1d46d8/packages/%40expo/cli/src/prebuild/prebuildAsync.ts#L112-L120
+  // https://github.com/expo/expo/blob/e2aa8935077d88fbbb22b1f4dc1f8a1586080b97/packages/%40expo/cli/src/prebuild/updateFromTemplate.ts#L23
+  const { hasNewProjectFiles, needsPodInstall, templateChecksum, changedDependencies } =
+    await updateFromTemplateAsync(projectRoot, {
+      exp,
+      pkg,
+      templateSelection,
+      platforms,
+      skipDependencyUpdate: resolveSkipDependencyUpdate(skipDependencyUpdate),
     });
-    log.info("Applied project templates for clean prebuild.", { withGuide: false });
-  }
 
   // TODO: if packageManager undefined, infer from lockfiles
   const _packageManager = resolvePackageManagerOptions({ noInstall, npm, yarn, bun, pnpm });
@@ -178,34 +171,4 @@ function resolvePlatformsOption(platform: string | undefined) {
   }
 
   return platforms;
-}
-
-function hasTemplateSelection(selection: TemplateSelection) {
-  return Boolean(
-    selection.template ||
-    selection["template-ios"] ||
-    selection["template-android"] ||
-    selection["template-macos"] ||
-    selection["template-windows"],
-  );
-}
-
-function readAppNameFromConfig(expoConfig: ExpoConfig) {
-  const filesafeName = expoConfig.name;
-  const expoDesktopConfigPluginsArgs = expoConfig.plugins?.find(
-    (plugin) => Array.isArray(plugin) && plugin[0] === "expo-desktop-config-plugins",
-  )?.[1] as { displayName?: string; bundleIdentifier?: string } | undefined;
-
-  const displayName = expoDesktopConfigPluginsArgs?.displayName ?? filesafeName;
-  const rdns =
-    expoDesktopConfigPluginsArgs?.bundleIdentifier ??
-    expoConfig?.ios?.bundleIdentifier ??
-    expoConfig?.android?.package ??
-    "com.helloworld";
-
-  return {
-    filesafeName,
-    displayName,
-    rdns,
-  };
 }

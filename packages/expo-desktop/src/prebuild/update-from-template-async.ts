@@ -2,6 +2,8 @@ import type { ExpoConfig, PackageJSONConfig } from "@expo/config";
 
 import type { ResolvedTemplateOption } from "./resolve-options.ts";
 
+import { readAppNameFromConfig } from "../common/read-app-name-from-config.ts";
+import { applySelectedTemplatesAsync, type TemplateSelection } from "../common/template.ts";
 import { createTempDirectoryPath } from "./create-temp-path.ts";
 import {
   DependenciesModificationResults,
@@ -18,7 +20,7 @@ export async function updateFromTemplateAsync(
   {
     exp,
     pkg,
-    template,
+    templateSelection,
     templateDirectory,
     platforms,
     skipDependencyUpdate,
@@ -28,7 +30,7 @@ export async function updateFromTemplateAsync(
     /** package.json as JSON */
     pkg: PackageJSONConfig;
     /** Template to clone from. */
-    template?: ResolvedTemplateOption;
+    templateSelection: TemplateSelection;
     /** Directory to write the template to before copying into the project. */
     templateDirectory?: string;
     /** List of platforms to clone. */
@@ -46,31 +48,42 @@ export async function updateFromTemplateAsync(
     templateChecksum: string;
   } & DependenciesModificationResults
 > {
-  if (!templateDirectory) {
-    templateDirectory = createTempDirectoryPath();
-  }
-
-  const { copiedPaths, templateChecksum } = await cloneTemplateAndCopyToProjectAsync({
+  const appName = readAppNameFromConfig(exp);
+  await applySelectedTemplatesAsync({
     projectRoot,
-    template,
-    templateDirectory,
-    exp,
-    platforms,
+    selection: templateSelection,
+    enabledPlatforms: platforms,
+    name: appName,
+    respectTemplateConfig: false,
   });
 
-  const depsResults = await updatePackageJSONAsync(projectRoot, {
-    templateDirectory,
-    pkg,
-    skipDependencyUpdate,
-  });
+  // if (!templateDirectory) {
+  //   templateDirectory = createTempDirectoryPath();
+  // }
 
-  return {
-    hasNewProjectFiles: !!copiedPaths.length,
-    // If the iOS folder changes or new packages are added, we should rerun pod install.
-    needsPodInstall: copiedPaths.includes("ios") || !!depsResults.changedDependencies.length,
-    templateChecksum,
-    ...depsResults,
-  };
+  // const { copiedPaths, templateChecksum } = await cloneTemplateAndCopyToProjectAsync({
+  //   projectRoot,
+  //   template,
+  //   templateDirectory,
+  //   exp,
+  //   platforms,
+  // });
+
+  // const depsResults = await updatePackageJSONAsync(projectRoot, {
+  //   templateDirectory,
+  //   pkg,
+  //   skipDependencyUpdate,
+  // });
+
+  // return {
+  //   hasNewProjectFiles: !!copiedPaths.length,
+  //   // If the iOS folder changes or new packages are added, we should rerun pod install.
+  //   needsPodInstall: copiedPaths.includes("ios") || !!depsResults.changedDependencies.length,
+  //   templateChecksum,
+  //   ...depsResults,
+  // };
+
+  throw new Error("Not implemented");
 }
 
 /**
