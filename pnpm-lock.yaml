@@ -28,6 +28,9 @@ catalogs:
     '@expo/config-types':
       specifier: ^56.0.5
       version: 56.0.5
+    '@expo/env':
+      specifier: ^2.3.0
+      version: 2.3.0
     '@expo/json-file':
       specifier: ^10.2.0
       version: 10.2.0
@@ -140,6 +143,9 @@ importers:
       '@expo/config-plugins':
         specifier: catalog:expo-latest
         version: 56.0.8
+      '@expo/env':
+        specifier: catalog:expo-latest
+        version: 2.3.0
       arktype:
         specifier: ^2.2.0
         version: 2.2.0
@@ -1085,6 +1091,10 @@ packages:
 
   '@expo/env@2.0.11':
     resolution: {integrity: sha512-xV+ps6YCW7XIPVUwFVCRN2nox09dnRwy8uIjwHWTODu0zFw4kp4omnVkl0OOjuu2XOe7tdgAHxikrkJt9xB/7Q==}
+
+  '@expo/env@2.3.0':
+    resolution: {integrity: sha512-9HnnIbzwTTdbwSjNLXTk0fPm9ZwMJ7c1/31tsni8HZ8Q62KzYCyspahH+V365vg5J6lr001DzNwBxVWSaYCQLg==}
+    engines: {node: '>=20.12.0'}
 
   '@expo/fingerprint@0.15.5':
     resolution: {integrity: sha512-mdVoAMcux1WlM6kd1RoWiHRNqKqS+J6mKmWQ/BKgeh937S/fcW58EE68O6nc4KDXtWi3PBeNHskOFcgyIuD4hw==}
@@ -5944,6 +5954,14 @@ snapshots:
       debug: 4.4.3
       dotenv: 16.4.7
       dotenv-expand: 11.0.7
+      getenv: 2.0.0
+    transitivePeerDependencies:
+      - supports-color
+
+  '@expo/env@2.3.0':
+    dependencies:
+      chalk: 4.1.2
+      debug: 4.4.3
       getenv: 2.0.0
     transitivePeerDependencies:
       - supports-color
