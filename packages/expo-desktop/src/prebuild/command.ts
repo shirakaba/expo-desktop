@@ -10,6 +10,7 @@ import { AppJson } from "../common/app-json.ts";
 import { loadEnvFiles, setNodeEnv } from "../common/node-env.ts";
 import { type TemplateSelection, applySelectedTemplatesAsync } from "../common/template.ts";
 import { clearNativeFolder } from "./clear-native-folder.ts";
+import { ensureConfigAsync } from "./ensure-config-async.ts";
 import { resolvePackageManagerOptions } from "./resolve-options.ts";
 
 /**
@@ -51,31 +52,8 @@ export async function prebuild({
 }) {
   log.info(`🏎️  Running ${kleur.yellow("expo-desktop prebuild")}.`, { withGuide: false });
 
-  // TODO: if packageManager undefined, infer from lockfiles
-  const _packageManager = resolvePackageManagerOptions({ noInstall, npm, yarn, bun, pnpm });
-
   let platforms = resolvePlatformsOption(platform);
-
-  const templateSelection = {
-    template,
-    "template-ios": templateIos,
-    "template-android": templateAndroid,
-    "template-macos": templateMacos,
-    "template-windows": templateWindows,
-  } satisfies TemplateSelection;
-
   const projectRoot = process.cwd();
-  if (clean && hasTemplateSelection(templateSelection)) {
-    const appName = await readAppNameFromConfigAsync(projectRoot);
-    await applySelectedTemplatesAsync({
-      projectRoot,
-      selection: templateSelection,
-      enabledPlatforms: platforms,
-      name: appName,
-      respectTemplateConfig: false,
-    });
-    log.info("Applied project templates for clean prebuild.", { withGuide: false });
-  }
 
   setNodeEnv("development");
   loadEnvFiles(projectRoot);
@@ -108,6 +86,34 @@ export async function prebuild({
   } else {
     // TODO: Check if the existing project folders are malformed.
   }
+
+  const { exp, pkg } = await ensureConfigAsync(projectRoot, { platforms });
+
+  // TODO: refactor the below to match updateFromTemplateAsync()
+  // https://github.com/expo/expo/blob/8dd645080f52927e2a8bf406167da7241a1d46d8/packages/%40expo/cli/src/prebuild/prebuildAsync.ts#L112-L120
+  // https://github.com/expo/expo/blob/e2aa8935077d88fbbb22b1f4dc1f8a1586080b97/packages/%40expo/cli/src/prebuild/updateFromTemplate.ts#L23
+
+  const templateSelection = {
+    template,
+    "template-ios": templateIos,
+    "template-android": templateAndroid,
+    "template-macos": templateMacos,
+    "template-windows": templateWindows,
+  } satisfies TemplateSelection;
+  if (clean && hasTemplateSelection(templateSelection)) {
+    const appName = await readAppNameFromConfigAsync(projectRoot);
+    await applySelectedTemplatesAsync({
+      projectRoot,
+      selection: templateSelection,
+      enabledPlatforms: platforms,
+      name: appName,
+      respectTemplateConfig: false,
+    });
+    log.info("Applied project templates for clean prebuild.", { withGuide: false });
+  }
+
+  // TODO: if packageManager undefined, infer from lockfiles
+  const _packageManager = resolvePackageManagerOptions({ noInstall, npm, yarn, bun, pnpm });
 
   // TODO:
   // - prebuildAsync()
