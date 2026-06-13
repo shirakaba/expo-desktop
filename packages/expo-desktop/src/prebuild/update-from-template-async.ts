@@ -49,7 +49,16 @@ export async function updateFromTemplateAsync(
   } & DependenciesModificationResults
 > {
   const appName = readAppNameFromConfig(exp);
-  await applySelectedTemplatesAsync({
+
+  // TODO: Figure out what to do with these multiple checksums we have.
+  //
+  //       I'm beginning to think it'd be a lot easier to maintain our own
+  //       unified template than to stitch together mobile + macos + windows
+  //       templates. A big problem is file priority - for any files outside of
+  //       the platform-specific folders, which one should take priority.
+  //       Particularly for common ones, such as package.json.
+  //       https://github.com/expo/expo/pull/26414
+  const results = await applySelectedTemplatesAsync({
     projectRoot,
     selection: templateSelection,
     enabledPlatforms: platforms,
