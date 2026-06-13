@@ -1,7 +1,13 @@
 import { tasks } from "@clack/prompts";
+import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
+import crypto from "node:crypto";
+import { createReadStream } from "node:fs";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import readline from "node:readline";
+import { Readable, Transform, type TransformCallback } from "node:stream";
+import { pipeline } from "node:stream/promises";
 import { pathToFileURL } from "node:url";
 
 import { applyWindowsCppAppTemplateAsync } from "./apply-windows-cpp-app-template.ts";
@@ -24,10 +30,10 @@ export async function applySelectedTemplatesAsync({
   enabledPlatforms: readonly TemplatePlatform[];
   name: { displayName: string; filesafeName: string; rdns: string };
   respectTemplateConfig: boolean;
-}) {
+}): Promise<AppliedTemplateResult[]> {
   const descriptors = getOrderedTemplateDescriptors(selection, enabledPlatforms);
   if (!descriptors.length) {
-    return;
+    return [];
   }
 
   // Post-process the templates just like the `react-native-macos-init` and
@@ -41,6 +47,7 @@ export async function applySelectedTemplatesAsync({
   // windows:
   // - https://github.com/microsoft/react-native-windows/blob/3d64f71ed8495da6a0dcfc1f97bcb8f761986594/packages/%40react-native-windows/cli/src/generator-windows/index.ts#L57
   // - https://github.com/microsoft/react-native-windows/tree/main/vnext/templates/cpp-app
+  const appliedTemplates = new Array<AppliedTemplateResult>();
   for (const [index, descriptor] of Object.entries(descriptors)) {
     const source = parseTemplateSource(descriptor.value);
     const extracted = await prepareTemplateSourceAsync(
@@ -48,7 +55,7 @@ export async function applySelectedTemplatesAsync({
       source,
     );
     try {
-      const templateRoot = await resolveTemplateRootAsync(extracted, source);
+      const templateRoot = await resolveTemplateRootAsync(extracted.root, source);
       const templateConfig = respectTemplateConfig
         ? await loadTemplateConfigAsync(templateRoot)
         : undefined;
@@ -59,10 +66,20 @@ export async function applySelectedTemplatesAsync({
         templateConfig,
         forPlatform: descriptor.forPlatform,
       });
+      const result: AppliedTemplateResult = {
+        key: descriptor.key,
+        checksum: extracted.checksum,
+      };
+      if (descriptor.forPlatform !== undefined) {
+        result.forPlatform = descriptor.forPlatform;
+      }
+      appliedTemplates.push(result);
     } finally {
-      await fs.rm(extracted, { recursive: true, force: true });
+      await fs.rm(extracted.root, { recursive: true, force: true });
     }
   }
+
+  return appliedTemplates;
 }
 
 export type TemplateSelection = {
@@ -80,6 +97,12 @@ type TemplateDescriptor = {
 };
 
 export type TemplatePlatform = "ios" | "android" | "macos" | "windows";
+
+export type AppliedTemplateResult = {
+  key: TemplateDescriptor["key"];
+  checksum: string;
+  forPlatform?: TemplatePlatform;
+};
 
 function getOrderedTemplateDescriptors(
   selection: TemplateSelection,
@@ -161,61 +184,191 @@ type TemplateSource =
 async function prepareTemplateSourceAsync(
   taskTitle: string,
   source: TemplateSource,
-): Promise<string> {
-  // We make sure there are no spaces in the path so that we don't need to
-  // quote/escape the shell command.
+): Promise<{ root: string; checksum: string }> {
   const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), "expo-desktop-template-"));
   const archivePath = path.join(tempRoot, "template.tgz");
 
-  switch (source.type) {
-    case "local-tarball":
-      await fs.copyFile(source.path, archivePath);
-      break;
-    case "github": {
-      // Don't think it's possible to have spaces in the owner/repo/ref, so no
-      // percent-encoding or quoting needed.
-      const tarballUrl = `https://codeload.github.com/${source.owner}/${source.repo}/tar.gz/${source.ref}`;
-      const response = await fetch(tarballUrl);
-      if (!response.ok || !response.body) {
-        throw new Error(`Failed to download template tarball from ${tarballUrl}`);
+  try {
+    let checksum: string;
+    switch (source.type) {
+      case "local-tarball":
+        checksum = await extractTemplateTarballAsync(createReadStream(source.path), tempRoot, {
+          taskTitle,
+        });
+        break;
+      case "github": {
+        // Don't think it's possible to have spaces in the owner/repo/ref, so no
+        // percent-encoding or quoting needed.
+        const tarballUrl = `https://codeload.github.com/${source.owner}/${source.repo}/tar.gz/${source.ref}`;
+        const response = await fetch(tarballUrl);
+        if (!response.ok || !response.body) {
+          throw new Error(`Failed to download template tarball from ${tarballUrl}`);
+        }
+        checksum = await extractTemplateTarballAsync(response.body, tempRoot, {
+          taskTitle,
+        });
+        break;
       }
-      const bytes = new Uint8Array(await response.arrayBuffer());
-      await fs.writeFile(archivePath, bytes);
-      break;
-    }
-    case "npm": {
-      const shescape = getShescape();
-      await tasks([
-        promisifiedSpawnTask({
-          title: `npm pack (${source.spec})`,
-          command: "npm",
-          args: ["pack", shescape.quote(source.spec), "--silent"],
-          options: { cwd: tempRoot },
-        }),
-      ]);
-      const entries = await fs.readdir(tempRoot);
-      const packed = entries.find((entry) => entry.endsWith(".tgz"));
-      if (!packed) {
-        throw new Error(`Could not pack template "${source.spec}".`);
+      case "npm": {
+        const shescape = getShescape();
+        await tasks([
+          promisifiedSpawnTask({
+            title: `npm pack (${source.spec})`,
+            command: "npm",
+            args: ["pack", shescape.quote(source.spec), "--silent"],
+            options: { cwd: tempRoot },
+          }),
+        ]);
+        const entries = await fs.readdir(tempRoot);
+        const packed = entries.find((entry) => entry.endsWith(".tgz"));
+        if (!packed) {
+          throw new Error(`Could not pack template "${source.spec}".`);
+        }
+        await fs.rename(path.join(tempRoot, packed), archivePath);
+        checksum = await extractTemplateTarballAsync(createReadStream(archivePath), tempRoot, {
+          taskTitle,
+        });
+        break;
       }
-      await fs.rename(path.join(tempRoot, packed), archivePath);
-      break;
     }
+
+    return { root: tempRoot, checksum };
+  } catch (error) {
+    await fs.rm(tempRoot, { recursive: true, force: true });
+    throw error;
+  }
+}
+
+// Match Expo CLI by hashing the compressed tarball bytes before decompression.
+class ChecksumStream extends Transform {
+  hash: crypto.Hash;
+
+  constructor(algorithm: string) {
+    super();
+    this.hash = crypto.createHash(algorithm);
   }
 
+  digest(): Buffer;
+  digest(encoding: crypto.BinaryToTextEncoding): string;
+  digest(encoding?: crypto.BinaryToTextEncoding): string | Buffer {
+    return encoding ? this.hash.digest(encoding) : this.hash.digest();
+  }
+
+  override _transform(chunk: Buffer, _encoding: BufferEncoding, callback: TransformCallback) {
+    this.hash.update(chunk);
+    callback(null, chunk);
+  }
+}
+
+type TarballReadable = Readable | Parameters<typeof Readable.fromWeb>[0];
+
+async function extractTemplateTarballAsync(
+  input: TarballReadable,
+  output: string,
+  {
+    taskTitle,
+    checksumAlgorithm = "md5",
+  }: {
+    taskTitle: string;
+    checksumAlgorithm?: string;
+  },
+): Promise<string> {
+  let checksum: string | undefined;
+
   await tasks([
-    promisifiedSpawnTask({
+    {
       title: taskTitle,
-      // The paths are Windows-style paths rather than POSIX, so make sure to
-      // select Windows tar rather than GNU tar (which may be on path, even when
-      // invoking from cmd.exe, due to having git bash installed).
-      // tar C:\Users\Jamie\AppData\Local\Temp\expo-desktop-template-Uf1F1B\template.tgz -C C:\Users\Jamie\AppData\Local\Temp\expo-desktop-template-Uf1F1B
-      command: process.platform === "win32" ? "C:\\Windows\\System32\\tar.exe" : "tar",
-      args: ["-xzf", archivePath, "-C", tempRoot],
-    }),
+      task: async (message) => {
+        checksum = await extractTarballStreamAsync(input, output, {
+          checksumAlgorithm,
+          logLine: message,
+        });
+      },
+    },
   ]);
 
-  return tempRoot;
+  if (checksum === undefined) {
+    throw new Error("Failed to calculate template checksum.");
+  }
+
+  return checksum;
+}
+
+async function extractTarballStreamAsync(
+  input: TarballReadable,
+  output: string,
+  {
+    checksumAlgorithm,
+    logLine,
+  }: {
+    checksumAlgorithm: string;
+    logLine: (line: string) => void;
+  },
+): Promise<string> {
+  await fs.mkdir(output, { recursive: true });
+
+  const checksumStream = new ChecksumStream(checksumAlgorithm);
+  const tar = spawn(getTarCommand(), ["-xzf", "-", "-C", output], {
+    shell: false,
+    stdio: ["pipe", "pipe", "pipe"],
+    windowsHide: true,
+  });
+
+  const lineBuffer = new Array<string>();
+  const pushLine = (stream: "stdout" | "stderr", line: string) => {
+    lineBuffer.push(`${stream}\t${line}`);
+    logLine(line);
+  };
+
+  readline.createInterface({ input: tar.stdout }).on("line", (line) => pushLine("stdout", line));
+  readline.createInterface({ input: tar.stderr }).on("line", (line) => pushLine("stderr", line));
+
+  const nodeInput = input instanceof Readable ? input : Readable.fromWeb(input);
+  const closePromise = waitForTarClose(tar, lineBuffer);
+  const pipePromise = pipeline(nodeInput, checksumStream, tar.stdin);
+
+  const [pipeResult, closeResult] = await Promise.allSettled([pipePromise, closePromise]);
+  if (closeResult.status === "rejected") {
+    throw closeResult.reason;
+  }
+  if (pipeResult.status === "rejected") {
+    throw new Error("Failed to stream template tarball to tar.", { cause: pipeResult.reason });
+  }
+
+  return checksumStream.digest("hex");
+}
+
+function getTarCommand(): string {
+  // The paths are Windows-style paths rather than POSIX, so make sure to select
+  // Windows tar rather than GNU tar, which may be on path due to Git Bash.
+  return process.platform === "win32" ? "C:\\Windows\\System32\\tar.exe" : "tar";
+}
+
+function waitForTarClose(
+  tar: ChildProcessWithoutNullStreams,
+  lineBuffer: readonly string[],
+): Promise<void> {
+  const { promise, resolve, reject } = Promise.withResolvers<void>();
+
+  tar.once("error", (error) => {
+    tar.stdin.destroy(error);
+    reject(error);
+  });
+
+  tar.once("close", (code, signal) => {
+    if (code === 0) {
+      resolve();
+      return;
+    }
+
+    const detail =
+      lineBuffer.length > 0
+        ? `\n\n${lineBuffer.slice(-20).join("\n")}`
+        : "\n\n(no stdout/stderr lines were captured)";
+    reject(new Error(`tar exited with code ${code} (signal: ${signal}).${detail}`));
+  });
+
+  return promise;
 }
 
 async function resolveTemplateRootAsync(
