@@ -216,7 +216,10 @@ async function prepareTemplateSourceAsync(
             title: `npm pack (${source.spec})`,
             command: "npm",
             args: ["pack", shescape.quote(source.spec), "--silent"],
-            options: { cwd: tempRoot },
+            options: {
+              cwd: tempRoot,
+              env: getNpmPackEnv(),
+            },
           }),
         ]);
         const entries = await fs.readdir(tempRoot);
@@ -237,6 +240,19 @@ async function prepareTemplateSourceAsync(
     await fs.rm(tempRoot, { recursive: true, force: true });
     throw error;
   }
+}
+
+function getNpmPackEnv(): NodeJS.ProcessEnv {
+  const nodeBin = path.dirname(process.execPath);
+  const pathEntries = process.env.PATH?.split(path.delimiter) ?? [];
+  if (pathEntries[0] === nodeBin) {
+    return process.env;
+  }
+
+  return {
+    ...process.env,
+    PATH: [nodeBin, ...pathEntries.filter((entry) => entry !== nodeBin)].join(path.delimiter),
+  };
 }
 
 // Match Expo CLI by hashing the compressed tarball bytes before decompression.
@@ -382,10 +398,6 @@ async function resolveTemplateRootAsync(
   }
 
   let templateRoot = path.join(extractedRoot, firstDir.name);
-  if (source.type === "npm") {
-    templateRoot = path.join(templateRoot, "package");
-  }
-
   if (source.type === "github" && source.subpath) {
     templateRoot = path.join(templateRoot, source.subpath);
   }
