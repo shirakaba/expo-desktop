@@ -34,6 +34,9 @@ catalogs:
     '@expo/json-file':
       specifier: ^10.2.0
       version: 10.2.0
+    '@expo/package-manager':
+      specifier: ^1.12.0
+      version: 1.12.1
     '@expo/plist':
       specifier: ^0.7.0
       version: 0.7.0
@@ -146,6 +149,12 @@ importers:
       '@expo/env':
         specifier: catalog:expo-latest
         version: 2.3.0
+      '@expo/json-file':
+        specifier: catalog:expo-latest
+        version: 10.2.0
+      '@expo/package-manager':
+        specifier: catalog:expo-latest
+        version: 1.12.1
       arktype:
         specifier: ^2.2.0
         version: 2.2.0
@@ -164,15 +173,30 @@ importers:
       expo-desktop-prebuild-config:
         specifier: workspace:^
         version: link:../expo-desktop-prebuild-config
+      getenv:
+        specifier: ^2.0.0
+        version: 2.0.0
       glob:
         specifier: ^10.5.0
         version: 10.5.0
       kleur:
         specifier: ^4.1.5
         version: 4.1.5
+      multitars:
+        specifier: ^1.0.0
+        version: 1.0.0
       mustache:
         specifier: ^4.2.0
         version: 4.2.0
+      ora:
+        specifier: 3.4.0
+        version: 3.4.0
+      picomatch:
+        specifier: ^2.3.2
+        version: 2.3.2
+      prompts:
+        specifier: ^2.4.2
+        version: 2.4.2
       shescape:
         specifier: ^2.1.12
         version: 2.1.12
@@ -180,15 +204,27 @@ importers:
         specifier: ^4.1.1
         version: 4.1.1
     devDependencies:
+      '@octokit/types':
+        specifier: ^13.5.0
+        version: 13.10.0
       '@tsconfig/node24':
         specifier: catalog:base
         version: 24.0.4
+      '@types/getenv':
+        specifier: ^1.0.0
+        version: 1.0.3
       '@types/mustache':
         specifier: ^4.2.6
         version: 4.2.6
       '@types/node':
         specifier: catalog:base
         version: 24.13.1
+      '@types/picomatch':
+        specifier: ^2.3.3
+        version: 2.3.4
+      '@types/prompts':
+        specifier: 2.0.14
+        version: 2.0.14
       '@typescript/native-preview':
         specifier: catalog:base
         version: 7.0.0-dev.20260507.1
@@ -1136,6 +1172,9 @@ packages:
   '@expo/package-manager@1.10.5':
     resolution: {integrity: sha512-nCP9Mebfl3jvOr0/P6VAuyah6PAtun+aihIL2zAtuE8uSe94JWkVZ7051i0MUVO+y3gFpBqnr8IIH5ch+VJjHA==}
 
+  '@expo/package-manager@1.12.1':
+    resolution: {integrity: sha512-fQLiFAcFRWF53mtuLK32SUJQ1ahhrTcBZPZPedYTiUT5ha5FF+UO6bPtCc0Y/hgj0/m3HCGBAuSHjbg2kI9oPQ==}
+
   '@expo/plist@0.4.8':
     resolution: {integrity: sha512-pfNtErGGzzRwHP+5+RqswzPDKkZrx+Cli0mzjQaus1ZWFsog5ibL+nVT3NcporW51o8ggnt7x813vtRbPiyOrQ==}
 
@@ -1171,10 +1210,6 @@ packages:
 
   '@expo/sdk-runtime-versions@1.0.0':
     resolution: {integrity: sha512-Doz2bfiPndXYFPMRwPyGa1k5QaKDVpY806UJj570epIiMzWaYyCtobasyfC++qfIXVb5Ocy7r3tP9d62hAQ7IQ==}
-
-  '@expo/spawn-async@1.7.2':
-    resolution: {integrity: sha512-QdWi16+CHB9JYP7gma19OVVg0BFkvU8zNj9GjWorYI8Iv8FUxjOCcYRuAmX4s/h91e4e7BPsskc8cSrZYho9Ew==}
-    engines: {node: '>=12'}
 
   '@expo/spawn-async@1.8.0':
     resolution: {integrity: sha512-eb9xxd/LbuEGSdua4NumCu/McVB9EM+F/JxB9pWgnERw4HQ9XyTNH1KapG6oqLWR8TuRK2LQfzJlmNi94CVobw==}
@@ -1322,6 +1357,12 @@ packages:
   '@nodelib/fs.walk@1.2.8':
     resolution: {integrity: sha512-oGB+UxlgWcgQkgwo8GcEGwemoTFt3FIO9ababBmaGwXIoBKZ+GTy0pP185beGg7Llih/NSHSV2XAs1lnznocSg==}
     engines: {node: '>= 8'}
+
+  '@octokit/openapi-types@24.2.0':
+    resolution: {integrity: sha512-9sIH3nSUttelJSXUrmGzl7QUBFul0/mB8HRYl3fOlgHbIWG+WnYDXU3v/2zMtAvuzZ/ed00Ei6on975FhBfzrg==}
+
+  '@octokit/types@13.10.0':
+    resolution: {integrity: sha512-ifLaO34EbbPj0Xgro4G5lP5asESjwHracYJvVaPIyXMuiuXLlhic3S47cBdTb+jfODkTE5YtGCLt3Ay3+J97sA==}
 
   '@oxfmt/binding-android-arm-eabi@0.47.0':
     resolution: {integrity: sha512-KrMQRdMi/upr81qT4ijK6X6BNp6jqpMY7FwILQnwIy9QLc3qpnhUx5rsCLGzn4ewsCQ0CNAspN2ogmP1GXLyLw==}
@@ -1930,6 +1971,9 @@ packages:
   '@types/estree@1.0.9':
     resolution: {integrity: sha512-GhdPgy1el4/ImP05X05Uw4cw2/M93BCUmnEvWZNStlCzEKME4Fkk+YpoA5OiHNQmoS7Cafb8Xa3Pya8m1Qrzeg==}
 
+  '@types/getenv@1.0.3':
+    resolution: {integrity: sha512-aCe60hc2U/xtdnGYbcZBFm6Xkm/MFuWqKMbhupcGt7DJ1QojADIXFKthtlgTwyXkEi6vr8lMXtOI218Ua9qx6w==}
+
   '@types/graceful-fs@4.1.9':
     resolution: {integrity: sha512-olP3sd1qOEe5dXTSaFvQG+02VdRXcdytWLAZsAq1PecU8uqQAhkrnbli7DagjtXKW/Bl7YJbUsa8MPcuc8LHEQ==}
 
@@ -1956,6 +2000,12 @@ packages:
 
   '@types/node@25.9.2':
     resolution: {integrity: sha512-G05zqtJhcDLb8uslf5EjCxXg9G1KQxiV8OS0R26IC//Eoyitzqe8z37I7cqvnZlrlSfgocQRfSn/AHBZJJFyGw==}
+
+  '@types/picomatch@2.3.4':
+    resolution: {integrity: sha512-0so8lU8O5zatZS/2Fi4zrwks+vZv7e0dygrgEZXljODXBig97l4cPQD+9LabXfGJOWwoRkTVz6Q4edZvD12UOA==}
+
+  '@types/prompts@2.0.14':
+    resolution: {integrity: sha512-HZBd99fKxRWpYCErtm2/yxUZv6/PBI9J7N4TNFffl5JbrYMHBwF25DjQGTW3b3jmXq+9P6/8fCIb2ee57BFfYA==}
 
   '@types/react@19.1.17':
     resolution: {integrity: sha512-Qec1E3mhALmaspIrhWt9jkQMNdw6bReVu64mjvhbhq2NFPftLPVr+l1SZgmw/66WwBNpDh7ao5AT6gF5v41PFA==}
@@ -3701,6 +3751,9 @@ packages:
 
   ms@2.1.3:
     resolution: {integrity: sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==}
+
+  multitars@1.0.0:
+    resolution: {integrity: sha512-H/J4fMLedtudftaYMOg7ajzLYgT3/rwbWVJbqr/iUgB8DQztn38ys5HOqI1CzSxx8QhXXwOOnnBvd4v3jG5+Mg==}
 
   mustache@4.2.0:
     resolution: {integrity: sha512-71ippSywq5Yb7/tVYyGbkBggbU8H3u5Rz56fH60jGFgr8uHwxs+aSKeqmluIVzM0m0kB7xQjKS6qPfd0b2ZoqQ==}
@@ -5794,7 +5847,7 @@ snapshots:
       '@expo/devcert': 1.2.1
       '@expo/env': 2.0.11
       '@expo/image-utils': 0.8.14
-      '@expo/json-file': 10.0.14
+      '@expo/json-file': 10.2.0
       '@expo/metro': 54.2.0
       '@expo/metro-config': 54.0.15(expo@54.0.34(@babel/core@7.29.0)(react-native@0.81.6(@babel/core@7.29.0)(@react-native-community/cli@20.1.3)(@react-native/metro-config@0.81.6(@babel/core@7.29.0))(@types/react@19.1.17)(react@19.1.4))(react@19.1.4))
       '@expo/osascript': 2.4.3
@@ -5802,7 +5855,7 @@ snapshots:
       '@expo/plist': 0.4.8
       '@expo/prebuild-config': 54.0.8(expo@54.0.34(@babel/core@7.29.0)(react-native@0.81.6(@babel/core@7.29.0)(@react-native-community/cli@20.1.3)(@react-native/metro-config@0.81.6(@babel/core@7.29.0))(@types/react@19.1.17)(react@19.1.4))(react@19.1.4))
       '@expo/schema-utils': 0.1.8
-      '@expo/spawn-async': 1.7.2
+      '@expo/spawn-async': 1.8.0
       '@expo/ws-tunnel': 1.0.6
       '@expo/xcpretty': 4.4.4
       '@react-native/dev-middleware': 0.81.5
@@ -5911,7 +5964,7 @@ snapshots:
       '@babel/code-frame': 7.10.4
       '@expo/config-plugins': 54.0.4
       '@expo/config-types': 54.0.10
-      '@expo/json-file': 10.0.14
+      '@expo/json-file': 10.2.0
       deepmerge: 4.3.1
       getenv: 2.0.0
       glob: 13.0.6
@@ -5974,7 +6027,7 @@ snapshots:
 
   '@expo/fingerprint@0.15.5':
     dependencies:
-      '@expo/spawn-async': 1.7.2
+      '@expo/spawn-async': 1.8.0
       arg: 5.0.2
       chalk: 4.1.2
       debug: 4.4.3
@@ -6004,7 +6057,7 @@ snapshots:
   '@expo/image-utils@0.8.14':
     dependencies:
       '@expo/require-utils': 55.0.5
-      '@expo/spawn-async': 1.7.2
+      '@expo/spawn-async': 1.8.0
       chalk: 4.1.2
       getenv: 2.0.0
       jimp-compact: 0.16.1
@@ -6033,7 +6086,7 @@ snapshots:
       '@expo/env': 2.0.11
       '@expo/json-file': 10.0.14
       '@expo/metro': 54.2.0
-      '@expo/spawn-async': 1.7.2
+      '@expo/spawn-async': 1.8.0
       browserslist: 4.28.2
       chalk: 4.1.2
       debug: 4.4.3
@@ -6077,12 +6130,21 @@ snapshots:
 
   '@expo/osascript@2.4.3':
     dependencies:
-      '@expo/spawn-async': 1.7.2
+      '@expo/spawn-async': 1.8.0
 
   '@expo/package-manager@1.10.5':
     dependencies:
-      '@expo/json-file': 10.0.14
-      '@expo/spawn-async': 1.7.2
+      '@expo/json-file': 10.2.0
+      '@expo/spawn-async': 1.8.0
+      chalk: 4.1.2
+      npm-package-arg: 11.0.3
+      ora: 3.4.0
+      resolve-workspace-root: 2.0.1
+
+  '@expo/package-manager@1.12.1':
+    dependencies:
+      '@expo/json-file': 10.2.0
+      '@expo/spawn-async': 1.8.0
       chalk: 4.1.2
       npm-package-arg: 11.0.3
       ora: 3.4.0
@@ -6106,7 +6168,7 @@ snapshots:
       '@expo/config-plugins': 54.0.4
       '@expo/config-types': 54.0.10
       '@expo/image-utils': 0.8.14
-      '@expo/json-file': 10.0.14
+      '@expo/json-file': 10.2.0
       '@react-native/normalize-colors': 0.81.5
       debug: 4.4.3
       expo: 54.0.34(@babel/core@7.29.0)(react-native@0.81.6(@babel/core@7.29.0)(@react-native-community/cli@20.1.3)(@react-native/metro-config@0.81.6(@babel/core@7.29.0))(@types/react@19.1.17)(react@19.1.4))(react@19.1.4)
@@ -6152,10 +6214,6 @@ snapshots:
   '@expo/schema-utils@0.1.8': {}
 
   '@expo/sdk-runtime-versions@1.0.0': {}
-
-  '@expo/spawn-async@1.7.2':
-    dependencies:
-      cross-spawn: 7.0.6
 
   '@expo/spawn-async@1.8.0':
     dependencies:
@@ -6371,6 +6429,12 @@ snapshots:
     dependencies:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.20.1
+
+  '@octokit/openapi-types@24.2.0': {}
+
+  '@octokit/types@13.10.0':
+    dependencies:
+      '@octokit/openapi-types': 24.2.0
 
   '@oxfmt/binding-android-arm-eabi@0.47.0':
     optional: true
@@ -7227,6 +7291,10 @@ snapshots:
 
   '@types/estree@1.0.9': {}
 
+  '@types/getenv@1.0.3':
+    dependencies:
+      '@types/node': 25.9.2
+
   '@types/graceful-fs@4.1.9':
     dependencies:
       '@types/node': 25.9.2
@@ -7254,6 +7322,12 @@ snapshots:
   '@types/node@25.9.2':
     dependencies:
       undici-types: 7.24.6
+
+  '@types/picomatch@2.3.4': {}
+
+  '@types/prompts@2.0.14':
+    dependencies:
+      '@types/node': 25.9.2
 
   '@types/react@19.1.17':
     dependencies:
@@ -8138,7 +8212,7 @@ snapshots:
 
   expo-modules-autolinking@3.0.25:
     dependencies:
-      '@expo/spawn-async': 1.7.2
+      '@expo/spawn-async': 1.8.0
       chalk: 4.1.2
       commander: 7.2.0
       require-from-string: 2.0.2
@@ -9283,6 +9357,8 @@ snapshots:
   ms@2.0.0: {}
 
   ms@2.1.3: {}
+
+  multitars@1.0.0: {}
 
   mustache@4.2.0: {}
 
