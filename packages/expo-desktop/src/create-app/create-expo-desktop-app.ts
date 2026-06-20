@@ -76,7 +76,12 @@ export async function createExpoDesktopApp({
   const resolvedTemplate =
     template ?? `expo-desktop-template-blank-typescript@${versions.expoMajor}.${versions.minor}`;
 
-  await extractAndPrepareTemplateAppAsync(projectRoot, { npmPackage: resolvedTemplate });
+  await extractAndPrepareTemplateAppAsync({
+    projectRoot,
+    name,
+    rnwVersion: versions.windows,
+    npmPackage: resolvedTemplate,
+  });
   console.log(`${green("◆")}  Applied templates.\n`);
 
   title("Altering app.json…", { spacing: 1 });

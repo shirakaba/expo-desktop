@@ -8,13 +8,17 @@ import * as PackageManager from "@expo/package-manager";
 import chalk from "chalk";
 import Debug from "debug";
 import { glob } from "glob";
+import mustache from "mustache";
+import crypto from "node:crypto";
 import fs from "node:fs";
 import { createRequire } from "node:module";
+import os from "node:os";
 import path from "node:path";
 import ora from "ora";
 
 import type { PackageManagerName } from "./resolve-package-manager.ts";
 
+import packageJson from "../../../package.json" with { type: "json" };
 import { sanitizedName } from "./create-file-transform.ts";
 import { env } from "./env.ts";
 import { downloadAndExtractGitHubRepositoryAsync } from "./github.ts";
@@ -128,13 +132,22 @@ export function resolvePackageModuleId(moduleId: string) {
  * Extract a template app to a given file path and clean up any properties left over from npm to
  * prepare it for usage.
  */
-export async function extractAndPrepareTemplateAppAsync(
-  projectRoot: string,
-  { npmPackage }: { npmPackage?: string | null },
-) {
-  const projectName = path.basename(projectRoot);
+export async function extractAndPrepareTemplateAppAsync({
+  projectRoot,
+  name,
+  npmPackage,
+  rnwVersion,
+}: {
+  projectRoot: string;
+  name: { displayName: string; filesafeName: string; rdns: string };
+  rnwVersion: string;
+  npmPackage?: string | null;
+}) {
+  const projectName = name.filesafeName;
 
   debug(`Extracting template app (pkg: ${npmPackage}, projectName: ${projectName})`);
+
+  const windowsTemplateStrings = getWindowsTemplateStrings({ name, rnwVersion });
 
   const { type, uri } = resolvePackageModuleId(
     npmPackage || "expo-desktop-template-blank-typescript",
@@ -157,7 +170,8 @@ export async function extractAndPrepareTemplateAppAsync(
     await renameTemplateAppNameAsync({
       cwd: projectRoot,
       files,
-      name: projectName,
+      name,
+      windowsTemplateStrings,
     });
   } catch (error: any) {
     Log.error("Error renaming app name in template");
@@ -168,6 +182,62 @@ export async function extractAndPrepareTemplateAppAsync(
 
   return projectRoot;
 }
+
+function getWindowsTemplateStrings({
+  name,
+  rnwVersion,
+}: {
+  name: { filesafeName: string; rdns: string };
+  rnwVersion: string;
+}) {
+  const projectGuid = crypto.randomUUID();
+  const packageGuid = crypto.randomUUID();
+  const namespace = name.rdns.replaceAll(/[-_]/g, "");
+  const namespaceCpp = namespace.replaceAll(".", "::");
+  const mainComponentName = name.filesafeName;
+
+  // We make a couple of hard assumptions here, based on the fact that we don't
+  // support specifying canary/dev versions, mainly to avoid the chicken-and-egg
+  // of having to run an `npm install` up-front to confirm for real.
+
+  // It's a canary if the version is e.g. `0.0.0-canary.1056`.
+  const isCanary = false;
+
+  // `devMode` is `true` if there is a "src-win" at the base of the
+  // react-native-windows folder.
+  const devMode = false;
+
+  return {
+    name: name.filesafeName,
+    namespace,
+    namespaceCpp,
+    rnwVersion,
+    // We can't reliably fill in the path to react-native-windows without first
+    // installing node modules. However, in create-app, we unpack the template
+    // before that, so we have a chicken-and-egg problem.
+    //
+    // Fortunately, it's a non-issue, as this template variable is only used in
+    // the solution file, specifically when `useNugets: false`, which is never
+    // the case, as you can see below.
+    rnwPathFromProjectRoot: "node_modules\\react-native-windows",
+    mainComponentName,
+    projectGuidLower: `{${projectGuid.toLowerCase()}}`,
+    projectGuidUpper: `{${projectGuid.toUpperCase()}}`,
+    packageGuidLower: `{${packageGuid.toLowerCase()}}`,
+    packageGuidUpper: `{${packageGuid.toUpperCase()}}`,
+    currentUser: os.userInfo().username,
+    devMode,
+    useNuGets: !devMode,
+    addReactNativePublicAdoFeed: true || isCanary,
+    cppNugetPackages: new Array<unknown>(),
+    autolinkPropertiesForProps: "",
+    autolinkProjectReferencesForTargets: "",
+    autolinkCppIncludes: "",
+    autolinkCppPackageProviders: "\n UNREFERENCED_PARAMETER(packageProviders);",
+  };
+}
+
+type WindowsTemplateStrings = ReturnType<typeof getWindowsTemplateStrings>;
 
 function escapeXMLCharacters(original: string): string {
   const noAmps = original.replace("&", "&amp;");
@@ -234,6 +304,25 @@ export const defaultRenameConfig = [
   "macos/**/*.xcodeproj/project.pbxproj",
   "macos/**/*.xcodeproj/xcshareddata/xcschemes/*.xcscheme",
   "macos/**/*.xcworkspace/contents.xcworkspacedata",
+
+  // Windows
+  "NuGet.config",
+  "windows/**/*.sln",
+  "windows/**/*.vcxproj",
+  "windows/**/*.vcxproj.filters",
+  "windows/**/*.vcxitems",
+  "windows/**/*.vcxitems.filters",
+  "windows/**/*.props",
+  "windows/**/*.targets",
+  "windows/**/*.h",
+  "windows/**/*.hpp",
+  "windows/**/*.c",
+  "windows/**/*.cpp",
+  "windows/**/*.idl",
+  "windows/**/*.rc",
+  "windows/**/*.xml",
+  "windows/**/*.xaml",
+  "windows/**/*.appxmanifest",
 ] as const;
 
 /**
@@ -278,15 +367,17 @@ export async function renameTemplateAppNameAsync({
   cwd,
   name,
   files,
+  windowsTemplateStrings,
 }: {
   cwd: string;
-  name: string;
+  name: { displayName: string; filesafeName: string; rdns: string };
   /**
    * An array of files to transform. Usually provided by calling
    * getTemplateFilesToRenameAsync().
    * @see getTemplateFilesToRenameAsync
    */
   files: string[];
+  windowsTemplateStrings: WindowsTemplateStrings;
 }) {
   debug(`Got files to transform: ${JSON.stringify(files)}`);
 
@@ -306,15 +397,32 @@ export async function renameTemplateAppNameAsync({
 
       debug(`Renaming app name in file: ${absoluteFilePath}`);
 
-      const safeName = [".xml", ".plist"].includes(path.extname(file))
-        ? escapeXMLCharacters(name)
-        : name;
+      const { base, ext } = path.parse(file);
+
+      const xmlSafeName = [".xml", ".plist"].includes(ext)
+        ? escapeXMLCharacters(name.filesafeName)
+        : name.filesafeName;
+
+      let replacement = contents;
 
       try {
-        const replacement = contents
-          .replace(/Hello App Display Name/g, safeName)
-          .replace(/HelloWorld/g, sanitizedName(safeName))
-          .replace(/helloworld/g, sanitizedName(safeName.toLowerCase()));
+        // The Windows files are unique in that they use Mustache syntax and
+        // use "MyApp" as their placeholder, rather than "HelloWorld".
+        if (/^windows[\/\\]/.test(file) || base === "NuGet.config") {
+          replacement = renderMustache(replacement, windowsTemplateStrings);
+
+          if (ext === ".vcxproj") {
+            replacement = replacement.replace(
+              /<!--\s*This project was created with react-native-windows[^\n\r]*-->/g,
+              `<!-- This project was created with expo-desktop ${packageJson.version} -->`,
+            );
+          }
+        } else {
+          replacement = replacement
+            .replace(/Hello App Display Name/g, name.displayName)
+            .replace(/HelloWorld/g, sanitizedName(xmlSafeName))
+            .replace(/helloworld/g, sanitizedName(xmlSafeName.toLowerCase()));
+        }
 
         if (replacement === contents) {
           return;
@@ -329,6 +437,37 @@ export async function renameTemplateAppNameAsync({
       }
     }),
   );
+}
+
+/**
+ * Render mustache tags inside `filePath` in place, mirroring the behaviour of
+ * react-native-windows' generator-common `resolveContents()`. Skips files that
+ * don't exist, files that don't contain any `{{` (no-op fast path), and
+ * preserves the file's existing line endings (LF vs CRLF).
+ *
+ * @see https://github.com/microsoft/react-native-windows/blob/main/packages/%40react-native-windows/cli/src/generator-common/index.ts
+ */
+function renderMustache(contents: string, view: Record<string, unknown>) {
+  if (!contents.includes("{{")) {
+    return contents;
+  }
+
+  const useCRLF = contents.includes("\r\n");
+  const adjustedView = adjustReplacementStringsForLineEndings(view, useCRLF);
+  return mustache.render(contents, adjustedView);
+}
+
+function adjustReplacementStringsForLineEndings(
+  view: Record<string, unknown>,
+  useCRLF: boolean,
+): Record<string, unknown> {
+  const out: Record<string, unknown> = { ...view };
+  for (const [key, value] of Object.entries(out)) {
+    if (typeof value === "string") {
+      out[key] = useCRLF ? value.replaceAll(/(?<!\r)\n/g, "\r\n") : value.replaceAll(/\r\n/g, "\n");
+    }
+  }
+  return out;
 }
 
 function templateHasNativeCode(root: string): boolean {
