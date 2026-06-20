@@ -47,26 +47,6 @@ const main = defineCommand({
           description: "Base template source (tarball, npm spec, or GitHub owner/repo#ref:subpath)",
           valueHint: "template",
         },
-        "template-ios": {
-          type: "string",
-          description: "iOS-specific template source",
-          valueHint: "template",
-        },
-        "template-android": {
-          type: "string",
-          description: "Android-specific template source",
-          valueHint: "template",
-        },
-        "template-macos": {
-          type: "string",
-          description: "macOS-specific template source",
-          valueHint: "template",
-        },
-        "template-windows": {
-          type: "string",
-          description: "Windows-specific template source",
-          valueHint: "template",
-        },
       },
       async run({ args }) {
         (await import("./create-app/command.ts")).newExpoDesktopProject(args);

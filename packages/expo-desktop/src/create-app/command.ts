@@ -15,10 +15,6 @@ export async function newExpoDesktopProject(args: {
   rdns: string | undefined;
   version: string | undefined;
   template: string | undefined;
-  "template-ios": string | undefined;
-  "template-android": string | undefined;
-  "template-macos": string | undefined;
-  "template-windows": string | undefined;
 }) {
   // A switch for skipping the questions
   const localDev = args["local-dev"];
@@ -31,13 +27,7 @@ export async function newExpoDesktopProject(args: {
         rdns: "uk.co.birchlabs.your-app-456",
       },
       packageManager: "pnpm",
-      templates: {
-        template: args.template,
-        "template-ios": args["template-ios"],
-        "template-android": args["template-android"],
-        "template-macos": args["template-macos"],
-        "template-windows": args["template-windows"],
-      },
+      template: args.template,
       versions: {
         expoMajor: 54,
         expoBlankTypeScript: "54.0.45",

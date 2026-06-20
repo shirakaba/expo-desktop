@@ -18,13 +18,13 @@ import { title } from "../common/clack.ts";
 import { hasGitStagedChangesAsync, hasProjectGitRepositoryAsync } from "../common/git.ts";
 import { packageManagerExec } from "../common/npm.ts";
 import { preserveFile } from "../common/preserve-file.ts";
-import { applySelectedTemplatesAsync, type TemplateSelection } from "../common/template.ts";
+import { applySelectedTemplatesAsync } from "../common/template.ts";
 
 export async function createExpoDesktopApp({
   localDev,
   name,
   packageManager,
-  templates,
+  template,
   versions,
 }: {
   /**
@@ -42,7 +42,7 @@ export async function createExpoDesktopApp({
     rdns: string;
   };
   packageManager: "npm" | "bun" | "pnpm" | "yarn";
-  templates: TemplateSelection;
+  template?: string | undefined;
   versions: {
     minor: number;
     expoMajor: number;
@@ -55,33 +55,12 @@ export async function createExpoDesktopApp({
   const { projectPath } = await createExpoApp({ localDev, name, packageManager, versions });
   await appendRootGitignoreSpawnDebugLogs(projectPath);
 
-  const templateSelection = {
-    // https://github.com/expo/expo/blob/sdk-54/templates/expo-template-blank-typescript
-    template: templates.template,
-    "template-ios": templates["template-ios"],
-    "template-android": templates["template-android"],
-    // https://github.com/microsoft/react-native-macos/tree/main/packages/react-native/local-cli/generator-macos/templates/macos
-    "template-macos":
-      templates["template-macos"] ??
-      "microsoft/react-native-macos#main:packages/react-native/local-cli/generator-macos/templates",
-    // https://github.com/microsoft/react-native-windows/tree/main/vnext/templates/cpp-app
-    "template-windows":
-      templates["template-windows"] ??
-      "microsoft/react-native-windows#main:vnext/templates/cpp-app",
-  } satisfies TemplateSelection;
-
   title("Applying templates…", { spacing: 1 });
   await applySelectedTemplatesAsync({
     projectRoot: projectPath,
-    selection: templateSelection,
+    template,
     enabledPlatforms: ["ios", "android", "macos", "windows"],
     name,
-    // I had originally hoped to consume the template.config.js file provided by
-    // the template, but the prototype in cpp-app imports dependencies like
-    // "chalk", "lodash", "username", and "../templateUtils" that it doesn't
-    // declare in any package.json, so we can't reliably support it. Will
-    // revisit the idea in future.
-    respectTemplateConfig: false,
   });
   console.log(`${green("◆")}  Applied templates.\n`);
 

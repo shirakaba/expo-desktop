@@ -8,7 +8,6 @@ import path from "node:path";
 import readline from "node:readline";
 import { Readable, Transform, type TransformCallback } from "node:stream";
 import { pipeline } from "node:stream/promises";
-import { pathToFileURL } from "node:url";
 
 import { applyWindowsCppAppTemplateAsync } from "./apply-windows-cpp-app-template.ts";
 import { promisifiedSpawnTask } from "./child-process.ts";
@@ -20,22 +19,15 @@ import { getShescape } from "./shescape.ts";
 
 export async function applySelectedTemplatesAsync({
   projectRoot,
-  selection,
+  template = "blank-typescript",
   enabledPlatforms,
   name,
-  respectTemplateConfig,
 }: {
   projectRoot: string;
-  selection: TemplateSelection;
+  template?: string | undefined;
   enabledPlatforms: readonly TemplatePlatform[];
   name: { displayName: string; filesafeName: string; rdns: string };
-  respectTemplateConfig: boolean;
 }): Promise<AppliedTemplateResult[]> {
-  const descriptors = getOrderedTemplateDescriptors(selection, enabledPlatforms);
-  if (!descriptors.length) {
-    return [];
-  }
-
   // Post-process the templates just like the `react-native-macos-init` and
   // `react-native init-windows` commands do:
   //
@@ -47,53 +39,25 @@ export async function applySelectedTemplatesAsync({
   // windows:
   // - https://github.com/microsoft/react-native-windows/blob/3d64f71ed8495da6a0dcfc1f97bcb8f761986594/packages/%40react-native-windows/cli/src/generator-windows/index.ts#L57
   // - https://github.com/microsoft/react-native-windows/tree/main/vnext/templates/cpp-app
-  const appliedTemplates = new Array<AppliedTemplateResult>();
-  for (const [index, descriptor] of Object.entries(descriptors)) {
-    const source = parseTemplateSource(descriptor.value);
-    const extracted = await prepareTemplateSourceAsync(
-      `Extracting template ${parseInt(index) + 1}/${descriptors.length} (--template ${descriptor.key})`,
-      source,
-    );
-    try {
-      const templateRoot = await resolveTemplateRootAsync(extracted.root, source);
-      const templateConfig = respectTemplateConfig
-        ? await loadTemplateConfigAsync(templateRoot)
-        : undefined;
-      await copyTemplateFilesAsync({
-        sourceRoot: templateRoot,
-        projectRoot,
-        name,
-        templateConfig,
-        forPlatform: descriptor.forPlatform,
-      });
-      const result: AppliedTemplateResult = {
-        key: descriptor.key,
-        checksum: extracted.checksum,
-      };
-      if (descriptor.forPlatform !== undefined) {
-        result.forPlatform = descriptor.forPlatform;
-      }
-      appliedTemplates.push(result);
-    } finally {
-      await fs.rm(extracted.root, { recursive: true, force: true });
-    }
+  const source = parseTemplateSource(template);
+  const extracted = await prepareTemplateSourceAsync("Extracting template", source);
+  try {
+    const templateRoot = await resolveTemplateRootAsync(extracted.root, source);
+    await copyTemplateFilesAsync({
+      sourceRoot: templateRoot,
+      projectRoot,
+      name,
+      enabledPlatforms,
+    });
+    return [{ key: "template", checksum: extracted.checksum }];
+  } finally {
+    await fs.rm(extracted.root, { recursive: true, force: true });
   }
-
-  return appliedTemplates;
 }
-
-export type TemplateSelection = {
-  template?: string | undefined;
-  "template-ios"?: string | undefined;
-  "template-android"?: string | undefined;
-  "template-macos"?: string | undefined;
-  "template-windows"?: string | undefined;
-};
 
 type TemplateDescriptor = {
   key: "template" | "template-ios" | "template-android" | "template-macos" | "template-windows";
   value: string;
-  forPlatform?: TemplatePlatform;
 };
 
 export type TemplatePlatform = "ios" | "android" | "macos" | "windows";
@@ -101,50 +65,7 @@ export type TemplatePlatform = "ios" | "android" | "macos" | "windows";
 export type AppliedTemplateResult = {
   key: TemplateDescriptor["key"];
   checksum: string;
-  forPlatform?: TemplatePlatform;
 };
-
-function getOrderedTemplateDescriptors(
-  selection: TemplateSelection,
-  enabledPlatforms: readonly TemplatePlatform[],
-): TemplateDescriptor[] {
-  const platformSet = new Set(enabledPlatforms);
-  const descriptors = new Array<TemplateDescriptor>();
-
-  if (selection.template) {
-    descriptors.push({ key: "template", value: selection.template });
-  }
-  if (selection["template-ios"] && platformSet.has("ios")) {
-    descriptors.push({
-      key: "template-ios",
-      value: selection["template-ios"],
-      forPlatform: "ios",
-    });
-  }
-  if (selection["template-android"] && platformSet.has("android")) {
-    descriptors.push({
-      key: "template-android",
-      value: selection["template-android"],
-      forPlatform: "android",
-    });
-  }
-  if (selection["template-macos"] && platformSet.has("macos")) {
-    descriptors.push({
-      key: "template-macos",
-      value: selection["template-macos"],
-      forPlatform: "macos",
-    });
-  }
-  if (selection["template-windows"] && platformSet.has("windows")) {
-    descriptors.push({
-      key: "template-windows",
-      value: selection["template-windows"],
-      forPlatform: "windows",
-    });
-  }
-
-  return descriptors;
-}
 
 function parseTemplateSource(template: string): TemplateSource {
   const localPath = path.resolve(process.cwd(), template);
@@ -405,20 +326,6 @@ async function resolveTemplateRootAsync(
   return templateRoot;
 }
 
-async function loadTemplateConfigAsync(templateRoot: string): Promise<TemplateConfig | undefined> {
-  const configPath = path.join(templateRoot, "template.config.js");
-  try {
-    await fs.access(configPath);
-  } catch {
-    return;
-  }
-
-  const imported = (await import(pathToFileURL(configPath).href)) as {
-    default?: TemplateConfig;
-  } & TemplateConfig;
-  return imported.default ?? imported;
-}
-
 type TemplateConfig = {
   files?: Array<{ from: string; to?: string }>;
   replacements?: Record<string, string>;
@@ -430,26 +337,18 @@ async function copyTemplateFilesAsync({
   sourceRoot,
   projectRoot,
   name,
-  templateConfig,
-  forPlatform,
+  enabledPlatforms,
 }: {
   sourceRoot: string;
   projectRoot: string;
   name: { displayName: string; filesafeName: string; rdns: string };
-  templateConfig?: TemplateConfig | undefined;
-  forPlatform?: TemplatePlatform | undefined;
+  enabledPlatforms: readonly TemplatePlatform[];
 }): Promise<void> {
-  const mappings = templateConfig?.files?.length
-    ? templateConfig.files.map((mapping) => ({
-        from: path.join(sourceRoot, mapping.from),
-        to: mapping.to ?? mapping.from,
-      }))
-    : await discoverAllFilesAsync(sourceRoot);
+  const mappings = await discoverAllFilesAsync(sourceRoot);
 
   const pathReplacements = {
     HelloWorld: name.filesafeName,
     helloworld: name.filesafeName.toLowerCase(),
-    ...(templateConfig?.pathReplacements ?? {}),
   };
 
   const copiedRelativePaths = new Array<string>();
@@ -461,17 +360,7 @@ async function copyTemplateFilesAsync({
     copiedRelativePaths.push(relativePath);
   }
 
-  if (templateConfig?.replacements && Object.keys(templateConfig.replacements).length > 0) {
-    await applyExtraReplacementsAsync({
-      cwd: projectRoot,
-      files: copiedRelativePaths,
-      replacements: templateConfig.replacements,
-    });
-  }
-
-  const filesFromRenameConfig = await getTemplateFilesToRenameAsync(projectRoot, {
-    renameConfig: templateConfig?.renameConfig,
-  });
+  const filesFromRenameConfig = await getTemplateFilesToRenameAsync(projectRoot, {});
   const copiedSet = new Set(copiedRelativePaths.map(normalizeToPosixPath));
   const filesToRename = filesFromRenameConfig.filter((file) =>
     copiedSet.has(normalizeToPosixPath(file)),
@@ -481,13 +370,11 @@ async function copyTemplateFilesAsync({
     files: filesToRename,
   });
 
-  if (forPlatform === "macos") {
-    await renameMacosUnderscoreGitignore(projectRoot);
-  }
+  // Changes to "macos" folder
+  await renameMacosUnderscoreGitignore(projectRoot);
 
-  if (forPlatform === "windows") {
-    await applyWindowsCppAppTemplateAsync(projectRoot, name);
-  }
+  // Changes to "windows" folder
+  await applyWindowsCppAppTemplateAsync(projectRoot, name);
 }
 
 async function discoverAllFilesAsync(
@@ -523,37 +410,6 @@ function replaceTokens(input: string, replacements: Record<string, string>): str
     output = output.split(from).join(to);
   }
   return output;
-}
-
-async function applyExtraReplacementsAsync({
-  cwd,
-  files,
-  replacements,
-}: {
-  cwd: string;
-  files: string[];
-  replacements: Record<string, string>;
-}) {
-  for (const file of files) {
-    const absolute = path.join(cwd, file);
-    let contents: string;
-    try {
-      contents = await fs.readFile(absolute, "utf8");
-    } catch (error) {
-      if (!(error instanceof Error) || !("code" in error) || error.code !== "ENOENT") {
-        throw error;
-      }
-
-      continue;
-    }
-
-    const replacement = replaceTokens(contents, replacements);
-    if (replacement === contents) {
-      continue;
-    }
-
-    await fs.writeFile(absolute, replacement, "utf8");
-  }
 }
 
 function normalizeToPosixPath(input: string): string {
