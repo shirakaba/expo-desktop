@@ -78,13 +78,7 @@ export async function newExpoDesktopProject(args: {
     name,
     packageManager,
     versions,
-    templates: {
-      template: args.template,
-      "template-ios": args["template-ios"],
-      "template-android": args["template-android"],
-      "template-macos": args["template-macos"],
-      "template-windows": args["template-windows"],
-    },
+    template: args.template,
   });
 }
 

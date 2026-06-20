@@ -15,6 +15,7 @@ import { applyConfigPlugins } from "../common/apply-config-plugins.ts";
 import { makePrettySummary } from "../common/arktype.ts";
 import { promisifiedSpawnTask, SPAWN_DEBUG_LOG_GLOB } from "../common/child-process.ts";
 import { title } from "../common/clack.ts";
+import { extractAndPrepareTemplateAppAsync } from "../common/expo/template.ts";
 import { hasGitStagedChangesAsync, hasProjectGitRepositoryAsync } from "../common/git.ts";
 import { packageManagerExec } from "../common/npm.ts";
 import { preserveFile } from "../common/preserve-file.ts";
@@ -52,26 +53,42 @@ export async function createExpoDesktopApp({
     macos: string;
   };
 }) {
-  const { projectPath } = await createExpoApp({ localDev, name, packageManager, versions });
-  await appendRootGitignoreSpawnDebugLogs(projectPath);
+  const projectRoot = path.resolve(process.cwd(), name.filesafeName);
+  const projectPath = projectRoot;
 
-  title("Applying templates…", { spacing: 1 });
-  await applySelectedTemplatesAsync({
-    projectRoot: projectPath,
-    template,
-    enabledPlatforms: ["ios", "android", "macos", "windows"],
-    name,
-  });
+  // const { projectPath } = await createExpoApp({ localDev, name, packageManager, versions });
+  // await appendRootGitignoreSpawnDebugLogs(projectPath);
+  //
+  // title("Applying templates…", { spacing: 1 });
+  // await applySelectedTemplatesAsync({
+  //   projectRoot: projectPath,
+  //   template,
+  //   enabledPlatforms: ["ios", "android", "macos", "windows"],
+  //   name,
+  // });
+
+  await fs.mkdir(projectRoot, { recursive: true });
+
+  // In create-expo, this coerces to `${name}@sdk-${selectedSdk}` for all known
+  // expo templates (e.g. expo-desktop-template-blank-typescript@sdk-54).
+  // - https://github.com/expo/expo/blob/6e418b5947dd8806ac97c19eb959ded3a1b14ea2/packages/create-expo/src/createAsync.ts#L97-L114
+  // - https://github.com/expo/expo/blob/6e418b5947dd8806ac97c19eb959ded3a1b14ea2/packages/create-expo/src/promptSdkVersion.ts#L78
+  const resolvedTemplate =
+    template ?? `expo-desktop-template-blank-typescript@${versions.expoMajor}.${versions.minor}`;
+
+  await extractAndPrepareTemplateAppAsync(projectRoot, { npmPackage: resolvedTemplate });
   console.log(`${green("◆")}  Applied templates.\n`);
 
   title("Altering app.json…", { spacing: 1 });
-  await updateAppJson({ name, projectPath });
+  await updateAppJson({ name, projectPath: projectRoot });
 
+  // Now that we have our own template, the main purpose of this is to alter the
+  // dependencies for localDev mode.
   title("Altering package.json…", { spacing: 1 });
   const { name: packageJsonName } = await updatePackageJson({
     localDev,
     name,
-    projectPath,
+    projectPath: projectRoot,
     versions,
     task: { type: "create" },
   });
@@ -79,6 +96,8 @@ export async function createExpoDesktopApp({
   title("Installing dependencies…", { spacing: 1 });
   await npmInstall({ asNewWorkspace: true, cwd: projectPath, packageManager });
 
+  // This can likely be removed, as we're no longer using the RNM/RNW CLIs to
+  // create our apps.
   await updatePackageJson({
     name,
     projectPath,
