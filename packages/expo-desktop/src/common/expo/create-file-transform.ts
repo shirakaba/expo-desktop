@@ -31,10 +31,15 @@ function renameDirectories(input: string, typeflag: TarTypeFlag): string {
 }
 
 function renameConfigs(input: string, typeflag: TarTypeFlag): string {
-  if (typeflag === TarTypeFlag.FILE && path.basename(input) === "gitignore") {
-    // Rename `gitignore` because npm ignores files named `.gitignore` when publishing.
+  if (typeflag === TarTypeFlag.FILE && /_?gitignore$/.test(path.basename(input))) {
+    // Rename `gitignore` and `_gitignore`, because npm ignores files named
+    // `.gitignore` when publishing.
     // See: https://github.com/npm/npm/issues/1862
-    input = input.replace(/gitignore$/, ".gitignore");
+    input = input.replace(/_?gitignore$/, ".gitignore");
+  }
+  if (typeflag === TarTypeFlag.FILE && path.basename(input) === "NuGet_Config") {
+    // Rename `NuGet_Config` to `NuGet.config`.
+    input = input.replace(/NuGet_Config$/, "NuGet.config");
   }
   return input;
 }
@@ -48,6 +53,8 @@ export function createEntryRenamer(name: string) {
           /HelloWorld/g,
           input.includes("android") ? sanitizedName(name.toLowerCase()) : sanitizedName(name),
         )
+        // The Windows template is MyApp rather than HelloWorld.
+        .replace(/MyApp/g, sanitizedName(name))
         .replace(/helloworld/g, sanitizedName(name).toLowerCase());
     }
     input = renameConfigs(input, typeflag);

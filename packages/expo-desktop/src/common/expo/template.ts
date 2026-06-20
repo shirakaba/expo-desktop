@@ -2,13 +2,14 @@
 
 import type { ExpoConfig } from "@expo/config";
 import type { JSONObject } from "@expo/json-file";
+import type { default as JsonFileType } from "@expo/json-file";
 
-import JsonFile from "@expo/json-file";
 import * as PackageManager from "@expo/package-manager";
 import chalk from "chalk";
 import Debug from "debug";
 import { glob } from "glob";
 import fs from "node:fs";
+import { createRequire } from "node:module";
 import path from "node:path";
 import ora from "ora";
 
@@ -25,6 +26,10 @@ import {
   getResolvedTemplateName,
 } from "./npm.ts";
 import { formatRunCommand } from "./resolve-package-manager.ts";
+
+const require = createRequire(import.meta.url);
+
+const JsonFile = (require("@expo/json-file") as typeof JsonFileType).default;
 
 const debug = Debug("expo-desktop:create-app:template") as typeof console.log;
 
@@ -340,7 +345,7 @@ export async function sanitizeTemplateAsync(projectRoot: string) {
 
   debug(`Sanitizing template or example app (projectName: ${projectName})`);
 
-  const templatePath = path.join(__dirname, "../template/gitignore");
+  const templatePath = path.join(import.meta.dirname, "../template/gitignore");
   const ignorePath = path.join(projectRoot, ".gitignore");
 
   let nativeFoldersIgnored = false;
@@ -364,7 +369,6 @@ export async function sanitizeTemplateAsync(projectRoot: string) {
     slug: projectName,
   };
 
-  // @ts-expect-error poor typings
   const appFile = new JsonFile(path.join(projectRoot, "app.json"), { default: {} });
   const appContent = (await appFile.readAsync()) as ExpoConfig | Record<"expo", ExpoConfig>;
   const appJson = deepMerge(
@@ -375,7 +379,6 @@ export async function sanitizeTemplateAsync(projectRoot: string) {
   await appFile.writeAsync(appJson);
   debug(`Created app.json:\n%O`, appJson);
 
-  // @ts-expect-error poor typings
   const packageFile = new JsonFile(path.join(projectRoot, "package.json"));
   const packageJson = await packageFile.readAsync();
   // name and version are required for yarn workspaces (monorepos)
