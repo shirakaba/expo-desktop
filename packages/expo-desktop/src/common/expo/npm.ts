@@ -1,4 +1,5 @@
 import spawnAsync from "@expo/spawn-async";
+import Debug from "debug";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -10,7 +11,7 @@ import { ALIASES } from "./legacy-templates.ts";
 import { Log } from "./log.ts";
 import { extractStream } from "./tar.ts";
 
-const debug = require("debug")("expo-desktop:create-app:npm") as typeof console.log;
+const debug = Debug("expo-desktop:create-app:npm") as typeof console.log;
 
 export interface ExtractProps {
   expName: string;

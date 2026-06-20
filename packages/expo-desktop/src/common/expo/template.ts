@@ -6,6 +6,7 @@ import type { JSONObject } from "@expo/json-file";
 import JsonFile from "@expo/json-file";
 import * as PackageManager from "@expo/package-manager";
 import chalk from "chalk";
+import Debug from "debug";
 import { glob } from "glob";
 import fs from "node:fs";
 import path from "node:path";
@@ -25,7 +26,7 @@ import {
 } from "./npm.ts";
 import { formatRunCommand } from "./resolve-package-manager.ts";
 
-const debug = require("debug")("expo-desktop:create-app:template") as typeof console.log;
+const debug = Debug("expo-desktop:create-app:template") as typeof console.log;
 
 const isMacOS = process.platform === "darwin";
 

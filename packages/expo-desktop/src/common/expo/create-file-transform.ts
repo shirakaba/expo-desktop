@@ -1,10 +1,11 @@
 // https://github.com/expo/expo/blob/main/packages/create-expo/src/createFileTransform.ts
 
+import Debug from "debug";
 import { TarTypeFlag } from "multitars";
 import path from "node:path";
 import picomatch from "picomatch";
 
-const debug = require("debug")("expo-desktop:create-app:fileTransform") as typeof console.log;
+const debug = Debug("expo-desktop:create-app:fileTransform") as typeof console.log;
 
 export function sanitizedName(name: string) {
   return name

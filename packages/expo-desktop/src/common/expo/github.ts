@@ -1,9 +1,11 @@
 import type { Endpoints } from "@octokit/types";
 
+import Debug from "debug";
+
 import { createGlobFilter } from "./create-file-transform.ts";
 import { extractNpmTarballAsync, type ExtractProps } from "./npm.ts";
 
-const debug = require("debug")("expo-desktop:create-app:github") as typeof console.log;
+const debug = Debug("expo-desktop:create-app:github") as typeof console.log;
 
 type GithubRepoResponse = Endpoints["GET /repos/{owner}/{repo}"]["response"]["data"];
 type GitHubRepoInfo = {

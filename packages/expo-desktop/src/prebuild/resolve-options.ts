@@ -1,10 +1,11 @@
+import Debug from "debug";
 import assert from "node:assert";
 import fs from "node:fs";
 import path from "node:path";
 
 import { validateUrl } from "./validate-url.ts";
 
-const debug = require("debug")("expo-desktop:prebuild:resolveOptions") as typeof console.log;
+const debug = Debug("expo-desktop:prebuild:resolveOptions") as typeof console.log;
 
 export function resolvePackageManagerOptions({
   noInstall,

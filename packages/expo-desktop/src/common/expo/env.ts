@@ -1,4 +1,6 @@
-import { boolish } from "getenv";
+import GetEnv from "getenv";
+
+const { boolish } = GetEnv;
 
 class Env {
   /** Enable debug logging */

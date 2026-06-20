@@ -1,6 +1,7 @@
 // NOTE(@kitten): Based on @expo/cli/src/utils/tar.ts
 // Keep in sync with that version of this module
 
+import Debug from "debug";
 import { streamToAsyncIterable, TarTypeFlag, untar } from "multitars";
 import crypto from "node:crypto";
 import fs from "node:fs";
@@ -8,7 +9,7 @@ import path from "node:path";
 import { Readable } from "node:stream";
 
 // Modified:
-const debug = require("debug")("expo-desktop:create-app:tar") as typeof console.log;
+const debug = Debug("expo-desktop:create-app:tar") as typeof console.log;
 
 class ChecksumStream extends TransformStream {
   hash: crypto.Hash;

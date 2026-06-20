@@ -1,13 +1,12 @@
 import * as PackageManager from "@expo/package-manager";
+import Debug from "debug";
 import { execSync } from "node:child_process";
 
 import { CLI_NAME } from "./cmd.ts";
 
 export type PackageManagerName = "npm" | "pnpm" | "yarn" | "bun";
 
-const debug = require("debug")(
-  "expo-desktop:create-app:resolvePackageManager",
-) as typeof console.log;
+const debug = Debug("expo-desktop:create-app:resolvePackageManager") as typeof console.log;
 
 /** Determine which package manager to use for installing dependencies based on how the process was started. */
 export function resolvePackageManager(): PackageManagerName {
