@@ -2,6 +2,7 @@ import type { ModPlatform } from "@expo/config-plugins";
 
 import { log, tasks } from "@clack/prompts";
 import { type } from "arktype";
+import Debug from "debug";
 import { glob } from "glob";
 import { cyan, green, yellow } from "kleur/colors";
 import { spawn, type SpawnOptions } from "node:child_process";
@@ -15,19 +16,33 @@ import { applyConfigPlugins } from "../common/apply-config-plugins.ts";
 import { makePrettySummary } from "../common/arktype.ts";
 import { promisifiedSpawnTask, SPAWN_DEBUG_LOG_GLOB } from "../common/child-process.ts";
 import { title } from "../common/clack.ts";
+import {
+  type CreateAsyncOptions,
+  setupDependenciesAsync,
+} from "../common/expo/create-async-utils.ts";
+import { generateAgentFiles } from "../common/expo/generate-agent-files.ts";
+import { initGitRepoAsync } from "../common/expo/git.ts";
 import { extractAndPrepareTemplateAppAsync } from "../common/expo/template.ts";
 import { hasGitStagedChangesAsync, hasProjectGitRepositoryAsync } from "../common/git.ts";
 import { packageManagerExec } from "../common/npm.ts";
 import { preserveFile } from "../common/preserve-file.ts";
 import { applySelectedTemplatesAsync } from "../common/template.ts";
 
+const debug = Debug("expo-desktop:create-app:git") as typeof console.log;
+
 export async function createExpoDesktopApp({
+  agentsMd,
+  yes,
+  install,
   localDev,
   name,
   packageManager,
   template,
   versions,
 }: {
+  agentsMd: boolean;
+  yes: boolean;
+  install: boolean;
   /**
    * A crude switch to use to help with local development.
    *
@@ -53,6 +68,13 @@ export async function createExpoDesktopApp({
     macos: string;
   };
 }) {
+  const props: CreateAsyncOptions = {
+    install,
+    template,
+    example: undefined,
+    yes,
+    agentsMd,
+  };
   const projectRoot = path.resolve(process.cwd(), name.filesafeName);
   const projectPath = projectRoot;
 
@@ -84,90 +106,102 @@ export async function createExpoDesktopApp({
   });
   console.log(`${green("◆")}  Applied templates.\n`);
 
-  title("Altering app.json…", { spacing: 1 });
-  await updateAppJson({ name, projectPath: projectRoot });
+  await setupDependenciesAsync(projectRoot, props);
 
-  // Now that we have our own template, the main purpose of this is to alter the
-  // dependencies for localDev mode.
-  title("Altering package.json…", { spacing: 1 });
-  const { name: packageJsonName } = await updatePackageJson({
-    localDev,
-    name,
-    projectPath: projectRoot,
-    versions,
-    task: { type: "create" },
-  });
-
-  title("Installing dependencies…", { spacing: 1 });
-  await npmInstall({ asNewWorkspace: true, cwd: projectPath, packageManager });
-
-  // This can likely be removed, as we're no longer using the RNM/RNW CLIs to
-  // create our apps.
-  await updatePackageJson({
-    name,
-    projectPath,
-    versions,
-    task: { type: "post-init-macos", name: packageJsonName },
-  });
-
-  title("Running Expo Prebuild for the mobile apps…", { spacing: 1 });
-  await runPrebuildMobile({ packageManager, projectPath });
-
-  title("Running Expo Desktop Prebuild for the desktop apps…", { spacing: 1 });
-  if (localDev) {
-    await addApplyConfigPluginsScript({ projectPath });
-  }
-  const bundleEntryFileCandidates = await getBundleEntryFileCandidates({ projectPath });
-  await applyConfigPlugins({
-    projectRoot: projectPath,
-    displayName: name.displayName,
-    bundleIdentifier: name.rdns.replaceAll("_", "-"),
-    platforms: ["macos", "windows"] as unknown as Array<ModPlatform>,
-    bundleEntryFileCandidates,
-  });
-  console.log(`${green("◆")}  Applied config plugins.\n`);
-
-  title("Improving the macOS app's gitignore file…", { spacing: 1 });
-  await improveMacosGitignore({ projectPath });
-
-  title("Adding Expo support to the macOS Podfile…", { spacing: 1 });
-  await updatePodfile({ projectPath });
-
-  if (platform === "darwin") {
-    // Avoid having to wait a million years for Hermes to download when focusing
-    // on developing desktop
-    if (!localDev) {
-      title("Installing Cocoapods for the iOS app…", { spacing: 1 });
-      await podInstall({ projectPath, type: "ios" });
-    }
-
-    title("Installing Cocoapods for the macOS app…", { spacing: 1 });
-    await podInstall({ projectPath, type: "macos" });
+  if (props.agentsMd) {
+    generateAgentFiles(projectRoot);
   }
 
-  // react-native config seems to return `windows: null` on non-Windows
-  // platforms (while returning a populated object for Windows). If you force it
-  // to non-null for development on macOS, macOS runs the autolinking command
-  // successfully but writes out erroneous output, so
-  // there's no point.
-  if (platform === "win32") {
-    title("Autolinking the Windows app…", { spacing: 1 });
-    await autolinkWindows({ projectPath });
+  try {
+    await initGitRepoAsync(projectRoot);
+  } catch (error) {
+    debug(`Error initializing git: %O`, error);
   }
 
-  title("Adding Expo support to the Metro config…", { spacing: 1 });
-  await improveMetroConfig({ projectPath });
+  // title("Altering app.json…", { spacing: 1 });
+  // await updateAppJson({ name, projectPath: projectRoot });
 
-  title("Adding Expo support to the Babel config…", { spacing: 1 });
-  await writeBabelConfig({ projectPath });
+  // // Now that we have our own template, the main purpose of this is to alter the
+  // // dependencies for localDev mode.
+  // title("Altering package.json…", { spacing: 1 });
+  // const { name: packageJsonName } = await updatePackageJson({
+  //   localDev,
+  //   name,
+  //   projectPath: projectRoot,
+  //   versions,
+  //   task: { type: "create" },
+  // });
 
-  title("Improving App.tsx…", { spacing: 1 });
-  await improveAppTsx({ projectPath });
+  // title("Installing dependencies…", { spacing: 1 });
+  // await npmInstall({ asNewWorkspace: true, cwd: projectPath, packageManager });
 
-  title("Committing changes…", { spacing: 1 });
-  await commitChanges({ projectPath });
+  // // This can likely be removed, as we're no longer using the RNM/RNW CLIs to
+  // // create our apps.
+  // await updatePackageJson({
+  //   name,
+  //   projectPath,
+  //   versions,
+  //   task: { type: "post-init-macos", name: packageJsonName },
+  // });
 
-  logProjectReady({ cdPath: name.filesafeName, packageManager });
+  // title("Running Expo Prebuild for the mobile apps…", { spacing: 1 });
+  // await runPrebuildMobile({ packageManager, projectPath });
+
+  // title("Running Expo Desktop Prebuild for the desktop apps…", { spacing: 1 });
+  // if (localDev) {
+  //   await addApplyConfigPluginsScript({ projectPath });
+  // }
+  // const bundleEntryFileCandidates = await getBundleEntryFileCandidates({ projectPath });
+  // await applyConfigPlugins({
+  //   projectRoot: projectPath,
+  //   displayName: name.displayName,
+  //   bundleIdentifier: name.rdns.replaceAll("_", "-"),
+  //   platforms: ["macos", "windows"] as unknown as Array<ModPlatform>,
+  //   bundleEntryFileCandidates,
+  // });
+  // console.log(`${green("◆")}  Applied config plugins.\n`);
+
+  // title("Improving the macOS app's gitignore file…", { spacing: 1 });
+  // await improveMacosGitignore({ projectPath });
+
+  // title("Adding Expo support to the macOS Podfile…", { spacing: 1 });
+  // await updatePodfile({ projectPath });
+
+  // if (platform === "darwin") {
+  //   // Avoid having to wait a million years for Hermes to download when focusing
+  //   // on developing desktop
+  //   if (!localDev) {
+  //     title("Installing Cocoapods for the iOS app…", { spacing: 1 });
+  //     await podInstall({ projectPath, type: "ios" });
+  //   }
+
+  //   title("Installing Cocoapods for the macOS app…", { spacing: 1 });
+  //   await podInstall({ projectPath, type: "macos" });
+  // }
+
+  // // react-native config seems to return `windows: null` on non-Windows
+  // // platforms (while returning a populated object for Windows). If you force it
+  // // to non-null for development on macOS, macOS runs the autolinking command
+  // // successfully but writes out erroneous output, so
+  // // there's no point.
+  // if (platform === "win32") {
+  //   title("Autolinking the Windows app…", { spacing: 1 });
+  //   await autolinkWindows({ projectPath });
+  // }
+
+  // title("Adding Expo support to the Metro config…", { spacing: 1 });
+  // await improveMetroConfig({ projectPath });
+
+  // title("Adding Expo support to the Babel config…", { spacing: 1 });
+  // await writeBabelConfig({ projectPath });
+
+  // title("Improving App.tsx…", { spacing: 1 });
+  // await improveAppTsx({ projectPath });
+
+  // title("Committing changes…", { spacing: 1 });
+  // await commitChanges({ projectPath });
+
+  // logProjectReady({ cdPath: name.filesafeName, packageManager });
 }
 
 async function getBundleEntryFileCandidates({ projectPath }: { projectPath: string }) {

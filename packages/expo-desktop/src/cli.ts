@@ -26,11 +26,24 @@ const main = defineCommand({
           description: `The ${kleur.bold("display name")} for the app ${grey("(Examples: 'My App 123', '俺のアプリ')")}`,
           valueHint: "name",
         },
+        yes: {
+          type: "boolean",
+          description: "Use the default options for creating a project",
+          alias: "y",
+        },
         "local-dev": {
           type: "boolean",
           description:
             "An undocumented switch for use during development to skip the questionnaire.",
           hidden: true,
+        },
+        "no-agents-md": {
+          type: "boolean",
+          description: "Skip generating AGENTS.md, CLAUDE.md, and .claude/settings.json",
+        },
+        "no-install": {
+          type: "boolean",
+          description: "Skip installing npm packages or CocoaPods",
         },
         rdns: {
           type: "string",

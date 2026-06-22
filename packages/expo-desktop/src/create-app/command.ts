@@ -9,17 +9,23 @@ import { previewFileTree } from "./preview-file-tree.ts";
 import { promptForVersion } from "./prompt-for-version.ts";
 
 export async function newExpoDesktopProject(args: {
-  "local-dev": boolean | undefined;
-  "filesafe-name": string | undefined;
   "display-name": string | undefined;
+  "filesafe-name": string | undefined;
+  "local-dev": boolean | undefined;
+  "no-agents-md": boolean | undefined;
+  "no-install": boolean | undefined;
+  yes: boolean | undefined;
   rdns: string | undefined;
-  version: string | undefined;
   template: string | undefined;
+  version: string | undefined;
 }) {
   // A switch for skipping the questions
   const localDev = args["local-dev"];
   if (localDev) {
     await createExpoDesktopApp({
+      yes: true,
+      agentsMd: false,
+      install: true,
       localDev,
       name: {
         displayName: "Your App Display Name",
@@ -74,6 +80,9 @@ export async function newExpoDesktopProject(args: {
   }
 
   await createExpoDesktopApp({
+    agentsMd: !args["no-agents-md"],
+    install: !args["no-install"],
+    yes: !!args.yes,
     localDev,
     name,
     packageManager,
