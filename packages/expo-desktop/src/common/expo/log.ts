@@ -1,5 +1,6 @@
 import chalk from "chalk";
 
+import { env } from "./env.ts";
 import { ExitError } from "./error.ts";
 
 export function error(...message: string[]): void {
@@ -8,7 +9,6 @@ export function error(...message: string[]): void {
 
 /** Print an error and provide additional info (the stack trace) in debug mode. */
 export function exception(e: Error): void {
-  const { env } = require("./utils/env");
   error(chalk.red(e.toString()) + (env.EXPO_DEBUG ? "\n" + chalk.gray(e.stack) : ""));
 }
 
