@@ -111,6 +111,14 @@ export async function setupDependenciesAsync(
   let podsInstalled: boolean = false;
   const needsPodsInstalled = await fs.existsSync(path.join(projectRoot, "ios"));
   if (shouldInstall) {
+    // Yarn refuses to install if it finds an ancestor directory with a
+    // package.json or yarn.lock. I'd rather it install as a separate workspace
+    // and that users merge it into their monorepo manually as needed, so we
+    // populate an empty yarn.lock file as they suggest.
+    if (packageManager === "yarn") {
+      await fs.promises.appendFile(path.join(projectRoot, "yarn.lock"), "", "utf-8");
+    }
+
     await installNodeDependenciesAsync(projectRoot, packageManager);
     if (needsPodsInstalled) {
       podsInstalled = await installCocoaPodsAsync(projectRoot);

@@ -93,10 +93,23 @@ export async function installDependenciesAsync(
   packageManager: PackageManagerName,
   flags: { silent: boolean } = { silent: false },
 ) {
-  await createPackageManager(packageManager, {
+  const manager = createPackageManager(packageManager, {
     cwd: projectRoot,
     silent: flags.silent,
-  }).installAsync();
+  });
+
+  try {
+    await manager.installAsync();
+  } catch (error) {
+    // Volta-managed installs of yarn may be missing the "yarnpkg" alias:
+    // https://github.com/volta-cli/volta/issues/1391
+    if (error instanceof Error && error.message === "spawn yarnpkg ENOENT") {
+      Object.defineProperty(manager, "bin", { value: "yarn" });
+      await manager.installAsync();
+    } else {
+      throw error;
+    }
+  }
 }
 
 export async function configurePackageManager(
@@ -107,7 +120,20 @@ export async function configurePackageManager(
   const manager = createPackageManager(packageManager, { cwd: projectRoot, ...flags });
   switch (manager.name) {
     case "yarn": {
-      const yarnVersion = await manager.versionAsync();
+      let yarnVersion: string;
+      try {
+        yarnVersion = await manager.versionAsync();
+      } catch (error) {
+        // Volta-managed installs of yarn may be missing the "yarnpkg" alias:
+        // https://github.com/volta-cli/volta/issues/1391
+        if (error instanceof Error && error.message === "spawn yarnpkg ENOENT") {
+          Object.defineProperty(manager, "bin", { value: "yarn" });
+          yarnVersion = await manager.versionAsync();
+        } else {
+          throw error;
+        }
+      }
+
       const majorVersion = parseInt(yarnVersion.split(".")[0] ?? "", 10);
 
       if (majorVersion >= 2) {
