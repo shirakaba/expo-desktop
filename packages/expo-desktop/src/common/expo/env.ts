@@ -23,6 +23,13 @@ class Env {
   get EXPO_NO_TELEMETRY() {
     return boolish("EXPO_NO_TELEMETRY", false);
   }
+
+  // https://github.com/expo/expo/blob/main/packages/%40expo/cli/src/utils/env.ts
+
+  /** Skip warning users about a dirty git status */
+  get EXPO_NO_GIT_STATUS() {
+    return boolish("EXPO_NO_GIT_STATUS", true);
+  }
 }
 
 export const env = new Env();

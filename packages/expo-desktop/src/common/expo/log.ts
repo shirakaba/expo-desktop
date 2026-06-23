@@ -3,6 +3,10 @@ import chalk from "chalk";
 import { env } from "./env.ts";
 import { ExitError } from "./error.ts";
 
+// NOTE(@kitten): LogRespectingTerminal in instantiateMetro regressed on fatal errors and
+// logs may be swallowed before exiting. We redirect them to a direct write when we're about to exit
+let isExiting = false;
+
 export function error(...message: string[]): void {
   console.error(...message);
 }
@@ -10,6 +14,14 @@ export function error(...message: string[]): void {
 /** Print an error and provide additional info (the stack trace) in debug mode. */
 export function exception(e: Error): void {
   error(chalk.red(e.toString()) + (env.EXPO_DEBUG ? "\n" + chalk.gray(e.stack) : ""));
+}
+
+export function warn(...message: string[]): void {
+  if (isExiting) {
+    process.stderr.write(message.map((value) => chalk.yellow(value)).join(" ") + "\n");
+    return;
+  }
+  console.warn(...message.map((value) => chalk.yellow(value)));
 }
 
 export function log(...message: string[]): void {

@@ -1,8 +1,11 @@
+import chalk from "chalk";
 import Debug from "debug";
 import assert from "node:assert";
 import fs from "node:fs";
 import path from "node:path";
 
+import { CommandError } from "../common/expo/error.ts";
+import * as Log from "../common/expo/log.ts";
 import { validateUrl } from "./validate-url.ts";
 
 const debug = Debug("expo-desktop:prebuild:resolveOptions") as typeof console.log;
@@ -113,4 +116,28 @@ export function resolveTemplateOption(template: string): ResolvedTemplateOption 
 export interface ResolvedTemplateOption {
   type: "file" | "npm" | "repository";
   uri: string;
+}
+
+/**
+ * Warns and filters out unsupported platforms based on the runtime constraints.
+ * Essentially this means no iOS or macOS on Windows devices.
+ */
+export function ensureValidPlatforms(
+  platforms: Array<"ios" | "android" | "macos" | "windows">,
+): Array<"ios" | "android" | "macos" | "windows"> {
+  // Skip prebuild for iOS and macOS on Windows
+  if (process.platform === "win32" && (platforms.includes("ios") || platforms.includes("macos"))) {
+    Log.warn(
+      chalk`⚠️  Skipping generating the iOS / macOS native project files. Run {bold npx expo prebuild} again from macOS or Linux to generate the iOS and/or macOS projects.\n`,
+    );
+    return platforms.filter((platform) => platform !== "ios" && platform !== "macos");
+  }
+  return platforms;
+}
+
+/** Asserts platform length must be greater than zero. */
+export function assertPlatforms(platforms: Array<"ios" | "android" | "macos" | "windows">) {
+  if (!platforms?.length) {
+    throw new CommandError("At least one platform must be enabled when syncing");
+  }
 }

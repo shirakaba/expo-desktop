@@ -98,30 +98,10 @@ const main = defineCommand({
             "Project template to clone from. File path pointing to a local tar file, npm package or a github repo",
           valueHint: "template",
         },
-        "template-ios": {
-          type: "string",
-          description: "iOS-specific template source",
-          valueHint: "template",
-        },
-        "template-android": {
-          type: "string",
-          description: "Android-specific template source",
-          valueHint: "template",
-        },
-        "template-macos": {
-          type: "string",
-          description: "macOS-specific template source",
-          valueHint: "template",
-        },
-        "template-windows": {
-          type: "string",
-          description: "Windows-specific template source",
-          valueHint: "template",
-        },
         platform: {
           type: "string",
-          description: `Platforms to sync: macos, windows, desktop ${dim("(Default: desktop)")}`,
-          valueHint: "desktop|macos|windows",
+          description: `Platforms to sync: ios, android, mobile, macos, windows, desktop, or all ${dim("(Default: desktop)")}`,
+          valueHint: "ios|android|mobile|macos|windows|desktop|all",
           alias: "p",
         },
         "skip-dependency-update": {

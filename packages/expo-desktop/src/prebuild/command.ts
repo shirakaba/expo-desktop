@@ -11,7 +11,10 @@ import { loadEnvFiles, setNodeEnv } from "../common/node-env.ts";
 import { type TemplateSelection, applySelectedTemplatesAsync } from "../common/template.ts";
 import { clearNativeFolder } from "./clear-native-folder.ts";
 import { ensureConfigAsync } from "./ensure-config-async.ts";
+import { promptToClearMalformedNativeProjectsAsync } from "./expo/clear-native-folder.ts";
 import {
+  assertPlatforms,
+  ensureValidPlatforms,
   resolvePackageManagerOptions,
   resolveSkipDependencyUpdate,
   resolveTemplateOption,
@@ -36,10 +39,6 @@ export async function prebuild({
   bun,
   pnpm,
   template,
-  "template-ios": templateIos,
-  "template-android": templateAndroid,
-  "template-macos": templateMacos,
-  "template-windows": templateWindows,
   platform,
   "skip-dependency-update": skipDependencyUpdate,
 }: {
@@ -50,10 +49,6 @@ export async function prebuild({
   bun: boolean | undefined;
   pnpm: boolean | undefined;
   template: string | undefined;
-  "template-ios": string | undefined;
-  "template-android": string | undefined;
-  "template-macos": string | undefined;
-  "template-windows": string | undefined;
   platform: string | undefined;
   "skip-dependency-update": boolean | undefined;
 }) {
@@ -85,23 +80,32 @@ export async function prebuild({
   }
 
   if (clean) {
-    // TODO: maybeBailOnGitStatusAsync()
-    // TODO: maybeBailOnNativeModuleAsync()
+    const { maybeBailOnGitStatusAsync } = await import("../common/expo/git-cli.js");
+    // Clean the project folders...
+    if (await maybeBailOnGitStatusAsync()) {
+      return null;
+    }
+
+    // Skipping: maybeBailOnNativeModuleAsync()
+    // (as it depends on the "expo" npm package and is no longer important after
+    // SDK 56)
 
     // Clear the native folders before syncing
     await clearNativeFolder(projectRoot, platforms);
   } else {
-    // TODO: Check if the existing project folders are malformed.
+    // Check if the existing project folders are malformed.
+    await promptToClearMalformedNativeProjectsAsync(projectRoot, platforms);
   }
+
+  // Warn if the project is attempting to prebuild an unsupported platform (iOS on Windows).
+  platforms = ensureValidPlatforms(platforms);
+  // Assert if no platforms are left over after filtering.
+  assertPlatforms(platforms);
 
   const { exp, pkg } = await ensureConfigAsync(projectRoot, { platforms });
 
   const templateSelection = {
     template,
-    "template-ios": templateIos,
-    "template-android": templateAndroid,
-    "template-macos": templateMacos,
-    "template-windows": templateWindows,
   } satisfies TemplateSelection;
 
   // Create native projects from template.
@@ -147,23 +151,35 @@ export async function prebuild({
   return exit(1);
 }
 
-function resolvePlatformsOption(platform: string | undefined) {
+function resolvePlatformsOption(
+  platform: string | undefined,
+): Array<"ios" | "android" | "macos" | "windows"> {
   if (
+    platform !== "ios" &&
+    platform !== "android" &&
+    platform !== "mobile" &&
     platform !== "macos" &&
     platform !== "windows" &&
     platform !== "desktop" &&
+    platform !== "all" &&
     typeof platform !== "undefined"
   ) {
     throw new Error(
-      "Expected --platform arg to be one of: macos | windows | desktop | <undefined>",
+      "Expected --platform arg to be one of: ios | android | mobile | macos | windows | desktop | all | <undefined>",
     );
   }
 
-  const platforms = new Array<"macos" | "windows">();
-  if (platform === "desktop" || platform === "macos") {
+  const platforms = new Array<"ios" | "android" | "macos" | "windows">();
+  if (platform === "all" || platform === "mobile" || platform === "ios") {
+    platforms.push("ios");
+  }
+  if (platform === "all" || platform === "mobile" || platform === "android") {
+    platforms.push("android");
+  }
+  if (platform === "all" || platform === "desktop" || platform === "macos") {
     platforms.push("macos");
   }
-  if (platform === "desktop" || platform === "windows") {
+  if (platform === "all" || platform === "desktop" || platform === "windows") {
     platforms.push("windows");
   }
   if (!platforms.length) {
