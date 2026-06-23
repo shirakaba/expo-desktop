@@ -605,21 +605,22 @@ export function logProjectReady({
   let macOSComment = "";
   if (!isMacOS) {
     macOSComment =
-      " # you need to use macOS to build the iOS project - use the Expo app if you need to do iOS development without a Mac";
+      " # you need to use macOS to build the iOS or macOS projects - use the Expo app if you need to do Apple development without a Mac";
   }
   console.log(`- ${chalk.bold(formatRunCommand(packageManager, "ios"))}${macOSComment}`);
+  console.log(`- ${chalk.bold(formatRunCommand(packageManager, "macos"))}${macOSComment}`);
 
   console.log(`- ${chalk.bold(formatRunCommand(packageManager, "web"))}`);
 }
 
-export async function installPodsAsync(projectRoot: string) {
+export async function installPodsAsync(projectRoot: string, platform: "ios" | "macos") {
   let step = logNewSection("Installing CocoaPods.");
   if (process.platform !== "darwin") {
     step.succeed("Skipped installing CocoaPods because operating system is not macOS.");
     return false;
   }
   const packageManager = new PackageManager.CocoaPodsPackageManager({
-    cwd: path.join(projectRoot, "ios"),
+    cwd: path.join(projectRoot, platform),
     silent: !env.EXPO_DEBUG,
   });
 
@@ -652,7 +653,7 @@ export async function installPodsAsync(projectRoot: string) {
     step.stopAndPersist({
       symbol: "⚠️ ",
       text: chalk.red(
-        "Something went wrong running `pod install` in the `ios` directory. Continuing with initializing the project, you can debug this afterwards.",
+        `Something went wrong running \`pod install\` in the \`${platform}\` directory. Continuing with initializing the project, you can debug this afterwards.`,
       ),
     });
     if (e.message) {

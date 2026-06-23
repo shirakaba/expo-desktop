@@ -45,12 +45,15 @@ export function getChangeDirectoryPath(projectRoot: string): string {
 /**
  * @see https://github.com/expo/expo/blob/6e418b5947dd8806ac97c19eb959ded3a1b14ea2/packages/create-expo/src/createAsync.ts#L285
  */
-export async function installCocoaPodsAsync(projectRoot: string): Promise<boolean> {
+export async function installCocoaPodsAsync(
+  projectRoot: string,
+  platform: "ios" | "macos",
+): Promise<boolean> {
   let podsInstalled = false;
   try {
-    podsInstalled = await installPodsAsync(projectRoot);
+    podsInstalled = await installPodsAsync(projectRoot, platform);
   } catch (error) {
-    debug(`Error installing CocoaPods: %O`, error);
+    debug(`Error installing CocoaPods for ${platform === "ios" ? "iOS" : "macOS"}: %O`, error);
   }
 
   return podsInstalled;
@@ -86,7 +89,7 @@ export function logNodeInstallWarning(
   console.log(`  cd ${cdPath || "."}${path.sep}`);
   console.log(`  ${packageManager} install`);
   if (needsPods && process.platform === "darwin") {
-    console.log(`  npx pod-install`);
+    console.log(`  pod install --project-directory=ios && pod install --project-directory=macos`);
   }
   console.log();
 }
@@ -108,8 +111,10 @@ export async function setupDependenciesAsync(
   await configureNodeDependenciesAsync(projectRoot, packageManager);
 
   // Install dependencies
-  let podsInstalled: boolean = false;
-  const needsPodsInstalled = await fs.existsSync(path.join(projectRoot, "ios"));
+  let podsInstalledIos: boolean = false;
+  const needsPodsInstalledIos = fs.existsSync(path.join(projectRoot, "ios"));
+  let podsInstalledMacos: boolean = false;
+  const needsPodsInstalledMacos = fs.existsSync(path.join(projectRoot, "macos"));
   if (shouldInstall) {
     // Yarn refuses to install if it finds an ancestor directory with a
     // package.json or yarn.lock. I'd rather it install as a separate workspace
@@ -120,15 +125,23 @@ export async function setupDependenciesAsync(
     }
 
     await installNodeDependenciesAsync(projectRoot, packageManager);
-    if (needsPodsInstalled) {
-      podsInstalled = await installCocoaPodsAsync(projectRoot);
+    if (needsPodsInstalledIos) {
+      podsInstalledIos = await installCocoaPodsAsync(projectRoot, "ios");
+    }
+    if (needsPodsInstalledMacos) {
+      podsInstalledMacos = await installCocoaPodsAsync(projectRoot, "macos");
     }
   }
   const cdPath = getChangeDirectoryPath(projectRoot);
   console.log();
   logProjectReady({ cdPath, packageManager });
   if (!shouldInstall) {
-    logNodeInstallWarning(cdPath, packageManager, needsPodsInstalled && !podsInstalled);
+    logNodeInstallWarning(
+      cdPath,
+      packageManager,
+      (needsPodsInstalledIos && !podsInstalledIos) ||
+        (needsPodsInstalledMacos && !podsInstalledMacos),
+    );
   }
 }
 
