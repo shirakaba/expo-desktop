@@ -4,9 +4,9 @@ import assert from "node:assert";
 import fs from "node:fs";
 import path from "node:path";
 
-import { CommandError } from "../common/expo/error.ts";
-import * as Log from "../common/expo/log.ts";
-import { validateUrl } from "./validate-url.ts";
+import { CommandError } from "../../common/expo/error.ts";
+import * as Log from "../../common/expo/log.ts";
+import { validateUrl } from "../validate-url.ts";
 
 const debug = Debug("expo-desktop:prebuild:resolveOptions") as typeof console.log;
 

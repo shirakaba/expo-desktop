@@ -1,16 +1,11 @@
 import { log } from "@clack/prompts";
-import { getConfig, type ExpoConfig } from "@expo/config";
-import { type } from "arktype";
+import { getConfig } from "@expo/config";
 import { default as kleur } from "kleur";
-import fs from "node:fs/promises";
-import path from "node:path";
 import { exit } from "node:process";
 
-import { AppJson } from "../common/app-json.ts";
 import { loadEnvFiles, setNodeEnv } from "../common/node-env.ts";
-import { type TemplateSelection, applySelectedTemplatesAsync } from "../common/template.ts";
-import { clearNativeFolder } from "./clear-native-folder.ts";
 import { ensureConfigAsync } from "./ensure-config-async.ts";
+import { clearNativeFolder } from "./expo/clear-native-folder.ts";
 import { promptToClearMalformedNativeProjectsAsync } from "./expo/clear-native-folder.ts";
 import {
   assertPlatforms,
@@ -18,7 +13,7 @@ import {
   resolvePackageManagerOptions,
   resolveSkipDependencyUpdate,
   resolveTemplateOption,
-} from "./resolve-options.ts";
+} from "./expo/resolve-options.ts";
 import { updateFromTemplateAsync } from "./update-from-template-async.ts";
 
 /**
@@ -62,7 +57,7 @@ export async function prebuild({
 
   // Filter out platforms that aren't in the app.json.
   // https://github.com/expo/expo/blob/8dd645080f52927e2a8bf406167da7241a1d46d8/packages/%40expo/cli/src/prebuild/prebuildAsync.ts#L74
-  const expoConfig = getConfig(projectRoot).exp;
+  const { exp: expoConfig } = getConfig(projectRoot);
   if (expoConfig.platforms?.length) {
     const finalPlatforms = platforms.filter((platform) =>
       (expoConfig.platforms as Array<"ios" | "android" | "web" | "macos" | "windows">).includes(
@@ -104,21 +99,24 @@ export async function prebuild({
 
   const { exp, pkg } = await ensureConfigAsync(projectRoot, { platforms });
 
-  const templateSelection = {
-    template,
-  } satisfies TemplateSelection;
+  // windowsTemplateStrings, rnwVersion
 
   // Create native projects from template.
   // https://github.com/expo/expo/blob/8dd645080f52927e2a8bf406167da7241a1d46d8/packages/%40expo/cli/src/prebuild/prebuildAsync.ts#L112-L120
   // https://github.com/expo/expo/blob/e2aa8935077d88fbbb22b1f4dc1f8a1586080b97/packages/%40expo/cli/src/prebuild/updateFromTemplate.ts#L23
-  const { hasNewProjectFiles, needsPodInstall, templateChecksum, changedDependencies } =
-    await updateFromTemplateAsync(projectRoot, {
-      exp,
-      pkg,
-      templateSelection,
-      platforms,
-      skipDependencyUpdate: resolveSkipDependencyUpdate(skipDependencyUpdate),
-    });
+  const {
+    hasNewProjectFiles,
+    needsPodInstallIos,
+    needsPodInstallMacos,
+    templateChecksum,
+    changedDependencies,
+  } = await updateFromTemplateAsync(projectRoot, {
+    exp,
+    pkg,
+    template: template != null ? resolveTemplateOption(template) : undefined,
+    platforms,
+    skipDependencyUpdate: resolveSkipDependencyUpdate(skipDependencyUpdate),
+  });
 
   // TODO: if packageManager undefined, infer from lockfiles
   const _packageManager = resolvePackageManagerOptions({ noInstall, npm, yarn, bun, pnpm });

@@ -1,5 +1,6 @@
 import spawnAsync from "@expo/spawn-async";
 import Debug from "debug";
+import assert from "node:assert";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -122,6 +123,21 @@ export async function extractNpmTarballAsync(
   );
 }
 
+/**
+ * @see https://github.com/expo/expo/blob/8dd645080f52927e2a8bf406167da7241a1d46d8/packages/%40expo/cli/src/utils/npm.ts#L137
+ */
+export async function extractNpmTarballFromUrlAsync(
+  url: string,
+  output: string,
+  props: ExtractProps,
+): Promise<string> {
+  const response = await fetch(url);
+  if (!response.ok || !response.body) {
+    throw new Error(`Unexpected response: ${response.statusText}. From url: ${url}`);
+  }
+  return await extractNpmTarballAsync(response.body, output, props);
+}
+
 export async function extractLocalNpmTarballAsync(
   tarFilePath: string,
   output: string,
@@ -132,6 +148,29 @@ export async function extractLocalNpmTarballAsync(
     output,
     props,
   );
+}
+
+export async function packNpmTarballAsync(packageDir: string): Promise<string> {
+  const cmdArgs = ["pack", "--json", "--foreground-scripts=false"];
+  const results = (
+    await spawnAsync("npm", cmdArgs, {
+      env: { ...process.env },
+      cwd: packageDir,
+    })
+  ).stdout?.trim();
+  try {
+    const [json] = JSON.parse(results) as { filename: string }[];
+    assert(
+      typeof json?.filename === "string",
+      'Expected filename property on JSON array of type "string"',
+    );
+    return path.resolve(packageDir, json.filename);
+  } catch (error: any) {
+    const cmdString = `npm ${cmdArgs.join(" ")}`;
+    throw new Error(
+      `Could not parse JSON returned from "${cmdString}".\n\n${results}\n\nError: ${error.message}`,
+    );
+  }
 }
 
 async function npmPackAsync(

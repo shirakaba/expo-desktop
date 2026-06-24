@@ -1,14 +1,14 @@
-// https://github.com/expo/expo/blob/main/packages/%40expo/cli/src/utils/prompts.ts
-
 import type { Choice, Options, PromptObject } from "prompts";
 
-import assert from "assert";
+// https://github.com/expo/expo/blob/main/packages/%40expo/cli/src/utils/prompts.ts
+import Debug from "debug";
+import assert from "node:assert";
 import prompts from "prompts";
 
 import { AbortCommandError, CommandError } from "./error.ts";
 import { isInteractive } from "./interactive.ts";
 
-const debug = require("debug")("expo:utils:prompts") as typeof console.log;
+const debug = Debug("expo-desktop:utils:prompts") as typeof console.log;
 
 export type Question<V extends string = string> = PromptObject<V> & {
   optionsPerPage?: number;

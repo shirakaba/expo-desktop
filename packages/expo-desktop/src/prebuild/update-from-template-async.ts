@@ -1,10 +1,22 @@
 import type { ExpoConfig, PackageJSONConfig } from "@expo/config";
 
-import type { ResolvedTemplateOption } from "./resolve-options.ts";
+import chalk from "chalk";
 
+import type { ResolvedTemplateOption } from "./expo/resolve-options.ts";
+
+import { AbortCommandError, SilentError } from "../common/expo/error.ts";
+import { Log } from "../common/expo/log.ts";
+import { logNewSection } from "../common/expo/ora.ts";
+import {
+  getTemplateFilesToRenameAsync,
+  getWindowsTemplateStrings,
+  renameTemplateAppNameAsync,
+} from "../common/expo/template.ts";
 import { readAppNameFromConfig } from "../common/read-app-name-from-config.ts";
-import { applySelectedTemplatesAsync, type TemplateSelection } from "../common/template.ts";
 import { createTempDirectoryPath } from "./create-temp-path.ts";
+import { copyTemplateFiles, createCopyFilesSuccessMessage } from "./expo/copy-template-files.ts";
+import { cloneTemplateAsync } from "./expo/resolve-template.ts";
+import { validateTemplatePlatforms } from "./expo/validate-template-platforms.ts";
 import {
   DependenciesModificationResults,
   updatePackageJSONAsync,
@@ -20,7 +32,7 @@ export async function updateFromTemplateAsync(
   {
     exp,
     pkg,
-    templateSelection,
+    template,
     templateDirectory,
     platforms,
     skipDependencyUpdate,
@@ -30,11 +42,11 @@ export async function updateFromTemplateAsync(
     /** package.json as JSON */
     pkg: PackageJSONConfig;
     /** Template to clone from. */
-    templateSelection: TemplateSelection;
+    template?: ResolvedTemplateOption | undefined;
     /** Directory to write the template to before copying into the project. */
     templateDirectory?: string;
     /** List of platforms to clone. */
-    platforms: Array<"macos" | "windows">;
+    platforms: Array<"ios" | "android" | "macos" | "windows">;
     /** List of dependencies to skip updating. */
     skipDependencyUpdate: Array<string> | undefined;
   },
@@ -43,56 +55,44 @@ export async function updateFromTemplateAsync(
     /** Indicates if new files were created in the project. */
     hasNewProjectFiles: boolean;
     /** Indicates that the project needs to run `pod install` */
-    needsPodInstall: boolean;
+    needsPodInstallIos: boolean;
+    /** Indicates that the project needs to run `pod install` */
+    needsPodInstallMacos: boolean;
     /** The template checksum used to create the native project. */
     templateChecksum: string;
   } & DependenciesModificationResults
 > {
-  const appName = readAppNameFromConfig(exp);
+  if (!templateDirectory) {
+    templateDirectory = createTempDirectoryPath();
+  }
 
-  // TODO: Figure out what to do with these multiple checksums we have.
-  //
-  //       I'm beginning to think it'd be a lot easier to maintain our own
-  //       unified template than to stitch together mobile + macos + windows
-  //       templates. A big problem is file priority - for any files outside of
-  //       the platform-specific folders, which one should take priority.
-  //       Particularly for common ones, such as package.json.
-  //       https://github.com/expo/expo/pull/26414
-  const results = await applySelectedTemplatesAsync({
+  // If React Native Windows isn't installed, then it doesn't matter what
+  // template strings we generate anyway, so we provide a fallback.
+  const rnwVersion = pkg.dependencies?.["react-native-windows"] ?? "0.81.27";
+
+  const { copiedPaths, templateChecksum } = await cloneTemplateAndCopyToProjectAsync({
     projectRoot,
-    selection: templateSelection,
-    enabledPlatforms: platforms,
-    name: appName,
-    respectTemplateConfig: false,
+    template,
+    templateDirectory,
+    exp,
+    platforms,
+    rnwVersion,
   });
 
-  // if (!templateDirectory) {
-  //   templateDirectory = createTempDirectoryPath();
-  // }
+  const depsResults = await updatePackageJSONAsync(projectRoot, {
+    templateDirectory,
+    pkg,
+    skipDependencyUpdate,
+  });
 
-  // const { copiedPaths, templateChecksum } = await cloneTemplateAndCopyToProjectAsync({
-  //   projectRoot,
-  //   template,
-  //   templateDirectory,
-  //   exp,
-  //   platforms,
-  // });
-
-  // const depsResults = await updatePackageJSONAsync(projectRoot, {
-  //   templateDirectory,
-  //   pkg,
-  //   skipDependencyUpdate,
-  // });
-
-  // return {
-  //   hasNewProjectFiles: !!copiedPaths.length,
-  //   // If the iOS folder changes or new packages are added, we should rerun pod install.
-  //   needsPodInstall: copiedPaths.includes("ios") || !!depsResults.changedDependencies.length,
-  //   templateChecksum,
-  //   ...depsResults,
-  // };
-
-  throw new Error("Not implemented");
+  return {
+    hasNewProjectFiles: !!copiedPaths.length,
+    // If the iOS folder changes or new packages are added, we should rerun pod install.
+    needsPodInstallIos: copiedPaths.includes("ios") || !!depsResults.changedDependencies.length,
+    needsPodInstallMacos: copiedPaths.includes("macos") || !!depsResults.changedDependencies.length,
+    templateChecksum,
+    ...depsResults,
+  };
 }
 
 /**
@@ -106,12 +106,73 @@ export async function cloneTemplateAndCopyToProjectAsync({
   template,
   exp,
   platforms: unknownPlatforms,
+  rnwVersion,
 }: {
   projectRoot: string;
   templateDirectory: string;
   template?: ResolvedTemplateOption | undefined;
-  exp: Pick<ExpoConfig, "name" | "sdkVersion">;
-  platforms: Array<"macos" | "windows">;
+  exp: ExpoConfig;
+  platforms: Array<"ios" | "android" | "macos" | "windows">;
+  rnwVersion: string;
 }): Promise<{ copiedPaths: string[]; templateChecksum: string }> {
-  throw new Error("Not implemented");
+  const platformDirectories = unknownPlatforms
+    .map((platform) => `./${platform}`)
+    .reverse()
+    .join(" and ");
+
+  const pluralized = unknownPlatforms.length > 1 ? "directories" : "directory";
+  const ora = logNewSection(`Creating native ${pluralized} (${platformDirectories})`);
+
+  try {
+    const templateChecksum = await cloneTemplateAsync({
+      templateDirectory,
+      projectRoot,
+      template,
+      exp,
+      ora,
+    });
+
+    const platforms = validateTemplatePlatforms({
+      templateDirectory,
+      platforms: unknownPlatforms,
+    });
+
+    const results = copyTemplateFiles(projectRoot, {
+      templateDirectory,
+      platforms,
+    });
+
+    const name = readAppNameFromConfig(exp);
+    // FIXME: The Windows app's projectGuid and packageGuid will regenerate upon
+    //        each prebuild, which will interfere with submission.
+    const windowsTemplateStrings = getWindowsTemplateStrings({ name, rnwVersion });
+
+    // TODO(@kitten): This duplicates functionality that `cloneTemplateAsync` can already do
+    const files = await getTemplateFilesToRenameAsync({ cwd: projectRoot });
+    await renameTemplateAppNameAsync({
+      cwd: projectRoot,
+      files,
+      name,
+      windowsTemplateStrings,
+    });
+
+    // Says: "Created native directories"
+    ora.succeed(createCopyFilesSuccessMessage(platforms, results));
+
+    return {
+      copiedPaths: results.copiedPaths,
+      templateChecksum,
+    };
+  } catch (e: any) {
+    if (!(e instanceof AbortCommandError)) {
+      Log.error(e.message);
+    }
+    ora.fail(`Failed to create the native ${pluralized}`);
+    Log.log(
+      chalk.yellow(
+        chalk`You may want to delete the {bold ./ios} and/or {bold ./android} directories before trying again.`,
+      ),
+    );
+    throw new SilentError(e);
+  }
 }

@@ -183,7 +183,7 @@ export async function extractAndPrepareTemplateAppAsync({
   return projectRoot;
 }
 
-function getWindowsTemplateStrings({
+export function getWindowsTemplateStrings({
   name,
   rnwVersion,
 }: {
@@ -237,7 +237,7 @@ function getWindowsTemplateStrings({
   };
 }
 
-type WindowsTemplateStrings = ReturnType<typeof getWindowsTemplateStrings>;
+export type WindowsTemplateStrings = ReturnType<typeof getWindowsTemplateStrings>;
 
 function escapeXMLCharacters(original: string): string {
   const noAmps = original.replace("&", "&amp;");
