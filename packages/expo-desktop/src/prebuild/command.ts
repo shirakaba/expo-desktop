@@ -1,8 +1,15 @@
 import { log } from "@clack/prompts";
 import { getConfig } from "@expo/config";
+import chalk from "chalk";
+import Debug from "debug";
 import { default as kleur } from "kleur";
 import { exit } from "node:process";
 
+import { env } from "../common/expo/env.ts";
+import { Log } from "../common/expo/log.ts";
+import { clearNodeModulesAsync } from "../common/expo/node-modules.ts";
+import { logNewSection } from "../common/expo/ora.ts";
+import { confirmAsync } from "../common/expo/prompts-cli.ts";
 import { loadEnvFiles, setNodeEnv } from "../common/node-env.ts";
 import { ensureConfigAsync } from "./ensure-config-async.ts";
 import { clearNativeFolder } from "./expo/clear-native-folder.ts";
@@ -16,6 +23,8 @@ import {
 } from "./expo/resolve-options.ts";
 import { updateFromTemplateAsync } from "./update-from-template-async.ts";
 
+const debug = Debug("expo-desktop:prebuild:command") as typeof console.log;
+
 /**
  * The entrypoint for `npx expo prebuild` is here:
  * [@expo/cli/src/prebuild/index.ts] expoPrebuild() >
@@ -26,17 +35,7 @@ import { updateFromTemplateAsync } from "./update-from-template-async.ts";
  * @see https://github.com/expo/expo/blob/15d35298c9a397c23bcbf6b20e2b9761564acbc4/packages/%40expo/cli/src/prebuild/index.ts#L7
  * @see https://github.com/expo/expo/blob/15d35298c9a397c23bcbf6b20e2b9761564acbc4/packages/%40expo/cli/src/prebuild/configureProjectAsync.ts#L37
  */
-export async function prebuild({
-  clean,
-  "no-install": noInstall,
-  npm,
-  yarn,
-  bun,
-  pnpm,
-  template,
-  platform,
-  "skip-dependency-update": skipDependencyUpdate,
-}: {
+export async function prebuild(args: {
   clean: boolean | undefined;
   "no-install": boolean | undefined;
   npm: boolean | undefined;
@@ -47,9 +46,28 @@ export async function prebuild({
   platform: string | undefined;
   "skip-dependency-update": boolean | undefined;
 }) {
+  const options: typeof args & {
+    noInstall: boolean | undefined;
+    install: boolean;
+    skipDependencyUpdate: boolean | undefined;
+  } = {
+    clean: args.clean,
+    noInstall: args["no-install"],
+    ["no-install"]: args["no-install"],
+    npm: args.npm,
+    yarn: args.yarn,
+    bun: args.bun,
+    pnpm: args.pnpm,
+    template: args.template,
+    platform: args.platform,
+    ["skip-dependency-update"]: args["skip-dependency-update"],
+    skipDependencyUpdate: args["skip-dependency-update"],
+    install: !args["no-install"],
+  };
+
   log.info(`🏎️  Running ${kleur.yellow("expo-desktop prebuild")}.`, { withGuide: false });
 
-  let platforms = resolvePlatformsOption(platform);
+  let platforms = resolvePlatformsOption(options.platform);
   const projectRoot = process.cwd();
 
   setNodeEnv("development");
@@ -74,7 +92,7 @@ export async function prebuild({
     }
   }
 
-  if (clean) {
+  if (options.clean) {
     const { maybeBailOnGitStatusAsync } = await import("../common/expo/git-cli.js");
     // Clean the project folders...
     if (await maybeBailOnGitStatusAsync()) {
@@ -113,40 +131,101 @@ export async function prebuild({
   } = await updateFromTemplateAsync(projectRoot, {
     exp,
     pkg,
-    template: template != null ? resolveTemplateOption(template) : undefined,
+    template: options.template != null ? resolveTemplateOption(options.template) : undefined,
     platforms,
-    skipDependencyUpdate: resolveSkipDependencyUpdate(skipDependencyUpdate),
+    skipDependencyUpdate: resolveSkipDependencyUpdate(options.skipDependencyUpdate),
   });
 
-  // TODO: if packageManager undefined, infer from lockfiles
-  const _packageManager = resolvePackageManagerOptions({ noInstall, npm, yarn, bun, pnpm });
+  // Install node modules
+  if (options.install) {
+    // Validate options
+    resolvePackageManagerOptions({
+      noInstall: options.noInstall,
+      npm: options.npm,
+      yarn: options.yarn,
+      bun: options.bun,
+      pnpm: options.pnpm,
+    });
 
-  // TODO:
-  // - prebuildAsync()
-  //   - https://github.com/expo/expo/blob/8dd645080f52927e2a8bf406167da7241a1d46d8/packages/%40expo/cli/src/prebuild/prebuildAsync.ts#L49
-  //   - getConfig()
-  //     - https://github.com/expo/expo/blob/8dd645080f52927e2a8bf406167da7241a1d46d8/packages/%40expo/config/src/Config.ts#L113
-  //     - Not sure whether we want to create expo-desktop-config for this
-  //   - ensureConfigAsync() is easy to port
-  //   - updateFromTemplateAsync() will involve the macos/windows templates
-  //   - install node_modules via chosen package manager
-  //   - configureProjectAsync()
-  //     - https://github.com/expo/expo/blob/8dd645080f52927e2a8bf406167da7241a1d46d8/packages/%40expo/cli/src/prebuild/configureProjectAsync.ts#L14
-  //     - Prompt for bundle ID and package name
-  //     - getPrebuildConfigAsync() from expo-desktop-prebuild-config
-  //     - compileModsAsync()
-  //       - https://github.com/expo/expo/blob/8dd645080f52927e2a8bf406167da7241a1d46d8/packages/%40expo/config-plugins/src/plugins/mod-compiler.ts#L82
-  //       - withDefaultBaseMods()
-  //       - evalModsAsync()
-  //         - https://github.com/expo/expo/blob/8dd645080f52927e2a8bf406167da7241a1d46d8/packages/%40expo/config-plugins/src/plugins/mod-compiler.ts#L126
-  //   - Install pods
-  //   - updateXcodeProject()
-  //     - https://github.com/expo/expo/blob/8dd645080f52927e2a8bf406167da7241a1d46d8/packages/%40expo/inline-modules/src/xcodeProjectUpdates.ts#L12
-  //     - This seems to be something to do with experimental Inline Modules:
-  //       - https://docs.expo.dev/modules/inline-modules-reference/
+    if (changedDependencies.length) {
+      if (options.npm) {
+        await clearNodeModulesAsync(projectRoot);
+      }
 
-  log.error(`${kleur.yellow("expo-desktop prebuild")} not yet implemented.`);
-  return exit(1);
+      Log.log(chalk.gray(chalk`Dependencies in the {bold package.json} changed:`));
+      Log.log(chalk.gray("  " + changedDependencies.join(", ")));
+
+      // Installing dependencies is a legacy feature from the unversioned
+      // command. We know opt to not change dependencies unless a template
+      // indicates a new dependency is required, or if the core dependencies are wrong.
+      if (
+        await confirmAsync({
+          message: `Install the updated dependencies?`,
+          initial: true,
+        })
+      ) {
+        // TODO: this is very big rabbit hole to implement
+        await installAsync([], {
+          npm: !!options.npm,
+          yarn: !!options.yarn,
+          pnpm: !!options.pnpm,
+          bun: !!options.bun,
+          silent: !(env.EXPO_DEBUG || env.CI),
+        });
+      }
+    }
+  }
+
+  // Apply Expo config to native projects. Prevent log-spew from ora when running in debug mode.
+  const configSyncingStep: { succeed(text?: string): unknown; fail(text?: string): unknown } =
+    env.EXPO_DEBUG
+      ? {
+          succeed(text) {
+            Log.log(text!);
+          },
+          fail(text) {
+            Log.error(text!);
+          },
+        }
+      : logNewSection("Running prebuild");
+  try {
+    // TODO: another big rabbit hole
+    await configureProjectAsync(projectRoot, {
+      platforms,
+      exp,
+      templateChecksum,
+    });
+    configSyncingStep.succeed("Finished prebuild");
+  } catch (error) {
+    configSyncingStep.fail("Prebuild failed");
+    throw error;
+  }
+
+  // Install CocoaPods
+  let podsInstalled: boolean = false;
+  // err towards running pod install less because it's slow and users can easily run npx pod-install afterwards.
+  if (platforms.includes("ios") && options.install && needsPodInstallIos) {
+    // FIXME: handle macOS pod install as well
+    const { installCocoaPodsAsync } = await import("../utils/cocoapods.js");
+
+    podsInstalled = await installCocoaPodsAsync(projectRoot);
+  } else {
+    debug("Skipped pod install");
+  }
+  const inlineModules = exp.experiments?.inlineModules ?? false;
+  if (inlineModules && platforms.includes("ios")) {
+    await updateXcodeProject(projectRoot, {
+      watchedDirectories: inlineModules.watchedDirectories ?? [],
+    });
+  }
+
+  return {
+    nodeInstall: !!options.install,
+    podInstall: !podsInstalled,
+    platforms: platforms,
+    hasNewProjectFiles,
+    exp,
+  };
 }
 
 function resolvePlatformsOption(
