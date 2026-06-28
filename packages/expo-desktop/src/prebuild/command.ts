@@ -5,6 +5,7 @@ import Debug from "debug";
 import { default as kleur } from "kleur";
 import { exit } from "node:process";
 
+import { setupDependenciesAsync } from "../common/expo/create-async-utils.ts";
 import { env } from "../common/expo/env.ts";
 import { Log } from "../common/expo/log.ts";
 import { clearNodeModulesAsync } from "../common/expo/node-modules.ts";
@@ -164,14 +165,19 @@ export async function prebuild(args: {
           initial: true,
         })
       ) {
-        // TODO: this is very big rabbit hole to implement
-        await installAsync([], {
-          npm: !!options.npm,
-          yarn: !!options.yarn,
-          pnpm: !!options.pnpm,
-          bun: !!options.bun,
-          silent: !(env.EXPO_DEBUG || env.CI),
-        });
+        // The real Expo CLI effectively runs `expo install` here. However,
+        // that's a very deep rabbit hole to port to Expo Desktop, and in this
+        // case really doesn't offer much value over setupDependenciesAsync().
+
+        // await installAsync([], {
+        //   npm: !!options.npm,
+        //   yarn: !!options.yarn,
+        //   pnpm: !!options.pnpm,
+        //   bun: !!options.bun,
+        //   silent: !(env.EXPO_DEBUG || env.CI),
+        // });
+
+        await setupDependenciesAsync(projectRoot, { install: true });
       }
     }
   }
