@@ -1,16 +1,16 @@
 import type { ExpoConfig } from "@expo/config";
-import type { ModPlatform } from "@expo/config-plugins";
 
-import { compileModsAsync } from "@expo/config-plugins";
-import { getPrebuildConfigAsync } from "@expo/prebuild-config";
+import { compileModsAsync } from "expo-desktop-config-plugins";
+import { getPrebuildConfigAsync } from "expo-desktop-prebuild-config";
 
 import { env } from "../../common/expo/env.ts";
 import * as Log from "../../common/expo/log.ts";
-import { logConfig } from "../config/configAsync";
 import {
   getOrPromptForBundleIdentifierAsync,
+  getOrPromptForNamespaceAsync,
   getOrPromptForPackageAsync,
-} from "../utils/getOrPromptApplicationId";
+} from "../ensure-config-async.ts";
+import { logConfig } from "./config-async.ts";
 
 export async function configureProjectAsync(
   projectRoot: string,
@@ -19,7 +19,7 @@ export async function configureProjectAsync(
     exp,
     templateChecksum,
   }: {
-    platforms: ModPlatform[];
+    platforms: Array<"ios" | "android" | "macos" | "windows">;
     exp?: ExpoConfig;
     templateChecksum?: string;
   },
@@ -27,8 +27,15 @@ export async function configureProjectAsync(
   let bundleIdentifier: string | undefined;
   if (platforms.includes("ios")) {
     // Check bundle ID before reading the config because it may mutate the config if the user is prompted to define it.
-    bundleIdentifier = await getOrPromptForBundleIdentifierAsync(projectRoot, exp);
+    bundleIdentifier = await getOrPromptForBundleIdentifierAsync(projectRoot, "ios", exp);
   }
+  if (platforms.includes("macos")) {
+    bundleIdentifier = await getOrPromptForBundleIdentifierAsync(projectRoot, "macos", exp);
+  }
+  if (platforms.includes("windows")) {
+    bundleIdentifier = await getOrPromptForNamespaceAsync(projectRoot, exp);
+  }
+
   let packageName: string | undefined;
   if (platforms.includes("android")) {
     // Check package before reading the config because it may mutate the config if the user is prompted to define it.

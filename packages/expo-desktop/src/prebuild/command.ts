@@ -15,6 +15,7 @@ import { loadEnvFiles, setNodeEnv } from "../common/node-env.ts";
 import { ensureConfigAsync } from "./ensure-config-async.ts";
 import { clearNativeFolder } from "./expo/clear-native-folder.ts";
 import { promptToClearMalformedNativeProjectsAsync } from "./expo/clear-native-folder.ts";
+import { configureProjectAsync } from "./expo/configure-project-async.ts";
 import {
   assertPlatforms,
   ensureValidPlatforms,

@@ -18,8 +18,12 @@ export async function ensureConfigAsync(
     platforms: Array<ModPlatform | "macos" | "windows">;
   },
 ): Promise<{ exp: ExpoConfig; pkg: PackageJSONConfig }> {
+  if (platforms.includes("ios")) {
+    await getOrPromptForBundleIdentifierAsync(projectRoot, "ios");
+  }
+
   if (platforms.includes("macos")) {
-    await getOrPromptForBundleIdentifierAsync(projectRoot);
+    await getOrPromptForBundleIdentifierAsync(projectRoot, "macos");
   }
 
   if (platforms.includes("windows")) {
@@ -41,16 +45,18 @@ export async function ensureConfigAsync(
  */
 export async function getOrPromptForBundleIdentifierAsync(
   projectRoot: string,
+  platform: "ios" | "macos",
   exp: ExpoConfig = getConfig(projectRoot).exp,
 ): Promise<string> {
-  const current = (exp as ExpoConfig & { macos: ExpoConfig["ios"] }).macos?.bundleIdentifier;
+  const platformDisplayName = platform === "ios" ? "iOS" : "macOS";
+  const current = (exp as ExpoConfig & { macos: ExpoConfig["ios"] })[platform]?.bundleIdentifier;
   if (current) {
     assertValidBundleId(current);
     return current;
   }
 
   const rdns = await text({
-    message: `Please provide the ${kleur.bold("bundle identifier")} for the macOS app. ${grey("(Example: 'com.example.my-app-123')")}`,
+    message: `Please provide the ${kleur.bold("bundle identifier")} for the ${platformDisplayName} app. ${grey("(Example: 'com.example.my-app-123')")}`,
     placeholder: "com.example.my-app",
     initialValue: "com.example.my-app",
     validate(value) {
@@ -69,15 +75,63 @@ export async function getOrPromptForBundleIdentifierAsync(
   if (
     await attemptModification(
       projectRoot,
-      // @ts-expect-error no 'macos' support
-      { macos: { bundleIdentifier } },
-      { macos: { bundleIdentifier } },
+      { [platform]: { bundleIdentifier } },
+      { [platform]: { bundleIdentifier } },
     )
   ) {
-    log.message(kleur.gray(`\u203A Apple bundle identifier: ${bundleIdentifier}`));
+    log.message(kleur.gray(`\u203A ${platformDisplayName} bundle identifier: ${bundleIdentifier}`));
   }
 
   return bundleIdentifier;
+}
+
+/**
+ * Get the Android package namespace from the Expo config or prompt the user to
+ * choose a new one.
+ *
+ * Prompted value will be validated against a local regex.
+ *
+ * If the project Expo config is a static JSON file, the package name will be
+ * updated in the config automatically.
+ */
+export async function getOrPromptForPackageAsync(
+  projectRoot: string,
+  exp: ExpoConfig = getConfig(projectRoot).exp,
+): Promise<string> {
+  const current = (exp as ExpoConfig).android?.package;
+  if (current) {
+    assertValidNamespace(current);
+    return current;
+  }
+
+  const rdns = await text({
+    message: `Please provide the ${kleur.bold("package")} for the Android app. ${grey("(Example: 'com.example.my_app_123')")}`,
+    placeholder: "com.example.my_app",
+    initialValue: "com.example.my_app",
+    validate(value) {
+      if (!value?.length) {
+        return "Must be at least one character long.";
+      }
+    },
+  });
+  if (isCancel(rdns)) {
+    process.exit(0);
+  }
+
+  const androidPackage = rdns.replaceAll(/[_-]/g, "_");
+
+  // Apply the changes to the config.
+  if (
+    await attemptModification(
+      projectRoot,
+      { android: { package: androidPackage } },
+      { android: { package: androidPackage } },
+    )
+  ) {
+    log.message(kleur.gray(`\u203A Android package: ${androidPackage}`));
+  }
+
+  return androidPackage;
 }
 
 /**
