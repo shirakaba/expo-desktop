@@ -16,11 +16,11 @@ import { readAppNameFromConfig } from "../common/read-app-name-from-config.ts";
 import { createTempDirectoryPath } from "./create-temp-path.ts";
 import { copyTemplateFiles, createCopyFilesSuccessMessage } from "./expo/copy-template-files.ts";
 import { cloneTemplateAsync } from "./expo/resolve-template.ts";
-import { validateTemplatePlatforms } from "./expo/validate-template-platforms.ts";
 import {
   DependenciesModificationResults,
   updatePackageJSONAsync,
-} from "./update-package-json-async.ts";
+} from "./expo/update-package-json.ts";
+import { validateTemplatePlatforms } from "./expo/validate-template-platforms.ts";
 
 /**
  * Creates local native files from an input template file path.

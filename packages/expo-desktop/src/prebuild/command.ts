@@ -212,7 +212,7 @@ export async function prebuild(args: {
   // err towards running pod install less because it's slow and users can easily run npx pod-install afterwards.
   if (platforms.includes("ios") && options.install && needsPodInstallIos) {
     // FIXME: handle macOS pod install as well
-    const { installCocoaPodsAsync } = await import("../utils/cocoapods.js");
+    const { installCocoaPodsAsync } = await import("../common/expo/cocoapods.js");
 
     podsInstalled = await installCocoaPodsAsync(projectRoot);
   } else {
