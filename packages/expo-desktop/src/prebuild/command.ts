@@ -208,17 +208,28 @@ export async function prebuild(args: {
   }
 
   // Install CocoaPods
-  let podsInstalled: boolean = false;
-  // err towards running pod install less because it's slow and users can easily run npx pod-install afterwards.
-  if (platforms.includes("ios") && options.install && needsPodInstallIos) {
-    // FIXME: handle macOS pod install as well
+  let podsInstalledIos: boolean = false;
+  let podsInstalledMacos: boolean = false;
+
+  const shouldPodInstallForIos = platforms.includes("ios") && options.install && needsPodInstallIos;
+  const shouldPodInstallForMacos =
+    platforms.includes("macos") && options.install && needsPodInstallMacos;
+
+  // err towards running pod install less because it's slow and users can easily
+  // run npx pod-install afterwards.
+  if (shouldPodInstallForIos || shouldPodInstallForMacos) {
     const { installCocoaPodsAsync } = await import("../common/expo/cocoapods.js");
 
-    // FIXME: support "ios" and "macos" options
-    podsInstalled = await installCocoaPodsAsync(projectRoot);
+    if (shouldPodInstallForIos) {
+      podsInstalledIos = await installCocoaPodsAsync(projectRoot, "ios");
+    }
+    if (shouldPodInstallForMacos) {
+      podsInstalledMacos = await installCocoaPodsAsync(projectRoot, "macos");
+    }
   } else {
     debug("Skipped pod install");
   }
+
   const inlineModules = exp.experiments?.inlineModules ?? false;
   if (inlineModules) {
     const watchedDirectories = inlineModules.watchedDirectories ?? [];
@@ -238,7 +249,7 @@ export async function prebuild(args: {
 
   return {
     nodeInstall: !!options.install,
-    podInstall: !podsInstalled,
+    podInstall: !(podsInstalledIos || podsInstalledMacos),
     platforms: platforms,
     hasNewProjectFiles,
     exp,

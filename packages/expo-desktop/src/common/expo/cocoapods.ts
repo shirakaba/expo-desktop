@@ -72,7 +72,10 @@ export async function hasPackageJsonDependencyListChangedAsync(
   return hasNewDependencies;
 }
 
-export async function installCocoaPodsAsync(projectRoot: string): Promise<boolean> {
+export async function installCocoaPodsAsync(
+  projectRoot: string,
+  platform: "ios" | "macos",
+): Promise<boolean> {
   let step = logNewSection("Installing CocoaPods...");
   if (process.platform !== "darwin") {
     step.succeed("Skipped installing CocoaPods because operating system is not on macOS.");
@@ -80,7 +83,7 @@ export async function installCocoaPodsAsync(projectRoot: string): Promise<boolea
   }
 
   const packageManager = new PackageManager.CocoaPodsPackageManager({
-    cwd: path.join(projectRoot, "ios"),
+    cwd: path.join(projectRoot, platform),
     silent: !(env.EXPO_DEBUG || env.CI),
   });
 
@@ -122,7 +125,9 @@ export async function installCocoaPodsAsync(projectRoot: string): Promise<boolea
   } catch (error: any) {
     step.stopAndPersist({
       symbol: "⚠️ ",
-      text: chalk.red("Something went wrong running `pod install` in the `ios` directory."),
+      text: chalk.red(
+        `Something went wrong running \`pod install\` in the \`${platform}\` directory.`,
+      ),
     });
     if (error instanceof PackageManager.CocoaPodsError) {
       Log.log(error.message);
@@ -133,29 +138,29 @@ export async function installCocoaPodsAsync(projectRoot: string): Promise<boolea
   }
 }
 
-function doesProjectUseCocoaPods(projectRoot: string): boolean {
-  return fs.existsSync(path.join(projectRoot, "ios", "Podfile"));
+function doesProjectUseCocoaPods(projectRoot: string, platform: "ios" | "macos"): boolean {
+  return fs.existsSync(path.join(projectRoot, platform, "Podfile"));
 }
 
-function isLockfileCreated(projectRoot: string): boolean {
-  const podfileLockPath = path.join(projectRoot, "ios", "Podfile.lock");
+function isLockfileCreated(projectRoot: string, platform: "ios" | "macos"): boolean {
+  const podfileLockPath = path.join(projectRoot, platform, "Podfile.lock");
   return fs.existsSync(podfileLockPath);
 }
 
-function isPodFolderCreated(projectRoot: string): boolean {
-  const podFolderPath = path.join(projectRoot, "ios", "Pods");
+function isPodFolderCreated(projectRoot: string, platform: "ios" | "macos"): boolean {
+  const podFolderPath = path.join(projectRoot, platform, "Pods");
   return fs.existsSync(podFolderPath);
 }
 
 // TODO: Same process but with app.config changes + default plugins.
 // This will ensure the user is prompted for extra setup.
-export async function maybePromptToSyncPodsAsync(projectRoot: string) {
-  if (!doesProjectUseCocoaPods(projectRoot)) {
+export async function maybePromptToSyncPodsAsync(projectRoot: string, platform: "ios" | "macos") {
+  if (!doesProjectUseCocoaPods(projectRoot, platform)) {
     // Project does not use CocoaPods
     return;
   }
-  if (!isLockfileCreated(projectRoot) || !isPodFolderCreated(projectRoot)) {
-    if (!(await installCocoaPodsAsync(projectRoot))) {
+  if (!isLockfileCreated(projectRoot, platform) || !isPodFolderCreated(projectRoot, platform)) {
+    if (!(await installCocoaPodsAsync(projectRoot, platform))) {
       throw new AbortCommandError();
     }
     return;
@@ -166,10 +171,14 @@ export async function maybePromptToSyncPodsAsync(projectRoot: string) {
     return;
   }
 
-  await promptToInstallPodsAsync(projectRoot, []);
+  await promptToInstallPodsAsync(projectRoot, platform, []);
 }
 
-async function promptToInstallPodsAsync(projectRoot: string, missingPods?: string[]) {
+async function promptToInstallPodsAsync(
+  projectRoot: string,
+  platform: "ios" | "macos",
+  missingPods?: string[],
+) {
   if (missingPods?.length) {
     Log.log(
       `Could not find the following native modules: ${missingPods
@@ -179,7 +188,7 @@ async function promptToInstallPodsAsync(projectRoot: string, missingPods?: strin
   }
 
   try {
-    if (!(await installCocoaPodsAsync(projectRoot))) {
+    if (!(await installCocoaPodsAsync(projectRoot, platform))) {
       throw new AbortCommandError();
     }
   } catch (error) {
