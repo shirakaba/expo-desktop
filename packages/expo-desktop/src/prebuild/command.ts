@@ -196,7 +196,6 @@ export async function prebuild(args: {
         }
       : logNewSection("Running prebuild");
   try {
-    // TODO: another big rabbit hole
     await configureProjectAsync(projectRoot, {
       platforms,
       exp,

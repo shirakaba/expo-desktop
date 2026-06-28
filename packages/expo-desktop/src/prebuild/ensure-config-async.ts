@@ -49,16 +49,31 @@ export async function getOrPromptForBundleIdentifierAsync(
   exp: ExpoConfig = getConfig(projectRoot).exp,
 ): Promise<string> {
   const platformDisplayName = platform === "ios" ? "iOS" : "macOS";
-  const current = (exp as ExpoConfig & { macos: ExpoConfig["ios"] })[platform]?.bundleIdentifier;
+  const otherPlatformDisplayName = platform === "ios" ? "macOS" : "iOS";
+  const typedConfig = exp as ExpoConfig & { macos: ExpoConfig["ios"] };
+
+  const current = typedConfig[platform]?.bundleIdentifier;
   if (current) {
     assertValidBundleId(current);
     return current;
   }
 
+  // Typically you'll want to use the same bundle identifier across both iOS and
+  // macOS in order to share the same App Store page, so we fall back to
+  // whichever the other Apple platform is.
+  const fallback = typedConfig[platform === "ios" ? "macos" : "ios"]?.bundleIdentifier;
   const rdns = await text({
-    message: `Please provide the ${kleur.bold("bundle identifier")} for the ${platformDisplayName} app. ${grey("(Example: 'com.example.my-app-123')")}`,
-    placeholder: "com.example.my-app",
-    initialValue: "com.example.my-app",
+    ...(fallback
+      ? {
+          message: `Please provide the ${kleur.bold("bundle identifier")} for the ${platformDisplayName} app. ${grey(`(Default: '${fallback}' - same as ${otherPlatformDisplayName}, to share the same App Store page)`)}`,
+          placeholder: fallback,
+          initialValue: fallback,
+        }
+      : {
+          message: `Please provide the ${kleur.bold("bundle identifier")} for the ${platformDisplayName} app. ${grey("(Example: 'com.example.my-app-123')")}`,
+          placeholder: "com.example.my-app",
+          initialValue: "com.example.my-app",
+        }),
     validate(value) {
       if (!value?.length) {
         return "Must be at least one character long.";

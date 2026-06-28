@@ -24,21 +24,31 @@ export async function configureProjectAsync(
     templateChecksum?: string;
   },
 ): Promise<ExpoConfig> {
+  // Typically you'll want your iOS and macOS bundle identifiers to be
+  // identical, so that they share the same App Store page. But we split them up
+  // to be as flexible as possible. We continue to support the unified
+  // `bundleIdentifier` so that our getPrebuildConfigAsync() can be
+  // API-compatible with the upstream implementation.
   let bundleIdentifier: string | undefined;
+  let bundleIdentifierIos: string | undefined;
+  let bundleIdentifierMacos: string | undefined;
   if (platforms.includes("ios")) {
-    // Check bundle ID before reading the config because it may mutate the config if the user is prompted to define it.
-    bundleIdentifier = await getOrPromptForBundleIdentifierAsync(projectRoot, "ios", exp);
+    // Check bundle ID before reading the config because it may mutate the
+    // config if the user is prompted to define it.
+    bundleIdentifierIos = await getOrPromptForBundleIdentifierAsync(projectRoot, "ios", exp);
   }
   if (platforms.includes("macos")) {
-    bundleIdentifier = await getOrPromptForBundleIdentifierAsync(projectRoot, "macos", exp);
+    bundleIdentifierMacos = await getOrPromptForBundleIdentifierAsync(projectRoot, "macos", exp);
   }
+  bundleIdentifier = bundleIdentifierIos ?? bundleIdentifierMacos;
+
+  let windowsNamespace: string | undefined;
   if (platforms.includes("windows")) {
-    bundleIdentifier = await getOrPromptForNamespaceAsync(projectRoot, exp);
+    windowsNamespace = await getOrPromptForNamespaceAsync(projectRoot, exp);
   }
 
   let packageName: string | undefined;
   if (platforms.includes("android")) {
-    // Check package before reading the config because it may mutate the config if the user is prompted to define it.
     packageName = await getOrPromptForPackageAsync(projectRoot, exp);
   }
 
@@ -46,6 +56,9 @@ export async function configureProjectAsync(
     platforms,
     packageName,
     bundleIdentifier,
+    bundleIdentifierIos,
+    bundleIdentifierMacos,
+    windowsNamespace,
   });
 
   if (templateChecksum) {
