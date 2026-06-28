@@ -3,7 +3,6 @@ import { getConfig } from "@expo/config";
 import chalk from "chalk";
 import Debug from "debug";
 import { default as kleur } from "kleur";
-import { exit } from "node:process";
 
 import { setupDependenciesAsync } from "../common/expo/create-async-utils.ts";
 import { env } from "../common/expo/env.ts";
@@ -16,6 +15,7 @@ import { ensureConfigAsync } from "./ensure-config-async.ts";
 import { clearNativeFolder } from "./expo/clear-native-folder.ts";
 import { promptToClearMalformedNativeProjectsAsync } from "./expo/clear-native-folder.ts";
 import { configureProjectAsync } from "./expo/configure-project-async.ts";
+import { updateXcodeProject } from "./expo/inline-modules.ts";
 import {
   assertPlatforms,
   ensureValidPlatforms,
@@ -214,15 +214,26 @@ export async function prebuild(args: {
     // FIXME: handle macOS pod install as well
     const { installCocoaPodsAsync } = await import("../common/expo/cocoapods.js");
 
+    // FIXME: support "ios" and "macos" options
     podsInstalled = await installCocoaPodsAsync(projectRoot);
   } else {
     debug("Skipped pod install");
   }
   const inlineModules = exp.experiments?.inlineModules ?? false;
-  if (inlineModules && platforms.includes("ios")) {
-    await updateXcodeProject(projectRoot, {
-      watchedDirectories: inlineModules.watchedDirectories ?? [],
-    });
+  if (inlineModules) {
+    const watchedDirectories = inlineModules.watchedDirectories ?? [];
+    if (platforms.includes("ios")) {
+      await updateXcodeProject({
+        projectRoot,
+        inlineModulesXcodeParams: { platform: "ios", watchedDirectories },
+      });
+    }
+    if (platforms.includes("macos")) {
+      await updateXcodeProject({
+        projectRoot,
+        inlineModulesXcodeParams: { platform: "macos", watchedDirectories },
+      });
+    }
   }
 
   return {
