@@ -1,15 +1,11 @@
 import type { PackageJSONConfig } from "@expo/config";
-import type { Range as SemverRange } from "semver";
 
 import { getPackageJson } from "@expo/config";
 import chalk from "chalk";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
-import { intersects as semverIntersects } from "semver";
 
-import { isModuleSymlinked } from "../../common/expo/is-module-symlinked.ts";
-import * as Log from "../../common/expo/log.ts";
 import { logNewSection } from "../../common/expo/ora.ts";
 
 export type DependenciesMap = { [key: string]: string | number };
@@ -116,7 +112,7 @@ export function updatePkgDependencies(
     pkg: PackageJSONConfig;
     templatePkg: PackageJSONConfig;
     /** @deprecated Required packages are not overwritten, only added when missing */
-    skipDependencyUpdate?: Array<string> | undefined;
+    skipDependencyUpdate: undefined | Array<string>;
   },
 ): DependenciesModificationResults {
   const { dependencies } = templatePkg;
@@ -139,74 +135,16 @@ export function updatePkgDependencies(
     ...pkg.dependencies,
   });
 
-  // These dependencies are only added, not overwritten from the project
-  const requiredDependencies = [
-    // TODO: This is no longer required because it's this same package.
-    "expo",
-    // TODO: Drop this somehow.
-    "react-native",
-  ].filter((depKey) => !!defaultDependencies[depKey]);
-
-  const symlinkedPackages: [string, string][] = [];
-  const nonRecommendedPackages: [string, string][] = [];
-
-  for (const dependencyKey of requiredDependencies) {
-    // If the local package.json defined the dependency that we want to overwrite...
-    if (pkg.dependencies?.[dependencyKey]) {
-      // Then ensure it isn't symlinked (i.e. the user has a custom version in their yarn workspace).
-      if (isModuleSymlinked(projectRoot, { moduleId: dependencyKey, isSilent: true })) {
-        // If the package is in the project's package.json and it's symlinked, then skip overwriting it.
-        symlinkedPackages.push([
-          `${dependencyKey}`,
-          `${dependencyKey}@${defaultDependencies[dependencyKey]}`,
-        ]);
-        continue;
-      }
-
-      // Do not modify manually skipped dependencies
-      if (skipDependencyUpdate.includes(dependencyKey)) {
-        continue;
-      }
-
-      // Warn users for outdated dependencies when prebuilding
-      const hasRecommendedVersion = versionRangesIntersect(
-        pkg.dependencies[dependencyKey],
-        String(defaultDependencies[dependencyKey]),
-        true,
-      );
-      if (!hasRecommendedVersion) {
-        nonRecommendedPackages.push([
-          `${dependencyKey}@${pkg.dependencies[dependencyKey]}`,
-          `${dependencyKey}@${defaultDependencies[dependencyKey]}`,
-        ]);
-      }
-    }
-  }
-
-  if (symlinkedPackages.length) {
-    symlinkedPackages.forEach(([current, recommended]) => {
-      Log.log(
-        `\u203A Using symlinked ${chalk.bold(current)} instead of recommended ${chalk.bold(recommended)}.`,
-      );
-    });
-  }
-
-  if (nonRecommendedPackages.length) {
-    nonRecommendedPackages.forEach(([current, recommended]) => {
-      Log.warn(
-        `\u203A Using ${chalk.bold(current)} instead of recommended ${chalk.bold(recommended)}.`,
-      );
-    });
-  }
-
-  // Only change the dependencies if the normalized hash changes, this helps to reduce meaningless changes.
+  // Only change the dependencies if the normalized hash changes, this helps to
+  // reduce meaningless changes.
   const hasNewDependencies =
     hashForDependencyMap(pkg.dependencies) !== hashForDependencyMap(combinedDependencies);
   // Save the dependencies
   let changedDependencies: string[] = [];
   if (hasNewDependencies) {
     changedDependencies = diffKeys(combinedDependencies, pkg.dependencies ?? {}).sort();
-    // Use Object.assign to preserve the original order of dependencies, this makes it easier to see what changed in the git diff.
+    // Use Object.assign to preserve the original order of dependencies, this
+    // makes it easier to see what changed in the git diff.
     pkg.dependencies = Object.assign(pkg.dependencies ?? {}, combinedDependencies);
   }
 
@@ -286,20 +224,4 @@ export function hashForDependencyMap(deps: DependenciesMap = {}): string {
 export function createFileHash(contents: string): string {
   // this doesn't need to be secure, the shorter the better.
   return crypto.createHash("sha1").update(contents).digest("hex");
-}
-
-/**
- * Determine if two semver ranges are overlapping or intersecting.
- * This is a safe version of `semver.intersects` that does not throw.
- */
-function versionRangesIntersect(
-  rangeA: string | SemverRange,
-  rangeB: string | SemverRange,
-  includePrerelease: boolean = false,
-) {
-  try {
-    return semverIntersects(rangeA, rangeB, { includePrerelease });
-  } catch {
-    return false;
-  }
 }
