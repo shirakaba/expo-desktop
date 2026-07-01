@@ -15,12 +15,11 @@ export class CommandError extends Error {
   name = "CommandError";
   readonly isCommandError = true;
   [prop: string]: unknown;
+  readonly code: string;
 
-  constructor(
-    public code: string,
-    message: string = "",
-  ) {
+  constructor(code: string, message: string = "") {
     super("");
+    this.code = code;
     // If e.toString() was called to get `message` we don't want it to look
     // like "Error: Error:".
     if (message.startsWith(ERROR_PREFIX)) {
