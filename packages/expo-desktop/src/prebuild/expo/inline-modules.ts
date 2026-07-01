@@ -1,6 +1,10 @@
-import { MacOSConfig } from "expo-desktop-config-plugins";
 import fs from "node:fs";
+import { createRequire } from "node:module";
 import path from "node:path";
+
+const require = createRequire(import.meta.url);
+const { MacOSConfig } =
+  require("expo-desktop-config-plugins") as typeof import("expo-desktop-config-plugins");
 
 export interface InlineModulesXcodeParams {
   platform: "ios" | "macos";

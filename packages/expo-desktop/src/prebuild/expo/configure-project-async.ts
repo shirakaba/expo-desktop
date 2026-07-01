@@ -1,7 +1,12 @@
 import type { ExpoConfig } from "@expo/config";
 
-import { compileModsAsync } from "expo-desktop-config-plugins";
-import { getPrebuildConfigAsync } from "expo-desktop-prebuild-config";
+import { createRequire } from "node:module";
+
+const require = createRequire(import.meta.url);
+const { compileModsAsync } =
+  require("expo-desktop-config-plugins") as typeof import("expo-desktop-config-plugins");
+const { getPrebuildConfigAsync } =
+  require("expo-desktop-prebuild-config") as typeof import("expo-desktop-prebuild-config");
 
 import { env } from "../../common/expo/env.ts";
 import * as Log from "../../common/expo/log.ts";
