@@ -9,9 +9,10 @@ import crypto from "node:crypto";
 
 import { attemptModification } from "./modify-config-async.ts";
 import {
+  assertValidAndroidNamespace,
   assertValidBundleId,
   assertValidGuid,
-  assertValidNamespace,
+  assertValidWindowsNamespace,
 } from "./validate-application-id.ts";
 
 /** Ensure config is written, and prompts for application identifiers. */
@@ -122,7 +123,7 @@ export async function getOrPromptForPackageAsync(
 ): Promise<string> {
   const current = (exp as ExpoConfig).android?.package;
   if (current) {
-    assertValidNamespace(current);
+    assertValidAndroidNamespace(current);
     return current;
   }
 
@@ -171,7 +172,7 @@ export async function getOrPromptForNamespaceAsync(
 ): Promise<string> {
   const current = (exp as ExpoConfig & { windows: { namespace: string } }).windows?.namespace;
   if (current) {
-    assertValidNamespace(current);
+    assertValidWindowsNamespace(current);
     return current;
   }
 

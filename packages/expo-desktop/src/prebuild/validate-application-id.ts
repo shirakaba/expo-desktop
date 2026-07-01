@@ -2,6 +2,7 @@ import assert from "node:assert";
 
 // TODO: Adjust to indicate that the bundle identifier must start with a letter, period, or hyphen.
 const MACOS_BUNDLE_ID_REGEX = /^[a-zA-Z0-9-.]+$/;
+const ANDROID_NAMESPACE_REGEX = /^[a-zA-Z0-9_.]+$/;
 const WINDOWS_NAMESPACE_REGEX = /^[a-zA-Z0-9.]+$/;
 const UUIDV4_REGEX =
   /[0-9A-Za-z]{8}-[0-9A-Za-z]{4}-4[0-9A-Za-z]{3}-[89ABab][0-9A-Za-z]{3}-[0-9A-Za-z]{12}/;
@@ -19,7 +20,15 @@ export function assertValidBundleId(value: string) {
   );
 }
 
-export function assertValidNamespace(value: string) {
+export function assertValidAndroidNamespace(value: string) {
+  assert.match(
+    value,
+    ANDROID_NAMESPACE_REGEX,
+    `The android.package defined in your Expo config is not formatted properly. Only alphanumeric characters, '_', and '.' are allowed, and each '.' must be followed by a letter.`,
+  );
+}
+
+export function assertValidWindowsNamespace(value: string) {
   assert.match(
     value,
     WINDOWS_NAMESPACE_REGEX,
