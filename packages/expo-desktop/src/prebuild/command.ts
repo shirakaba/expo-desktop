@@ -288,7 +288,7 @@ function resolvePlatformsOption(
     platforms.push("windows");
   }
   if (!platforms.length) {
-    throw new Error("At least one platform must be enabled when syncing");
+    platforms.push("ios", "android", "macos", "windows");
   }
 
   return platforms;
