@@ -20,6 +20,9 @@ const getMonorepoTemplatePath = async () => {
   }
 };
 
+// FIXME: This is logic for working within the expo/expo monorepo and would need
+//        to be adapted for our workflow. Currently I manage the templates in
+//        the expo-desktop-templates repo.
 export async function resolveLocalTemplateAsync({
   templateDirectory,
   projectRoot,

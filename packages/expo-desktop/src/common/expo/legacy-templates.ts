@@ -5,29 +5,13 @@ import { env } from "./env.ts";
 
 export const LEGACY_TEMPLATES = [
   {
-    title: "Default",
-    value: "expo-template-default",
-    description: "includes tools recommended for most app developers",
-  },
-  {
-    title: "Blank",
-    value: "expo-template-blank",
-    description: "a minimal app as clean as an empty canvas",
-  },
-
-  {
     title: "Blank (TypeScript)",
-    value: "expo-template-blank-typescript",
+    value: "expo-desktop-template-blank-typescript",
     description: "blank app with TypeScript enabled",
   },
   {
-    title: "Navigation (TypeScript)",
-    value: "expo-template-tabs",
-    description: "File-based routing with TypeScript enabled",
-  },
-  {
     title: "Blank (Bare)",
-    value: "expo-template-bare-minimum",
+    value: "expo-desktop-template-bare-minimum",
     description: "blank app with the native code exposed (expo prebuild)",
   },
 ];
@@ -48,7 +32,9 @@ export async function promptTemplateAsync() {
 
   if (!answer) {
     console.log();
-    console.log(chalk`Specify the template name, example: {cyan --template expo-template-blank}`);
+    console.log(
+      chalk`Specify the template name, example: {cyan --template expo-desktop-template-blank-typescript}`,
+    );
     console.log();
     process.exit(1);
   }

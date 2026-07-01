@@ -56,10 +56,10 @@ export function splitNpmNameAndTag(npmPackageName: string): [string, string | un
 
 /**
  * Applies known shortcuts to an NPM package name and tag.
- * - If the name is `blank`, `blank-typescript`, `tabs`, or `bare-minimum`, apply the prefix `expo-template-`.
+ * - If the name is `blank`, `blank-typescript`, `tabs`, or `bare-minimum`, apply the prefix `expo-desktop-template-`.
  * - If a tag is a numeric value like `45`, and the name is a known template, then convert the tag to `sdk-X`.
  *
- * @example `blank@45` => `expo-template-blank@sdk-45`
+ * @example `blank@45` => `expo-desktop-template-blank@sdk-45`
  */
 export function getResolvedTemplateName(npmPackageName: string) {
   let [name, tag = "latest"] = splitNpmNameAndTag(npmPackageName);
@@ -68,7 +68,7 @@ export function getResolvedTemplateName(npmPackageName: string) {
     return joinNpmNameAndTag(name, tag);
   }
 
-  const aliasPrefix = "expo-template-";
+  const aliasPrefix = "expo-desktop-template-";
 
   if (ALIASES.includes(aliasPrefix + name)) {
     name = aliasPrefix + name;
