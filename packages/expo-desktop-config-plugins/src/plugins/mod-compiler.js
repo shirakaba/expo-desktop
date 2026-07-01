@@ -164,7 +164,7 @@ async function evalModsAsync(
       debug(`run in order: ${entries.map(([name]) => name).join(", ")}`);
       const platformProjectRoot = path.join(projectRoot, platformName);
       const projectName =
-        platformName === "ios" ? getHackyProjectName(projectRoot, config) : undefined;
+        platformName === "ios" ? getHackyProjectName(projectRoot, platformName, config) : undefined;
 
       for (const [modName, mod] of entries) {
         const modRequest = {
