@@ -6,6 +6,7 @@ import { getPrebuildConfigAsync } from "expo-desktop-prebuild-config";
 import { env } from "../../common/expo/env.ts";
 import * as Log from "../../common/expo/log.ts";
 import {
+  getOrGenerateGuidsAsync,
   getOrPromptForBundleIdentifierAsync,
   getOrPromptForNamespaceAsync,
   getOrPromptForPackageAsync,
@@ -43,8 +44,13 @@ export async function configureProjectAsync(
   bundleIdentifier = bundleIdentifierIos ?? bundleIdentifierMacos;
 
   let windowsNamespace: string | undefined;
+  let windowsPackageGuid: string | undefined;
+  let windowsProjectGuid: string | undefined;
   if (platforms.includes("windows")) {
     windowsNamespace = await getOrPromptForNamespaceAsync(projectRoot, exp);
+    const result = await getOrGenerateGuidsAsync(projectRoot, exp);
+    windowsPackageGuid = result.packageGuid;
+    windowsProjectGuid = result.projectGuid;
   }
 
   let packageName: string | undefined;
@@ -59,6 +65,8 @@ export async function configureProjectAsync(
     bundleIdentifierIos,
     bundleIdentifierMacos,
     windowsNamespace,
+    windowsPackageGuid,
+    windowsProjectGuid,
   });
 
   if (templateChecksum) {

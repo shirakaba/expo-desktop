@@ -1,4 +1,5 @@
 const { getConfig } = require("@expo/config");
+const crypto = require("node:crypto");
 
 const { getAutolinkedPackagesAsync } = require("./getAutolinkedPackages");
 const {
@@ -10,7 +11,7 @@ const {
 const { withMacosExpoPlugins, withWindowsExpoPlugins } = require("./withDefaultPlugins");
 
 /**
- * @typedef {{ displayName?: string | undefined; bundleIdentifier?: string | undefined; bundleIdentifierIos?: string | undefined; bundleIdentifierMacos?: string | undefined; packageName?: string | undefined; windowsNamespace?: string | undefined; platforms: Array<import('@expo/config-plugins').ModPlatform | "macos" | "windows">; bundleEntryFileCandidates?: Array<string> | undefined; }} PrebuildConfigProps
+ * @typedef {{ displayName?: string | undefined; bundleIdentifier?: string | undefined; bundleIdentifierIos?: string | undefined; bundleIdentifierMacos?: string | undefined; packageName?: string | undefined; windowsNamespace?: string | undefined; windowsPackageGuid?: string | undefined; windowsProjectGuid?: string | undefined; platforms: Array<import('@expo/config-plugins').ModPlatform | "macos" | "windows">; bundleEntryFileCandidates?: Array<string> | undefined; }} PrebuildConfigProps
  */
 
 /**
@@ -45,6 +46,8 @@ function getPrebuildConfig(
     bundleIdentifierMacos = bundleIdentifier,
     packageName,
     windowsNamespace,
+    windowsPackageGuid,
+    windowsProjectGuid,
     bundleEntryFileCandidates,
     autolinkedModules,
   },
@@ -112,6 +115,10 @@ function getPrebuildConfig(
     if (!config.windows) config.windows = {};
     config.windows.namespace =
       windowsNamespace ?? config.windows.namespace ?? `com.placeholder.appid`;
+    config.windows.projectGuid =
+      windowsProjectGuid ?? config.windows.projectGuid ?? crypto.randomUUID();
+    config.windows.packageGuid =
+      windowsPackageGuid ?? config.windows.packageGuid ?? crypto.randomUUID();
 
     config = withWindowsExpoPlugins(config, {
       displayName,

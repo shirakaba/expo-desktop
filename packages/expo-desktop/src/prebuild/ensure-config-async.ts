@@ -5,9 +5,14 @@ import { isCancel, log, text } from "@clack/prompts";
 import { getConfig } from "@expo/config";
 import { default as kleur } from "kleur";
 import { grey } from "kleur/colors";
+import crypto from "node:crypto";
 
 import { attemptModification } from "./modify-config-async.ts";
-import { assertValidBundleId, assertValidNamespace } from "./validate-application-id.ts";
+import {
+  assertValidBundleId,
+  assertValidGuid,
+  assertValidNamespace,
+} from "./validate-application-id.ts";
 
 /** Ensure config is written, and prompts for application identifiers. */
 export async function ensureConfigAsync(
@@ -28,9 +33,11 @@ export async function ensureConfigAsync(
 
   if (platforms.includes("windows")) {
     await getOrPromptForNamespaceAsync(projectRoot);
+    await getOrGenerateGuidsAsync(projectRoot);
   }
 
-  // Read config again because prompting for bundle id or package name may have mutated the results.
+  // Read config again because any of the above actions may have mutated the
+  // results.
   return getConfig(projectRoot);
 }
 
@@ -197,4 +204,51 @@ export async function getOrPromptForNamespaceAsync(
   }
 
   return windowsNamespace;
+}
+
+/**
+ * Get the Windows UUID from the Expo config or generate one afresh.
+ */
+export async function getOrGenerateGuidsAsync(
+  projectRoot: string,
+  exp: ExpoConfig = getConfig(projectRoot).exp,
+) {
+  const current = (exp as ExpoConfig & { windows: { projectGuid?: string; packageGuid?: string } })
+    .windows;
+
+  let didGenerateGuid = false;
+
+  let projectGuid = current?.projectGuid;
+  if (projectGuid) {
+    assertValidGuid(projectGuid, "windows.projectGuid");
+  } else {
+    projectGuid = crypto.randomUUID();
+    didGenerateGuid = true;
+  }
+
+  let packageGuid = current?.packageGuid;
+  if (packageGuid) {
+    assertValidGuid(packageGuid, "windows.packageGuid");
+  } else {
+    packageGuid = crypto.randomUUID();
+    didGenerateGuid = true;
+  }
+
+  if (!didGenerateGuid) {
+    return { projectGuid, packageGuid };
+  }
+
+  // Apply the changes to the config.
+  if (
+    await attemptModification(
+      projectRoot,
+      // @ts-expect-error no 'windows' support
+      { windows: { projectGuid, packageGuid } },
+      { windows: { projectGuid, packageGuid } },
+    )
+  ) {
+    log.message(kleur.gray(`\u203A Generated windows projectGuid and/or packageGuid.`));
+  }
+
+  return { projectGuid, packageGuid };
 }

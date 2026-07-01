@@ -3,6 +3,8 @@ import assert from "node:assert";
 // TODO: Adjust to indicate that the bundle identifier must start with a letter, period, or hyphen.
 const MACOS_BUNDLE_ID_REGEX = /^[a-zA-Z0-9-.]+$/;
 const WINDOWS_NAMESPACE_REGEX = /^[a-zA-Z0-9.]+$/;
+const UUIDV4_REGEX =
+  /[0-9A-Za-z]{8}-[0-9A-Za-z]{4}-4[0-9A-Za-z]{3}-[89ABab][0-9A-Za-z]{3}-[0-9A-Za-z]{12}/;
 
 /** Validate a macOS bundle identifier. */
 export function validateBundleId(value: string): boolean {
@@ -22,5 +24,13 @@ export function assertValidNamespace(value: string) {
     value,
     WINDOWS_NAMESPACE_REGEX,
     `The windows.namespace defined in your Expo config is not formatted properly. Only alphanumeric characters and '.' are allowed, and each '.' must be followed by a letter.`,
+  );
+}
+
+export function assertValidGuid(value: string, field: string) {
+  assert.match(
+    value,
+    UUIDV4_REGEX,
+    `The ${field} GUID defined in your Expo config is not formatted properly. Make sure it's a valid UUID v4 value.`,
   );
 }

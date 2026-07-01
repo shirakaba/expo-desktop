@@ -19,6 +19,7 @@ import ora from "ora";
 import type { PackageManagerName } from "./resolve-package-manager.ts";
 
 import packageJson from "../../../package.json" with { type: "json" };
+import { getOrGenerateGuidsAsync } from "../../prebuild/ensure-config-async.ts";
 import { sanitizedName } from "./create-file-transform.ts";
 import { env } from "./env.ts";
 import { downloadAndExtractGitHubRepositoryAsync } from "./github.ts";
@@ -147,8 +148,6 @@ export async function extractAndPrepareTemplateAppAsync({
 
   debug(`Extracting template app (pkg: ${npmPackage}, projectName: ${projectName})`);
 
-  const windowsTemplateStrings = getWindowsTemplateStrings({ name, rnwVersion });
-
   const { type, uri } = resolvePackageModuleId(
     npmPackage || "expo-desktop-template-blank-typescript",
   );
@@ -165,6 +164,22 @@ export async function extractAndPrepareTemplateAppAsync({
     });
   }
 
+  await sanitizeTemplateAsync(projectRoot);
+
+  // TODO: Should we remove this step? It made sense while we had a
+  // single-template model (i.e. blank-typescript had a /windows folder in it),
+  // but now we're doing a step that's redundant with the prebuild step. i.e.
+  // we again ensure these GUIDs are generated and written into the app.json
+  // when we call ensureConfigAsync() and configureProjectAsync().
+  const { packageGuid, projectGuid } = await getOrGenerateGuidsAsync(projectRoot);
+
+  const windowsTemplateStrings = getWindowsTemplateStrings({
+    name,
+    rnwVersion,
+    packageGuid,
+    projectGuid,
+  });
+
   try {
     const files = await getTemplateFilesToRenameAsync({ cwd: projectRoot });
     await renameTemplateAppNameAsync({
@@ -178,20 +193,20 @@ export async function extractAndPrepareTemplateAppAsync({
     throw error;
   }
 
-  await sanitizeTemplateAsync(projectRoot);
-
   return projectRoot;
 }
 
 export function getWindowsTemplateStrings({
+  packageGuid,
+  projectGuid,
   name,
   rnwVersion,
 }: {
+  packageGuid: string;
+  projectGuid: string;
   name: { filesafeName: string; rdns: string };
   rnwVersion: string;
 }) {
-  const projectGuid = crypto.randomUUID();
-  const packageGuid = crypto.randomUUID();
   const namespace = name.rdns.replaceAll(/[-_]/g, "");
   const namespaceCpp = namespace.replaceAll(".", "::");
   const mainComponentName = name.filesafeName;

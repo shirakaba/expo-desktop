@@ -1,6 +1,7 @@
 import type { ExpoConfig, PackageJSONConfig } from "@expo/config";
 
 import chalk from "chalk";
+import assert from "node:assert";
 
 import type { ResolvedTemplateOption } from "./expo/resolve-options.ts";
 
@@ -143,9 +144,35 @@ export async function cloneTemplateAndCopyToProjectAsync({
     });
 
     const name = readAppNameFromConfig(exp);
-    // FIXME: The Windows app's projectGuid and packageGuid will regenerate upon
-    //        each prebuild, which will interfere with submission.
-    const windowsTemplateStrings = getWindowsTemplateStrings({ name, rnwVersion });
+
+    const typedConfig = exp as ExpoConfig & {
+      windows?: { projectGuid?: string; packageGuid?: string };
+    };
+    assert(
+      typedConfig.windows,
+      "Expected windows to have been filled in earlier by ensureConfigAsync().",
+    );
+    assert(
+      typedConfig.windows.packageGuid,
+      "Expected windows.packageGuid to have been filled in earlier by ensureConfigAsync().",
+    );
+    assert(
+      typedConfig.windows.projectGuid,
+      "Expected windows.projectGuid to have been filled in earlier by ensureConfigAsync().",
+    );
+    const { packageGuid, projectGuid } = typedConfig.windows;
+
+    // FIXME: Once the mustache is rendered once (e.g. during create-app)
+    // this function is no good for updating the packageGuid, projectGuid, and
+    // namespace. We need to add that logic to withExpoDesktop() to run at
+    // prebuild time based on values configured in app.json.
+    // packages/expo-desktop-config-plugins/src/plugins/with-expo-desktop.js
+    const windowsTemplateStrings = getWindowsTemplateStrings({
+      name,
+      rnwVersion,
+      packageGuid,
+      projectGuid,
+    });
 
     // TODO(@kitten): This duplicates functionality that `cloneTemplateAsync` can already do
     const files = await getTemplateFilesToRenameAsync({ cwd: projectRoot });

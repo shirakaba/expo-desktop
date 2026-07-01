@@ -28,6 +28,8 @@ module.exports = function withExpoDesktop(config, props) {
   config = withExpoXcodeBuildPhase(config, props);
 
   // Windows-only config plugins
+  // TODO: We need a config plugin for renaming the Windows namespace,
+  // packageGuid, and projectGuid from the app.json.
   config = withExpoAppCpp(config, { windowTitle: props.displayName });
   config = withReactNativeDirs(config, {
     bundleEntryFileCandidates: props.bundleEntryFileCandidates,
