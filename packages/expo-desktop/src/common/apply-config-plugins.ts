@@ -1,3 +1,5 @@
+import type { ModConfig } from "@expo/config-plugins";
+
 import { createRequire } from "node:module";
 
 import { withInternal } from "./with-internal.ts";
@@ -26,7 +28,9 @@ export async function applyConfigPlugins(
   let { exp: expoConfig } = getConfig(projectRoot);
   const { platforms, plugins } = expoConfig;
   if (platforms?.length) {
-    const finalPlatforms = options.platforms.filter((platform) => platforms.includes(platform));
+    const finalPlatforms = options.platforms.filter((platform) =>
+      platforms.includes(platform as keyof ModConfig),
+    );
     if (finalPlatforms.length > 0) {
       options.platforms = finalPlatforms;
     } else {

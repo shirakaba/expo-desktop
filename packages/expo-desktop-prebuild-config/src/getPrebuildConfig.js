@@ -11,7 +11,7 @@ const {
 const { withMacosExpoPlugins, withWindowsExpoPlugins } = require("./withDefaultPlugins");
 
 /**
- * @typedef {{ displayName?: string | undefined; bundleIdentifier?: string | undefined; bundleIdentifierIos?: string | undefined; bundleIdentifierMacos?: string | undefined; packageName?: string | undefined; windowsNamespace?: string | undefined; windowsPackageGuid?: string | undefined; windowsProjectGuid?: string | undefined; platforms: Array<import('@expo/config-plugins').ModPlatform | "macos" | "windows">; bundleEntryFileCandidates?: Array<string> | undefined; }} PrebuildConfigProps
+ * @typedef {{ displayName?: string | undefined; filesafeName?: string | undefined; bundleIdentifier?: string | undefined; bundleIdentifierIos?: string | undefined; bundleIdentifierMacos?: string | undefined; packageName?: string | undefined; windowsNamespace?: string | undefined; windowsPackageGuid?: string | undefined; windowsProjectGuid?: string | undefined; platforms: Array<import('@expo/config-plugins').ModPlatform | "macos" | "windows">; bundleEntryFileCandidates?: Array<string> | undefined; }} PrebuildConfigProps
  */
 
 /**
@@ -41,6 +41,7 @@ function getPrebuildConfig(
   {
     platforms,
     displayName,
+    filesafeName,
     bundleIdentifier,
     bundleIdentifierIos = bundleIdentifier,
     bundleIdentifierMacos = bundleIdentifier,
@@ -122,7 +123,11 @@ function getPrebuildConfig(
 
     config = withWindowsExpoPlugins(config, {
       displayName,
+      filesafeName,
       bundleEntryFileCandidates,
+      windowsNamespace,
+      windowsPackageGuid,
+      windowsProjectGuid,
     });
   }
 
