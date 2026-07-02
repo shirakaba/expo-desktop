@@ -13,6 +13,7 @@ import * as Log from "../../common/expo/log.ts";
 import {
   getOrGenerateGuidsAsync,
   getOrPromptForBundleIdentifierAsync,
+  getOrPromptForDisplayNameAsync,
   getOrPromptForNamespaceAsync,
   getOrPromptForPackageAsync,
 } from "../ensure-config-async.ts";
@@ -63,12 +64,15 @@ export async function configureProjectAsync(
     packageName = await getOrPromptForPackageAsync(projectRoot, exp);
   }
 
+  const displayName = await getOrPromptForDisplayNameAsync(projectRoot, exp);
+
   let { exp: config } = await getPrebuildConfigAsync(projectRoot, {
     platforms,
     packageName,
     bundleIdentifier,
     bundleIdentifierIos,
     bundleIdentifierMacos,
+    displayName,
     windowsNamespace,
     windowsPackageGuid,
     windowsProjectGuid,

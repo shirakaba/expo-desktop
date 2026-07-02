@@ -7,6 +7,7 @@ import { default as kleur } from "kleur";
 import { grey } from "kleur/colors";
 import crypto from "node:crypto";
 
+import { readAppNameFromConfig } from "../common/read-app-name-from-config.ts";
 import { attemptModification } from "./modify-config-async.ts";
 import {
   assertValidAndroidNamespace,
@@ -106,6 +107,75 @@ export async function getOrPromptForBundleIdentifierAsync(
   }
 
   return bundleIdentifier;
+}
+
+/**
+ * Get the display name from the Expo config, or prompt the user to choose one.
+ *
+ * If the project Expo config is a static JSON file, the display name will be
+ * updated in the config automatically.
+ */
+export async function getOrPromptForDisplayNameAsync(
+  projectRoot: string,
+  exp: ExpoConfig = getConfig(projectRoot).exp,
+): Promise<string> {
+  const { displayName: current } = readAppNameFromConfig(exp);
+
+  if (current) {
+    return current;
+  }
+
+  const displayName = await text({
+    message: `Please provide the ${kleur.bold("display name")} for the app. ${grey("(Examples: 'My App 123', '俺のアプリ')")}`,
+    placeholder: "My App",
+    initialValue: "My App",
+    validate(value) {
+      if (!value?.length) {
+        return "Must be at least one character long.";
+      }
+    },
+  });
+  if (isCancel(displayName)) {
+    process.exit(0);
+  }
+
+  const existingPlugins = exp.plugins ?? [];
+  const existingIndex = existingPlugins.findIndex(
+    (plugin) => plugin[0] === "expo-desktop-config-plugins",
+  );
+  const leading = existingIndex === -1 ? [] : existingPlugins.slice(0, existingIndex);
+  const existingProps = existingIndex === -1 ? {} : (existingPlugins[existingIndex][1] ?? {});
+  const trailing =
+    existingIndex === -1 ? existingPlugins : existingPlugins.slice(existingIndex + 1);
+
+  // Apply the changes to the config.
+  if (
+    await attemptModification(
+      projectRoot,
+      {
+        plugins: [
+          ...leading,
+          ["expo-desktop-config-plugins", { ...existingProps, displayName }],
+          ...trailing,
+        ],
+      },
+      {
+        plugins: [
+          ...leading,
+          ["expo-desktop-config-plugins", { ...existingProps, displayName }],
+          ...trailing,
+        ],
+      },
+    )
+  ) {
+    log.message(
+      kleur.gray(
+        `\u203A ${existingIndex === -1 ? "Added" : "Updated"} "expo-desktop-config-plugins" with "displayName" prop`,
+      ),
+    );
+  }
+
+  return displayName;
 }
 
 /**
