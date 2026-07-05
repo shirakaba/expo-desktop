@@ -95,6 +95,29 @@ function updateProjTemplateStrings(
     { "#text": `..\\${filesafeName}\\${filesafeName}.vcxproj` },
   ];
 
+  // 6. Find <ItemGroup> ... <ProjectReference>
+  const ItemGroupForProjectReference = Project.find(({ ItemGroup }) =>
+    ItemGroup?.find(({ ProjectReference }) => !!ProjectReference),
+  );
+  if (!ItemGroupForProjectReference) {
+    throw new Error(
+      "Expected there to be a <ItemGroup> element inside the <Project>, with a <ProjectReference> member.",
+    );
+  }
+
+  // 7. Filter all <ProjectReference> elements
+  const ChildrenWithProjectReference = ItemGroupForProjectReference.ItemGroup?.filter(
+    ({ ProjectReference }) => !!ProjectReference,
+  );
+  if (!ChildrenWithProjectReference.length) {
+    throw new Error(
+      "Expected there to be at least one <ProjectReference> child within an <ItemGroup>.",
+    );
+  }
+  for (const child of ChildrenWithProjectReference) {
+    child[":@"]["@_Include"] = `..\\${filesafeName}\\${filesafeName}.vcxproj`;
+  }
+
   return config;
 }
 
