@@ -115,6 +115,30 @@ const defaultProviders = {
       await fsPromises.writeFile(filePath, output);
     },
   }),
+  appxmanifest: provider({
+    isIntrospective: true,
+    getFilePath({ modRequest: { projectRoot } }) {
+      return Paths.getAppxManifestFilePath({ projectRoot, filesafeName: undefined });
+    },
+    async read(filePath) {
+      const data = await fsPromises.readFile(filePath, "utf-8");
+      return new XMLParser(losslessXmlParserOptions).parse(data);
+    },
+    async write(filePath, { modRequest: { introspect }, modResults }) {
+      const builder = new XMLBuilder(losslessXmlBuilderOptions);
+      let output = builder.build(modResults);
+      // XMLBuilder writes out `&pos;` even if we special-case it in
+      // `options.entities`, so I'm resorting to this crude replace as the
+      // lesser evil.
+      output = output.replaceAll("&apos;", "'");
+
+      // Return early without writing, in introspection mode.
+      if (introspect) {
+        return;
+      }
+      await fsPromises.writeFile(filePath, output);
+    },
+  }),
 };
 
 /**

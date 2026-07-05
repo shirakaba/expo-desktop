@@ -105,6 +105,30 @@ function getWapprojFilePath({ projectRoot, filesafeName }) {
 }
 
 /**
+ * Gets the path to MyApp.Package/Package.appxmanifest (where "MyApp" may vary
+ * based on filesafeName).
+ *
+ * @param {object} params
+ * @param {string} params.projectRoot
+ * @param {string | undefined} params.filesafeName - An explicit filesafe name,
+ * otherwise will try to infer it based on the name of the vcxproj.
+ */
+function getAppxManifestFilePath({ projectRoot, filesafeName }) {
+  // TODO: Take filesafeName as a mandatory parameter via app.json or config
+  //       plugin arg, rather than accessing the file system to deduce it.
+  const fileSafeNameResolved =
+    filesafeName ??
+    path.basename(getVcxprojFilePath({ projectRoot, filesafeName: undefined }), ".vcxproj");
+
+  return path.resolve(
+    projectRoot,
+    "windows",
+    `${fileSafeNameResolved}.Package`,
+    "Package.appxmanifest",
+  );
+}
+
+/**
  * Globs for a file `${filesafeName}${extension}`, e.g. "MyApp.cpp". Accepts
  * either an explicit filesafe name (e.g. "MyApp"), or `undefined`, in which
  * case it infers the filesafe name from the vcxproj (e.g. "MyApp.vcxproj" ->
@@ -209,3 +233,4 @@ exports.getFileInfo = getFileInfo;
 exports.getLanguage = getLanguage;
 exports.getVcxprojFilePath = getVcxprojFilePath;
 exports.getWapprojFilePath = getWapprojFilePath;
+exports.getAppxManifestFilePath = getAppxManifestFilePath;

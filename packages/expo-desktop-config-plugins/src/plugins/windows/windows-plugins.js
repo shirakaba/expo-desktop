@@ -71,3 +71,21 @@ const withWapproj = (config, action) => {
   });
 };
 exports.withWapproj = withWapproj;
+
+/**
+ * A mod to update the app's wapproj. Called MyApp.Package/Package.appxmanifest in the
+ * cpp-app template.
+ *
+ * @param {ExportedConfig} config
+ * @param {Mod<ReturnType<import("fast-xml-parser").XMLParser["parse"]>>} action
+ *
+ * @see https://github.com/microsoft/react-native-windows/blob/cdca047ea950fb061c04ca09e2d172fef5811e02/vnext/templates/cpp-app/windows/MyApp.Package/MyApp.Package/Package.appxmanifest
+ */
+const withAppxManifest = (config, action) => {
+  return withMod(config, {
+    platform: "windows",
+    mod: "appxmanifest",
+    action,
+  });
+};
+exports.withAppxManifest = withAppxManifest;
