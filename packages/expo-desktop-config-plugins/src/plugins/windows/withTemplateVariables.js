@@ -7,8 +7,13 @@ const { withAppxManifest, withWapproj } = require("./windows-plugins");
  * @type {import("@expo/config-plugins").ConfigPlugin<{ displayName?: string | undefined; filesafeName?: string | undefined; windowsNamespace?: string | undefined; windowsPackageGuid?: string | undefined; windowsProjectGuid?: string | undefined; }>}
  */
 function withTemplateVariables(config, props) {
+  // TODO: fill in template strings for the Vcxproj:
+  //       - ProjectGuid
+  //       - ProjectName
+  //       - RootNamespace
+
   config = withWapproj(config, (config) =>
-    updateProjTemplateStrings(config, {
+    updateWapprojTemplateStrings(config, {
       displayName: props.displayName,
       filesafeName: props.filesafeName,
       windowsNamespace: props.windowsNamespace,
@@ -36,7 +41,7 @@ module.exports.withTemplateVariables = withTemplateVariables;
  * @param {import("@expo/config-plugins").ExportedConfigWithProps<ReturnType<import("fast-xml-parser").XMLParser["parse"]>>} config
  * @param {{ displayName?: string | undefined; filesafeName?: string | undefined; windowsNamespace?: string | undefined; windowsPackageGuid?: string | undefined; windowsProjectGuid?: string | undefined; }} props
  */
-function updateProjTemplateStrings(
+function updateWapprojTemplateStrings(
   config,
   { filesafeName, windowsNamespace, windowsPackageGuid, windowsProjectGuid },
 ) {
@@ -70,7 +75,9 @@ function updateProjTemplateStrings(
   if (!ChildWithProjectGuid) {
     throw new Error("Expected there to be a <ProjectGuid> child within the <PropertyGroup>.");
   }
-  ChildWithProjectGuid.ProjectGuid = [{ "#text": windowsProjectGuid.toLowerCase() }];
+  // Although the field is called ProjectGuid, this is the WAP project, so it's
+  // the "package" GUID we want in this case.
+  ChildWithProjectGuid.ProjectGuid = [{ "#text": windowsPackageGuid.toLowerCase() }];
 
   // 4. Find <PropertyGroup> ... <EntryPointProjectUniqueName>
   const PropertyGroupForEntryPoint = Project.find(({ PropertyGroup }) =>
