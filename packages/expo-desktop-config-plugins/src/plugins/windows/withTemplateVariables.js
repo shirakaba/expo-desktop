@@ -38,7 +38,7 @@ module.exports.withTemplateVariables = withTemplateVariables;
  */
 function updateProjTemplateStrings(
   config,
-  { windowsNamespace, windowsPackageGuid, windowsProjectGuid },
+  { filesafeName, windowsNamespace, windowsPackageGuid, windowsProjectGuid },
 ) {
   // 1. Find <Project>
   if (!Array.isArray(config.modResults)) {
@@ -53,6 +53,7 @@ function updateProjTemplateStrings(
     throw new Error("Expected <Project> element to be an array.");
   }
 
+  // 2. Find <PropertyGroup> ... <ProjectGuid>
   const PropertyGroupForProjectGuid = Project.find(({ PropertyGroup }) =>
     PropertyGroup?.find(({ ProjectGuid }) => !!ProjectGuid),
   );
@@ -62,14 +63,37 @@ function updateProjTemplateStrings(
     );
   }
 
+  // 3. Find the <ProjectGuid>
   const ChildWithProjectGuid = PropertyGroupForProjectGuid.PropertyGroup?.find(
     ({ ProjectGuid }) => !!ProjectGuid,
   );
   if (!ChildWithProjectGuid) {
     throw new Error("Expected there to be a <ProjectGuid> child within the <PropertyGroup>.");
   }
-
   ChildWithProjectGuid.ProjectGuid = [{ "#text": windowsProjectGuid.toLowerCase() }];
+
+  // 4. Find <PropertyGroup> ... <EntryPointProjectUniqueName>
+  const PropertyGroupForEntryPoint = Project.find(({ PropertyGroup }) =>
+    PropertyGroup?.find(({ EntryPointProjectUniqueName }) => !!EntryPointProjectUniqueName),
+  );
+  if (!PropertyGroupForEntryPoint) {
+    throw new Error(
+      "Expected there to be a <PropertyGroup> element inside the <Project>, with a <EntryPointProjectUniqueName> member.",
+    );
+  }
+
+  // 5. Find the <EntryPointProjectUniqueName>
+  const ChildWithEntryPoint = PropertyGroupForProjectGuid.PropertyGroup?.find(
+    ({ EntryPointProjectUniqueName }) => !!EntryPointProjectUniqueName,
+  );
+  if (!ChildWithEntryPoint) {
+    throw new Error(
+      "Expected there to be a <EntryPointProjectUniqueName> child within the <PropertyGroup>.",
+    );
+  }
+  ChildWithEntryPoint.EntryPointProjectUniqueName = [
+    { "#text": `..\\${filesafeName}\\${filesafeName}.vcxproj` },
+  ];
 
   return config;
 }
