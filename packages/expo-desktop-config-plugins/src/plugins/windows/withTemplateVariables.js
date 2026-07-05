@@ -39,18 +39,23 @@ function updateProjProps(config, { windowsNamespace, windowsPackageGuid, windows
     throw new Error("Expected <Project> element to be an array.");
   }
 
-  // // 2. Find <PropertyGroup Label="ReactNativeWindowsProps">
-  // const ReactNativeWindowsProps = Project.find(
-  //   (element) =>
-  //     "PropertyGroup" in element &&
-  //     Array.isArray(element.PropertyGroup) &&
-  //     element[":@"]?.["@_Label"] === "ReactNativeWindowsProps",
-  // )?.PropertyGroup;
-  // if (!ReactNativeWindowsProps) {
-  //   throw new Error(
-  //     'Expected there to be a <PropertyGroup Label="ReactNativeWindowsProps"> element inside the <Project>.',
-  //   );
-  // }
+  const PropertyGroupForProjectGuid = Project.find(({ PropertyGroup }) =>
+    PropertyGroup?.find(({ ProjectGuid }) => !!ProjectGuid),
+  );
+  if (!PropertyGroupForProjectGuid) {
+    throw new Error(
+      "Expected there to be a <PropertyGroup> element inside the <Project>, with a <ProjectGuid> member.",
+    );
+  }
+
+  const ChildWithProjectGuid = PropertyGroupForProjectGuid.PropertyGroup?.find(
+    ({ ProjectGuid }) => !!ProjectGuid,
+  );
+  if (!ChildWithProjectGuid) {
+    throw new Error("Expected there to be a <ProjectGuid> child within the <PropertyGroup>.");
+  }
+
+  ChildWithProjectGuid.ProjectGuid = [{ "#text": windowsProjectGuid.toLowerCase() }];
 
   return config;
 }
