@@ -36,6 +36,7 @@ module.exports = function withExpoDesktop(config, props) {
     bundleEntryFileCandidates: props.bundleEntryFileCandidates,
   });
   config = withTemplateVariables(config, {
+    displayName: props.displayName,
     filesafeName: props.filesafeName,
     windowsNamespace: props.windowsNamespace,
     windowsPackageGuid: props.windowsPackageGuid,
