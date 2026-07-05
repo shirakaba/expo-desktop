@@ -7,6 +7,8 @@ export function readAppNameFromConfig(expoConfig: ExpoConfig) {
     (plugin) => Array.isArray(plugin) && plugin[0] === "expo-desktop-config-plugins",
   )?.[1] as { displayName?: string; bundleIdentifier?: string } | undefined;
 
+  // FIXME: we should be stricter here. If the display name hasn't been provided
+  //        explicitly, Expo Desktop should require that it be provided.
   const displayName: string =
     expoDesktopConfigPluginsArgs?.displayName ??
     typedConfig.ios?.infoPlist?.CFBundleName ??
