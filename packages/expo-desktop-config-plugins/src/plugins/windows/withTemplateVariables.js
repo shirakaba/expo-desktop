@@ -1,4 +1,4 @@
-const { withAppxManifest, withSln, withWapproj } = require("./windows-plugins");
+const { withAppxManifest, withSln, withVcxproj, withWapproj } = require("./windows-plugins");
 
 /**
  * @typedef {{ displayName: string; filesafeName: string; windowsNamespace: string; windowsPackageGuid: string; windowsProjectGuid: string }} TemplateVariables
@@ -16,8 +16,20 @@ function withTemplateVariables(config, props) {
   //       - ProjectName
   //       - RootNamespace
 
+  console.log("sanity!");
+
   config = withWapproj(config, (config) =>
     updateWapprojTemplateStrings(config, {
+      displayName: props.displayName,
+      filesafeName: props.filesafeName,
+      windowsNamespace: props.windowsNamespace,
+      windowsPackageGuid: props.windowsPackageGuid,
+      windowsProjectGuid: props.windowsProjectGuid,
+    }),
+  );
+
+  config = withVcxproj(config, (config) =>
+    updateVcxprojTemplateStrings(config, {
       displayName: props.displayName,
       filesafeName: props.filesafeName,
       windowsNamespace: props.windowsNamespace,
@@ -51,7 +63,7 @@ function withTemplateVariables(config, props) {
 module.exports.withTemplateVariables = withTemplateVariables;
 
 /**
- * Update the ProjectGuid in a .vcxproj or .wapproj.
+ * Update the template variables in a .wapproj.
  * @param {import("@expo/config-plugins").ExportedConfigWithProps<ReturnType<import("fast-xml-parser").XMLParser["parse"]>>} config
  * @param {TemplateVariables} props
  */
@@ -138,6 +150,115 @@ function updateWapprojTemplateStrings(
   for (const child of ChildrenWithProjectReference) {
     child[":@"]["@_Include"] = `..\\${filesafeName}\\${filesafeName}.vcxproj`;
   }
+
+  return config;
+}
+
+/**
+ * Update the template variables in a .vcxproj.
+ * @param {import("@expo/config-plugins").ExportedConfigWithProps<ReturnType<import("fast-xml-parser").XMLParser["parse"]>>} config
+ * @param {TemplateVariables} props
+ */
+function updateVcxprojTemplateStrings(
+  config,
+  { filesafeName, windowsNamespace, windowsPackageGuid, windowsProjectGuid },
+) {
+  // 1. Find <Project>
+  if (!Array.isArray(config.modResults)) {
+    throw new Error("Expected parsed XML to be an array.");
+  }
+  const projectContainer = config.modResults.find((element) => "Project" in element);
+  if (!projectContainer) {
+    throw new Error("Expected parsed XML contain a <Project> element.");
+  }
+  const { Project } = projectContainer;
+  if (!Array.isArray(Project)) {
+    throw new Error("Expected <Project> element to be an array.");
+  }
+
+  // 2. Find <PropertyGroup Label="Globals">
+  const PropertyGroupGlobals = Project.find(
+    ({ PropertyGroup, [":@"]: attributes }) =>
+      !!PropertyGroup && attributes?.["@_Label"] === "Globals",
+  )?.PropertyGroup;
+  if (!PropertyGroupGlobals) {
+    throw new Error(
+      'Expected there to be a <PropertyGroup Label="Globals"> element inside the <Project>.',
+    );
+  }
+
+  // 3. Find the <ProjectGuid>
+  const ProjectGuid = PropertyGroupGlobals.find(({ ProjectGuid }) => !!ProjectGuid);
+  if (!ProjectGuid) {
+    throw new Error(
+      'Expected there to be a <ProjectGuid> element inside the <PropertyGroup Label="Globals">.',
+    );
+  }
+  ProjectGuid.ProjectGuid = [{ "#text": `{${windowsProjectGuid.toUpperCase()}}` }];
+
+  // 4. Find the <ProjectName>
+  const ProjectName = PropertyGroupGlobals.find(({ ProjectName }) => !!ProjectName);
+  if (!ProjectName) {
+    throw new Error(
+      'Expected there to be a <ProjectName> element inside the <PropertyGroup Label="Globals">.',
+    );
+  }
+  ProjectName.ProjectName = [{ "#text": filesafeName }];
+
+  // 5. Find the <RootNamespace>
+  const RootNamespace = PropertyGroupGlobals.find(({ RootNamespace }) => !!RootNamespace);
+  if (!RootNamespace) {
+    throw new Error(
+      'Expected there to be a <RootNamespace> element inside the <PropertyGroup Label="Globals">.',
+    );
+  }
+  RootNamespace.RootNamespace = [{ "#text": windowsNamespace }];
+
+  // 6. Find the <ItemGroup> ... <ResourceCompile>
+  const ItemGroupForResourceCompile = Project.find(({ ItemGroup }) =>
+    ItemGroup?.find(({ ResourceCompile }) => !!ResourceCompile),
+  )?.ItemGroup;
+  if (!ItemGroupForResourceCompile) {
+    throw new Error(
+      "Expected there to be a <ItemGroup> element inside the <Project>, with a <ResourceCompile> member.",
+    );
+  }
+
+  // 7. Set the <ResourceCompile> "Include" attribute
+  const ResourceCompile = ItemGroupForResourceCompile.find(
+    ({ ResourceCompile, ":@": attributes }) =>
+      !!ResourceCompile && attributes["@_Include"]?.endsWith(".rc"),
+  );
+  if (!ResourceCompile) {
+    throw new Error(
+      "Expected there to be at least one <ResourceCompile> child within an <ItemGroup>.",
+    );
+  }
+  ResourceCompile[":@"]["@_Include"] = `${filesafeName}.rc`;
+
+  // 8. Find the <ItemGroup> ... <Image>
+  const ItemGroupForImage = Project.find(({ ItemGroup }) =>
+    ItemGroup?.find(({ Image }) => !!Image),
+  )?.ItemGroup;
+  if (!ItemGroupForImage) {
+    throw new Error(
+      "Expected there to be a <ItemGroup> element inside the <Project>, with a <Image> member.",
+    );
+  }
+
+  // 8. Find the <Image Include="MyApp.ico">
+  const Image = ItemGroupForImage.filter(
+    ({ Image, ":@": attributes }) =>
+      !!Image &&
+      attributes["@_Include"]?.endsWith(".ico") &&
+      attributes["@_Include"] !== "small.ico",
+  );
+  if (Image.length !== 1) {
+    throw new Error(
+      `Expected there to be exactly two <Image> members - one which includes small.ico, and the other with a variable name based on your app. Instead, got: ${JSON.stringify(Image.map(({ ":@": attributes }) => attributes?.["@_Include"]))}`,
+    );
+  }
+  Image[0][":@"]["@_Include"] = `${filesafeName}.ico`;
 
   return config;
 }
