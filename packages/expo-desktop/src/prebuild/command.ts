@@ -95,7 +95,7 @@ export async function prebuild(args: {
   }
 
   if (options.clean) {
-    const { maybeBailOnGitStatusAsync } = await import("../common/expo/git-cli.js");
+    const { maybeBailOnGitStatusAsync } = await import("../common/expo/git-cli.ts");
     // Clean the project folders...
     if (await maybeBailOnGitStatusAsync()) {
       return null;
@@ -218,7 +218,7 @@ export async function prebuild(args: {
   // err towards running pod install less because it's slow and users can easily
   // run npx pod-install afterwards.
   if (shouldPodInstallForIos || shouldPodInstallForMacos) {
-    const { installCocoaPodsAsync } = await import("../common/expo/cocoapods.js");
+    const { installCocoaPodsAsync } = await import("../common/expo/cocoapods.ts");
 
     if (shouldPodInstallForIos) {
       podsInstalledIos = await installCocoaPodsAsync(projectRoot, "ios");
