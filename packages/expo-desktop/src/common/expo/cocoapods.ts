@@ -5,6 +5,7 @@ import { getPackageJson } from "@expo/config";
 import * as PackageManager from "@expo/package-manager";
 import chalk from "chalk";
 import fs from "node:fs";
+import { createRequire } from "node:module";
 import path from "node:path";
 
 import { hashForDependencyMap } from "../../prebuild/expo/update-package-json.ts";
@@ -14,6 +15,7 @@ import { AbortCommandError } from "./error.ts";
 import * as Log from "./log.ts";
 import { logNewSection } from "./ora.ts";
 
+const require = createRequire(import.meta.url);
 const JsonFile = (require("@expo/json-file") as typeof JsonFileType).default;
 
 type PackageChecksums = {
