@@ -211,6 +211,20 @@ export function updatePkgScripts({ pkg }: { pkg: PackageJSONConfig }) {
     pkg.scripts.ios = "expo run:ios";
     hasChanged = true;
   }
+  if (
+    pkg.scripts.macos ===
+    "node -e \"console.log('Please run `npx expo-desktop prebuild` to set up the React Native macOS project.'); process.exit(1);\""
+  ) {
+    pkg.scripts.macos = "rnc-cli run-macos";
+    hasChanged = true;
+  }
+  if (
+    pkg.scripts.windows ===
+    "node -e \"console.log('Please run `npx expo-desktop prebuild` to set up the React Native Windows project.'); process.exit(1);\""
+  ) {
+    pkg.scripts.windows = "rnc-cli run-windows";
+    hasChanged = true;
+  }
   return hasChanged;
 }
 

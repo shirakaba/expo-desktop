@@ -549,25 +549,34 @@ export async function sanitizeTemplateAsync(projectRoot: string) {
   if (
     (typeof packageJson.scripts === "object" || packageJson.scripts == null) &&
     !(packageJson.scripts as JSONObject)?.android &&
-    !(packageJson.scripts as JSONObject)?.ios
+    !(packageJson.scripts as JSONObject)?.ios &&
+    !(packageJson.scripts as JSONObject)?.macos &&
+    !(packageJson.scripts as JSONObject)?.windows
   ) {
     // When we're creating a template that:
-    // - does not have ios/android scripts
+    // - does not have ios/android/macos/windows scripts
     // - doesn't have native codes
     // - has native folders ignored
-    // we automatically add ios/android scripts since prebuild will likely trigger, and used to add these scripts automatically
-    // but doesn't anymore
+    // we automatically add ios/android/macos/windows scripts since prebuild
+    // will likely trigger, and used to add these scripts automatically but
+    // doesn't anymore
     if (templateHasNativeCode(projectRoot)) {
       packageJson.scripts = {
         ...packageJson.scripts,
         android: "expo run:android",
         ios: "expo run:ios",
+        macos: "rnc-cli run-macos",
+        windows: "rnc-cli run-windows",
       };
     } else if (nativeFoldersIgnored) {
       packageJson.scripts = {
         ...packageJson.scripts,
         android: "expo start --android",
         ios: "expo start --ios",
+        macos:
+          "node -e \"console.log('Please run `npx expo-desktop prebuild` to set up the React Native macOS project.'); process.exit(1);\"",
+        windows:
+          "node -e \"console.log('Please run `npx expo-desktop prebuild` to set up the React Native Windows project.'); process.exit(1);\"",
       };
     } else {
       // By default we don't do anything since we don't know if `start` or `run:*` are good defaults
