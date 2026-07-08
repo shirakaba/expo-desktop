@@ -62,8 +62,7 @@ export async function configAsync(projectRoot: string, options: Options) {
     });
   } else if (options.type === "introspect") {
     const { getPrebuildConfigAsync } = await import("expo-desktop-prebuild-config");
-    const { compileModsAsync } =
-      await import("expo-desktop-config-plugins/src/plugins/mod-compiler.js");
+    const { compileModsAsync } = await import("expo-desktop-config-plugins/plugins/mod-compiler");
 
     config = await getPrebuildConfigAsync(projectRoot, {
       platforms: ["ios", "android", "macos", "windows"],
