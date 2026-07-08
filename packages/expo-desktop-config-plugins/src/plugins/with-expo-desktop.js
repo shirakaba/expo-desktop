@@ -12,7 +12,8 @@ const { withTemplateVariables } = require("./windows/withTemplateVariables");
  * @type {import("@expo/config-plugins").ConfigPlugin<{ displayName: string; filesafeName?: string | undefined; bundleIdentifier?: string; bundleEntryFileCandidates?: Array<string>; windowsNamespace?: string | undefined; windowsPackageGuid?: string | undefined; windowsProjectGuid?: string | undefined; }>}
  */
 module.exports = function withExpoDesktop(config, props) {
-  // TODO: Either make all props optional, or throw error when missing.
+  // FIXME: Either make all props optional, or throw error when missing. Many
+  //        are strictly needed in the case of Windows.
 
   config = withNameSettingsGradle(config, props);
 

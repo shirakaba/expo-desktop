@@ -1,10 +1,14 @@
-const { withAppxManifest, withWapproj } = require("./windows-plugins");
+const { withAppxManifest, withSln, withWapproj } = require("./windows-plugins");
+
+/**
+ * @typedef {{ displayName: string; filesafeName: string; windowsNamespace: string; windowsPackageGuid: string; windowsProjectGuid: string }} TemplateVariables
+ */
 
 /**
  * A config plugin to update a React Native Windows /windows folder with
  * template
  *
- * @type {import("@expo/config-plugins").ConfigPlugin<{ displayName?: string | undefined; filesafeName?: string | undefined; windowsNamespace?: string | undefined; windowsPackageGuid?: string | undefined; windowsProjectGuid?: string | undefined; }>}
+ * @type {import("@expo/config-plugins").ConfigPlugin<TemplateVariables>}
  */
 function withTemplateVariables(config, props) {
   // TODO: fill in template strings for the Vcxproj:
@@ -32,6 +36,16 @@ function withTemplateVariables(config, props) {
     }),
   );
 
+  config = withSln(config, (config) =>
+    updateSlnTemplateStrings(config, {
+      displayName: props.displayName,
+      filesafeName: props.filesafeName,
+      windowsNamespace: props.windowsNamespace,
+      windowsPackageGuid: props.windowsPackageGuid,
+      windowsProjectGuid: props.windowsProjectGuid,
+    }),
+  );
+
   return config;
 }
 module.exports.withTemplateVariables = withTemplateVariables;
@@ -39,7 +53,7 @@ module.exports.withTemplateVariables = withTemplateVariables;
 /**
  * Update the ProjectGuid in a .vcxproj or .wapproj.
  * @param {import("@expo/config-plugins").ExportedConfigWithProps<ReturnType<import("fast-xml-parser").XMLParser["parse"]>>} config
- * @param {{ displayName?: string | undefined; filesafeName?: string | undefined; windowsNamespace?: string | undefined; windowsPackageGuid?: string | undefined; windowsProjectGuid?: string | undefined; }} props
+ * @param {TemplateVariables} props
  */
 function updateWapprojTemplateStrings(
   config,
@@ -131,7 +145,7 @@ function updateWapprojTemplateStrings(
 /**
  * Update the ProjectGuid in a Package.appxmanifest
  * @param {import("@expo/config-plugins").ExportedConfigWithProps<ReturnType<import("fast-xml-parser").XMLParser["parse"]>>} config
- * @param {{ displayName?: string | undefined; filesafeName?: string | undefined; windowsNamespace?: string | undefined; windowsPackageGuid?: string | undefined; windowsProjectGuid?: string | undefined; }} props
+ * @param {TemplateVariables} props
  */
 function updateAppxManifestTemplateStrings(
   config,
@@ -170,3 +184,31 @@ function updateAppxManifestTemplateStrings(
 
   return config;
 }
+
+/**
+ * Update various fields in a MyApp.sln
+ * @param {import("@expo/config-plugins").ExportedConfigWithProps<{ path: string; contents: string; language: "text"; }>} config
+ * @param {TemplateVariables} props
+ */
+function updateSlnTemplateStrings(
+  config,
+  { displayName, filesafeName, windowsNamespace, windowsPackageGuid, windowsProjectGuid },
+) {
+  config.modResults.contents = config.modResults.contents.replace(
+    wapprojPattern,
+    `Project("{C7167F0D-BC9F-4E6E-AFE1-012C56B48DB5}") = "${filesafeName}.Package", "${filesafeName}.Package\\${filesafeName}.Package.wapproj", "{${windowsPackageGuid.toUpperCase()}}"`,
+  );
+
+  config.modResults.contents = config.modResults.contents.replace(
+    vcxprojPattern,
+    `Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "${filesafeName}", "${filesafeName}\\${filesafeName}.vcxproj", "{${windowsProjectGuid.toUpperCase()}}"`,
+  );
+
+  return config;
+}
+
+const wapprojPattern =
+  /Project\("{[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}}"\)\s*=\s*"[a-zA-Z0-9]+\.Package",\s*"[a-zA-Z0-9]+\.Package\\[a-zA-Z0-9]+\.Package\.wapproj",\s*"{[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}}"/;
+
+const vcxprojPattern =
+  /Project\("{[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}}"\)\s*=\s*"[a-zA-Z0-9]+",\s*"[a-zA-Z0-9]+\\[a-zA-Z0-9]+\.vcxproj",\s*"{[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}}"/;

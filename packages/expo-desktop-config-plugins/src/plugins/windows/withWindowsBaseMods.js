@@ -67,6 +67,20 @@ const defaultProviders = {
       await fsPromises.writeFile(filePath, contents);
     },
   }),
+  sln: provider({
+    getFilePath({ modRequest: { projectRoot } }) {
+      // TODO: work out how to thread filesafeName through modRequest, probably
+      //       via evalModsAsync(). For now, we just infer it based on the name
+      //       of the .vcxproj file.
+      return Paths.getSlnFilePath({ projectRoot, filesafeName: undefined });
+    },
+    async read(filePath) {
+      return Paths.getFileInfo(filePath);
+    },
+    async write(filePath, { modResults: { contents } }) {
+      await fsPromises.writeFile(filePath, contents);
+    },
+  }),
   vcxproj: provider({
     isIntrospective: true,
     getFilePath({ modRequest: { projectRoot } }) {

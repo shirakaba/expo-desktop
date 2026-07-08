@@ -15,7 +15,11 @@ const { withMod } = require("@expo/config-plugins");
  * @typedef {import("@expo/config-types").ExpoConfig} ExpoConfig
  * @typedef {import("@expo/config-plugins").ExportedConfig} ExportedConfig
  * @typedef {import("xcode").XcodeProject} XcodeProject
- * @typedef {ReturnType<import("./Paths").getFileInfo>} FileInfo
+ */
+
+/**
+ * @template {string} T
+ * @typedef {{ path: string; contents: string; language: T; }} FileInfo<T>
  */
 
 /**
@@ -23,7 +27,7 @@ const { withMod } = require("@expo/config-plugins");
  * the WinMain function). Called MyApp.cpp in the cpp-app template.
  *
  * @param {ExportedConfig} config
- * @param {Mod<FileInfo>} action
+ * @param {Mod<FileInfo<"cpp">>} action
  *
  * @see https://github.com/microsoft/react-native-windows/blob/cdca047ea950fb061c04ca09e2d172fef5811e02/vnext/templates/cpp-app/windows/MyApp/MyApp.cpp
  */
@@ -89,3 +93,21 @@ const withAppxManifest = (config, action) => {
   });
 };
 exports.withAppxManifest = withAppxManifest;
+
+/**
+ * A mod to update the app's solution file. Called MyApp.sln in the
+ * cpp-app template.
+ *
+ * @param {ExportedConfig} config
+ * @param {Mod<FileInfo<"text">>} action
+ *
+ * @see https://github.com/microsoft/react-native-windows/blob/cdca047ea950fb061c04ca09e2d172fef5811e02/vnext/templates/cpp-app/windows/MyApp.sln
+ */
+const withSln = (config, action) => {
+  return withMod(config, {
+    platform: "windows",
+    mod: "sln",
+    action,
+  });
+};
+exports.withSln = withSln;
