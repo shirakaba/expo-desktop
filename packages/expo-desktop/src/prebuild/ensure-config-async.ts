@@ -1,5 +1,6 @@
 import type { ExpoConfig, PackageJSONConfig } from "@expo/config";
 import type { ModPlatform } from "@expo/config-plugins";
+import type withExpoDesktop from "expo-desktop-config-plugins/plugins/with-expo-desktop";
 
 import { isCancel, log, text } from "@clack/prompts";
 import { getConfig } from "@expo/config";
@@ -148,6 +149,16 @@ export async function getOrPromptForDisplayNameAsync(
     process.exit(0);
   }
 
+  await ensureExpoDesktopConfigPlugins(projectRoot, { displayName });
+
+  return displayName;
+}
+
+export async function ensureExpoDesktopConfigPlugins(
+  projectRoot: string,
+  props: Parameters<typeof withExpoDesktop>[1],
+  exp: ExpoConfig = getConfig(projectRoot).exp,
+) {
   const existingPlugins = exp.plugins ?? [];
   const existingIndex = existingPlugins.findIndex(
     (plugin) => plugin[0] === "expo-desktop-config-plugins",
@@ -164,14 +175,14 @@ export async function getOrPromptForDisplayNameAsync(
       {
         plugins: [
           ...leading,
-          ["expo-desktop-config-plugins", { ...existingProps, displayName }],
+          ["expo-desktop-config-plugins", { ...existingProps, ...props }],
           ...trailing,
         ],
       },
       {
         plugins: [
           ...leading,
-          ["expo-desktop-config-plugins", { ...existingProps, displayName }],
+          ["expo-desktop-config-plugins", { ...existingProps, ...props }],
           ...trailing,
         ],
       },
@@ -179,12 +190,10 @@ export async function getOrPromptForDisplayNameAsync(
   ) {
     log.message(
       kleur.gray(
-        `\u203A ${existingIndex === -1 ? "Added" : "Updated"} "expo-desktop-config-plugins" with "displayName" prop`,
+        `\u203A ${existingIndex === -1 ? "Added" : "Updated"} "expo-desktop-config-plugins" with given props`,
       ),
     );
   }
-
-  return displayName;
 }
 
 /**
