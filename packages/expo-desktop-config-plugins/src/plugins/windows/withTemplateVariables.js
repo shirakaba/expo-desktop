@@ -1,3 +1,4 @@
+const os = require("node:os");
 const { withAppxManifest, withSln, withVcxproj, withWapproj } = require("./windows-plugins");
 
 /**
@@ -11,13 +12,6 @@ const { withAppxManifest, withSln, withVcxproj, withWapproj } = require("./windo
  * @type {import("@expo/config-plugins").ConfigPlugin<TemplateVariables>}
  */
 function withTemplateVariables(config, props) {
-  // TODO: fill in template strings for the Vcxproj:
-  //       - ProjectGuid
-  //       - ProjectName
-  //       - RootNamespace
-
-  console.log("sanity!");
-
   config = withWapproj(config, (config) =>
     updateWapprojTemplateStrings(config, {
       displayName: props.displayName,
@@ -264,14 +258,35 @@ function updateVcxprojTemplateStrings(
 }
 
 /**
- * Update the ProjectGuid in a Package.appxmanifest
+ * @typedef {`${number}.${number}.${number}.0`} WindowsVersion
+ */
+
+/**
+ * Update template strings and other properties in a Package.appxmanifest
  * @param {import("@expo/config-plugins").ExportedConfigWithProps<ReturnType<import("fast-xml-parser").XMLParser["parse"]>>} config
- * @param {TemplateVariables} props
+ * @param {TemplateVariables & { description?: string | undefined; executableName?: string | undefined; entrypoint?: string | undefined; publisherDisplayName?: string | undefined; version?: WindowsVersion | undefined; minVersionUwp?: WindowsVersion | undefined; minVersionWin32?: WindowsVersion | undefined; maxVersionTestedUwp?: WindowsVersion | undefined; maxVersionTestedWin32?: WindowsVersion | undefined }} props
  */
 function updateAppxManifestTemplateStrings(
   config,
-  { displayName, filesafeName, windowsNamespace, windowsPackageGuid, windowsProjectGuid },
+  {
+    displayName,
+    filesafeName,
+    publisherDisplayName,
+    description,
+    executableName,
+    entrypoint,
+    version,
+    minVersionUwp,
+    minVersionWin32,
+    maxVersionTestedUwp,
+    maxVersionTestedWin32,
+    windowsNamespace,
+    windowsPackageGuid,
+    windowsProjectGuid,
+  },
 ) {
+  const resolvedPublisherDisplayName = publisherDisplayName ?? os.userInfo().username;
+
   // 1. Find <Package>
   if (!Array.isArray(config.modResults)) {
     throw new Error("Expected parsed XML to be an array.");
@@ -289,19 +304,117 @@ function updateAppxManifestTemplateStrings(
   if (!Identity) {
     throw new Error("Expected there to be an <Identity> element inside the <Package>.");
   }
+  if (!Identity[":@"]) {
+    Identity[":@"] = {};
+  }
   Identity[":@"]["@_Name"] = filesafeName;
+  Identity[":@"]["@_Publisher"] = `CN=${resolvedPublisherDisplayName}`;
+  if (version) {
+    Identity[":@"]["@_Version"] = version;
+  } else {
+    Identity[":@"]["@_Version"] = "1.0.0.0";
+  }
 
   const Properties = Package.find(({ Properties }) => Properties)?.Properties;
   if (!Properties) {
     throw new Error("Expected there to be a <Properties> element inside the <Package>.");
   }
 
-  let DisplayNameIndex = Properties.findIndex(({ DisplayName }) => !!DisplayName);
+  const DisplayNameIndex = Properties.findIndex(({ DisplayName }) => !!DisplayName);
   if (DisplayNameIndex === -1) {
     Properties.unshift({ ["#text"]: "\n    " }, { DisplayName: [{ ["#text"]: displayName }] });
   } else {
     Properties[DisplayNameIndex].DisplayName = [{ ["#text"]: displayName }];
   }
+
+  const PublisherDisplayNameIndex = Properties.findIndex(
+    ({ PublisherDisplayName }) => !!PublisherDisplayName,
+  );
+  if (PublisherDisplayNameIndex === -1) {
+    Properties.unshift(
+      { ["#text"]: "\n    " },
+      { PublisherDisplayName: [{ ["#text"]: resolvedPublisherDisplayName }] },
+    );
+  } else {
+    Properties[PublisherDisplayNameIndex].PublisherDisplayName = [
+      { ["#text"]: resolvedPublisherDisplayName },
+    ];
+  }
+
+  const Dependencies = Package.find(({ Dependencies }) => Dependencies)?.Dependencies;
+  if (!Dependencies) {
+    throw new Error("Expected there to be a <Dependencies> element inside the <Package>.");
+  }
+
+  const TargetDeviceFamilyUWP = Dependencies.find(
+    ({ TargetDeviceFamily, [":@"]: attributes }) =>
+      !!TargetDeviceFamily && attributes?.["@_Name"] === "Windows.Universal",
+  );
+  const TargetDeviceFamilyWin32 = Dependencies.find(
+    ({ TargetDeviceFamily, [":@"]: attributes }) =>
+      !!TargetDeviceFamily && attributes?.["@_Name"] === "Windows.Desktop",
+  );
+  if (minVersionUwp) {
+    if (!TargetDeviceFamilyUWP[":@"]) {
+      TargetDeviceFamilyUWP[":@"] = {};
+    }
+    TargetDeviceFamilyUWP[":@"]["@_MinVersion"] = minVersionUwp;
+  }
+  if (maxVersionTestedUwp) {
+    if (!TargetDeviceFamilyUWP[":@"]) {
+      TargetDeviceFamilyUWP[":@"] = {};
+    }
+    TargetDeviceFamilyUWP[":@"]["@_MaxVersionTested"] = maxVersionTestedUwp;
+  }
+  if (minVersionWin32) {
+    if (!TargetDeviceFamilyWin32[":@"]) {
+      TargetDeviceFamilyWin32[":@"] = {};
+    }
+    TargetDeviceFamilyWin32[":@"]["@_MinVersion"] = minVersionWin32;
+  }
+  if (maxVersionTestedWin32) {
+    if (!TargetDeviceFamilyWin32[":@"]) {
+      TargetDeviceFamilyWin32[":@"] = {};
+    }
+    TargetDeviceFamilyWin32[":@"]["@_MaxVersionTested"] = maxVersionTestedWin32;
+  }
+
+  const Applications = Package.find(({ Applications }) => Applications)?.Applications;
+  if (!Applications) {
+    throw new Error("Expected there to be a <Applications> element inside the <Package>.");
+  }
+
+  const Application = Applications.find(({ Application }) => !!Application)?.Application;
+  if (!Application) {
+    throw new Error("Expected there to be an <Application> element inside the <Applications>.");
+  }
+  if (!Application[":@"]) {
+    Application[":@"] = {};
+  }
+  if (executableName) {
+    Application[":@"]["@_Executable"] = executableName;
+  } else {
+    Application[":@"]["@_Executable"] = "$targetnametoken$.exe";
+  }
+  if (entrypoint) {
+    Application[":@"]["@_EntryPoint"] = entrypoint;
+  } else {
+    Application[":@"]["@_EntryPoint"] = "$targetentrypoint$";
+  }
+
+  const VisualElements = Application.find(
+    ({ "uap:VisualElements": VisualElements }) => !!VisualElements,
+  );
+  if (!VisualElements) {
+    throw new Error(
+      "Expected there to be a <uap:VisualElements> element inside the <Application>.",
+    );
+  }
+  if (!VisualElements[":@"]) {
+    VisualElements[":@"] = {};
+  }
+  VisualElements[":@"]["@_DisplayName"] = displayName;
+  VisualElements[":@"]["@_Description"] = description ?? displayName;
 
   return config;
 }
