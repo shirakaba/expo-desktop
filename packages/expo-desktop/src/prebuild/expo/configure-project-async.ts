@@ -31,6 +31,11 @@ export async function configureProjectAsync(
     templateChecksum?: string;
   },
 ): Promise<ExpoConfig> {
+  let packageName: string | undefined;
+  if (platforms.includes("android")) {
+    packageName = await getOrPromptForPackageAsync(projectRoot, exp);
+  }
+
   // Typically you'll want your iOS and macOS bundle identifiers to be
   // identical, so that they share the same App Store page. But we split them up
   // to be as flexible as possible. We continue to support the unified
@@ -57,11 +62,6 @@ export async function configureProjectAsync(
     const result = await getOrGenerateGuidsAsync(projectRoot, exp);
     windowsPackageGuid = result.packageGuid;
     windowsProjectGuid = result.projectGuid;
-  }
-
-  let packageName: string | undefined;
-  if (platforms.includes("android")) {
-    packageName = await getOrPromptForPackageAsync(projectRoot, exp);
   }
 
   const displayName = await getOrPromptForDisplayNameAsync(projectRoot, exp);

@@ -25,6 +25,10 @@ export async function ensureConfigAsync(
     platforms: Array<ModPlatform | "macos" | "windows">;
   },
 ): Promise<{ exp: ExpoConfig; pkg: PackageJSONConfig }> {
+  if (platforms.includes("android")) {
+    await getOrPromptForPackageAsync(projectRoot);
+  }
+
   if (platforms.includes("ios")) {
     await getOrPromptForBundleIdentifierAsync(projectRoot, "ios");
   }
@@ -37,6 +41,8 @@ export async function ensureConfigAsync(
     await getOrPromptForNamespaceAsync(projectRoot);
     await getOrGenerateGuidsAsync(projectRoot);
   }
+
+  await getOrPromptForDisplayNameAsync(projectRoot);
 
   // Read config again because any of the above actions may have mutated the
   // results.
