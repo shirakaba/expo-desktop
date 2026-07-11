@@ -78,7 +78,7 @@ export async function installCocoaPodsAsync(
   projectRoot: string,
   platform: "ios" | "macos",
 ): Promise<boolean> {
-  let step = logNewSection("Installing CocoaPods...");
+  let step = logNewSection(`Installing CocoaPods for ${platform}…`);
   if (process.platform !== "darwin") {
     step.succeed("Skipped installing CocoaPods because operating system is not on macOS.");
     return false;
@@ -122,7 +122,7 @@ export async function installCocoaPodsAsync(
     await packageManager.installAsync({ spinner: step });
     // Create cached list for later
     await hasPackageJsonDependencyListChangedAsync(projectRoot).catch(() => null);
-    step.succeed("Installed CocoaPods");
+    step.succeed(`Installed CocoaPods for ${platform}.`);
     return true;
   } catch (error: any) {
     step.stopAndPersist({
