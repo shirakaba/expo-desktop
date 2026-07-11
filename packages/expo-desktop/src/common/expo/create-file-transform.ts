@@ -53,8 +53,17 @@ export function createEntryRenamer(name: string) {
           /HelloWorld/g,
           input.includes("android") ? sanitizedName(name.toLowerCase()) : sanitizedName(name),
         )
-        // The Windows template is MyApp rather than HelloWorld.
-        .replace(/MyApp/g, sanitizedName(name))
+        /*
+         * The Windows template placeholder name is "MyApp" rather than
+         * "HelloWorld". The React Native Windows CLI renames files like
+         * MyApp.cpp to `${filesafeName}.cpp`, which we used to do too (via the
+         * commented-out code below).
+         *
+         * However, I've decided to fix it to "MyApp", because by keeping the
+         * names stable as MyApp, we can avoid desyncs between dirty
+         * prebuilds (which don't rename files) and clean prebuilds (which do).
+         */
+        // .replace(/MyApp/g, sanitizedName(name))
         .replace(/helloworld/g, sanitizedName(name).toLowerCase());
     }
     input = renameConfigs(input, typeflag);

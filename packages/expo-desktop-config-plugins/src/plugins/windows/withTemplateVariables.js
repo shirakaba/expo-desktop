@@ -2,7 +2,8 @@ const os = require("node:os");
 const { withAppxManifest, withSln, withVcxproj, withWapproj } = require("./windows-plugins");
 
 /**
- * @typedef {{ displayName: string; filesafeName: string; windowsNamespace: string; windowsPackageGuid: string; windowsProjectGuid: string }} TemplateVariables
+ * @typedef {{ displayName: string; filesafeName: string; windowsNamespace: string; windowsPackageGuid: string; windowsProjectGuid: string }} CommonTemplateVariables
+ * @typedef {CommonTemplateVariables & updateAppxManifestTemplateStringsTemplateVariables} TemplateVariables
  */
 
 /**
@@ -12,10 +13,15 @@ const { withAppxManifest, withSln, withVcxproj, withWapproj } = require("./windo
  * @type {import("@expo/config-plugins").ConfigPlugin<TemplateVariables>}
  */
 function withTemplateVariables(config, props) {
+  // We pass "MyApp" as the filesafe name because the template overuses it,
+  // renaming files like MyApp.cpp to `${filesafeName}.cpp` for no real benefit.
+  // By keeping the names stable as MyApp, we can avoid desyncs between dirty
+  // prebuilds (which don't rename files) and clean prebuilds (which do).
+
   config = withWapproj(config, (config) =>
     updateWapprojTemplateStrings(config, {
       displayName: props.displayName,
-      filesafeName: props.filesafeName,
+      filesafeName: "MyApp",
       windowsNamespace: props.windowsNamespace,
       windowsPackageGuid: props.windowsPackageGuid,
       windowsProjectGuid: props.windowsProjectGuid,
@@ -25,7 +31,7 @@ function withTemplateVariables(config, props) {
   config = withVcxproj(config, (config) =>
     updateVcxprojTemplateStrings(config, {
       displayName: props.displayName,
-      filesafeName: props.filesafeName,
+      filesafeName: "MyApp",
       windowsNamespace: props.windowsNamespace,
       windowsPackageGuid: props.windowsPackageGuid,
       windowsProjectGuid: props.windowsProjectGuid,
@@ -35,7 +41,20 @@ function withTemplateVariables(config, props) {
   config = withAppxManifest(config, (config) =>
     updateAppxManifestTemplateStrings(config, {
       displayName: props.displayName,
-      filesafeName: props.filesafeName,
+      description: props.description,
+      filesafeName: "MyApp",
+      executableName: props.executableName
+        ? props.executableName
+        : props.filesafeName
+          ? `${props.filesafeName}.exe`
+          : undefined,
+      entrypoint: props.entrypoint,
+      publisherDisplayName: props.publisherDisplayName,
+      version: props.version,
+      minVersionUwp: props.minVersionUwp,
+      minVersionWin32: props.minVersionWin32,
+      maxVersionTestedUwp: props.maxVersionTestedUwp,
+      maxVersionTestedWin32: props.maxVersionTestedWin32,
       windowsNamespace: props.windowsNamespace,
       windowsPackageGuid: props.windowsPackageGuid,
       windowsProjectGuid: props.windowsProjectGuid,
@@ -45,7 +64,7 @@ function withTemplateVariables(config, props) {
   config = withSln(config, (config) =>
     updateSlnTemplateStrings(config, {
       displayName: props.displayName,
-      filesafeName: props.filesafeName,
+      filesafeName: "MyApp",
       windowsNamespace: props.windowsNamespace,
       windowsPackageGuid: props.windowsPackageGuid,
       windowsProjectGuid: props.windowsProjectGuid,
@@ -59,7 +78,7 @@ module.exports.withTemplateVariables = withTemplateVariables;
 /**
  * Update the template variables in a .wapproj.
  * @param {import("@expo/config-plugins").ExportedConfigWithProps<ReturnType<import("fast-xml-parser").XMLParser["parse"]>>} config
- * @param {TemplateVariables} props
+ * @param {CommonTemplateVariables} props
  */
 function updateWapprojTemplateStrings(
   config,
@@ -151,7 +170,7 @@ function updateWapprojTemplateStrings(
 /**
  * Update the template variables in a .vcxproj.
  * @param {import("@expo/config-plugins").ExportedConfigWithProps<ReturnType<import("fast-xml-parser").XMLParser["parse"]>>} config
- * @param {TemplateVariables} props
+ * @param {CommonTemplateVariables} props
  */
 function updateVcxprojTemplateStrings(
   config,
@@ -258,13 +277,14 @@ function updateVcxprojTemplateStrings(
 }
 
 /**
+ * @typedef {{ description?: string | undefined; executableName?: string | undefined; entrypoint?: string | undefined; publisherDisplayName?: string | undefined; version?: WindowsVersion | undefined; minVersionUwp?: WindowsVersion | undefined; minVersionWin32?: WindowsVersion | undefined; maxVersionTestedUwp?: WindowsVersion | undefined; maxVersionTestedWin32?: WindowsVersion | undefined }} updateAppxManifestTemplateStringsTemplateVariables
  * @typedef {`${number}.${number}.${number}.0`} WindowsVersion
  */
 
 /**
  * Update template strings and other properties in a Package.appxmanifest
  * @param {import("@expo/config-plugins").ExportedConfigWithProps<ReturnType<import("fast-xml-parser").XMLParser["parse"]>>} config
- * @param {TemplateVariables & { description?: string | undefined; executableName?: string | undefined; entrypoint?: string | undefined; publisherDisplayName?: string | undefined; version?: WindowsVersion | undefined; minVersionUwp?: WindowsVersion | undefined; minVersionWin32?: WindowsVersion | undefined; maxVersionTestedUwp?: WindowsVersion | undefined; maxVersionTestedWin32?: WindowsVersion | undefined }} props
+ * @param {CommonTemplateVariables & updateAppxManifestTemplateStringsTemplateVariables} props
  */
 function updateAppxManifestTemplateStrings(
   config,
@@ -422,7 +442,7 @@ function updateAppxManifestTemplateStrings(
 /**
  * Update various fields in a MyApp.sln
  * @param {import("@expo/config-plugins").ExportedConfigWithProps<{ path: string; contents: string; language: "text"; }>} config
- * @param {TemplateVariables} props
+ * @param {CommonTemplateVariables} props
  */
 function updateSlnTemplateStrings(
   config,

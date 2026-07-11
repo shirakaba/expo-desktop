@@ -223,7 +223,16 @@ export function getWindowsTemplateStrings({
   const devMode = false;
 
   return {
-    name: name.filesafeName,
+    /*
+     * We pass "MyApp" as the filesafe name because the template overuses it,
+     * renaming files like MyApp.cpp to `${filesafeName}.cpp` for no real
+     * benefit.
+     *
+     * By keeping the names stable as MyApp, we can avoid desyncs between dirty
+     * prebuilds (which don't rename files) and clean prebuilds (which do).
+     */
+    // name: name.filesafeName,
+    name: "MyApp",
     namespace,
     namespaceCpp,
     rnwVersion,
