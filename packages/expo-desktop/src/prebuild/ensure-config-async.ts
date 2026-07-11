@@ -16,7 +16,10 @@ import {
   assertValidWindowsNamespace,
 } from "./validate-application-id.ts";
 
-/** Ensure config is written, and prompts for application identifiers. */
+/**
+ * Ensure config is written, and prompts for application identifiers.
+ * See also: packages/expo-desktop/src/prebuild/expo/configure-project-async.ts
+ */
 export async function ensureConfigAsync(
   projectRoot: string,
   {

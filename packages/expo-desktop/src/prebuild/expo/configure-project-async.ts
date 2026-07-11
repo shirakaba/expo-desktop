@@ -19,6 +19,9 @@ import {
 } from "../ensure-config-async.ts";
 import { logConfig } from "./config-async.ts";
 
+/**
+ * See also: packages/expo-desktop/src/prebuild/ensure-config-async.ts
+ */
 export async function configureProjectAsync(
   projectRoot: string,
   {
