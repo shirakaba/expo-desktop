@@ -204,12 +204,12 @@ export function getWindowsTemplateStrings({
 }: {
   packageGuid: string;
   projectGuid: string;
-  name: { filesafeName: string; rdns: string };
+  name: { displayName: string; rdns: string };
   rnwVersion: string;
 }) {
   const namespace = name.rdns.replaceAll(/[-_]/g, "");
   const namespaceCpp = namespace.replaceAll(".", "::");
-  const mainComponentName = name.filesafeName;
+  const mainComponentName = name.displayName;
 
   // We make a couple of hard assumptions here, based on the fact that we don't
   // support specifying canary/dev versions, mainly to avoid the chicken-and-egg
