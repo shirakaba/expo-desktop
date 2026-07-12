@@ -32,6 +32,9 @@ export function logConfig(config: ExpoConfig | ProjectConfig) {
   );
 }
 
+/**
+ * A port of `npx expo config` from packages/@expo/cli/src/config/configAsync.ts
+ */
 export async function configAsync(projectRoot: string, options: Options) {
   const loggingFunctions = {
     log: console.log,

@@ -10,6 +10,7 @@ const { getPrebuildConfigAsync } =
 
 import { env } from "../../common/expo/env.ts";
 import * as Log from "../../common/expo/log.ts";
+import { logConfig } from "../../config/expo/config-async.ts";
 import {
   getOrGenerateGuidsAsync,
   getOrPromptForBundleIdentifierAsync,
@@ -17,7 +18,6 @@ import {
   getOrPromptForNamespaceAsync,
   getOrPromptForPackageAsync,
 } from "../ensure-config-async.ts";
-import { logConfig } from "./config-async.ts";
 
 /**
  * See also: packages/expo-desktop/src/prebuild/ensure-config-async.ts
