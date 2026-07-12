@@ -178,25 +178,3 @@ export type NpmResponseType = typeof NpmResponse.inferOut;
  */
 export const semverMatcher =
   /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[A-Za-z-][\dA-Za-z-]*)(?:\.(?:0|[1-9]\d*|\d*[A-Za-z-][\dA-Za-z-]*))*))?(?:\+([\dA-Za-z-]+(?:\.[\dA-Za-z-]+)*))?$/;
-
-export function packageManagerExec(packageManager: "npm" | "bun" | "pnpm" | "yarn") {
-  const args = new Array<string>();
-  let command: string;
-  switch (packageManager) {
-    case "bun":
-      command = "bunx";
-      break;
-    case "npm":
-      command = "npx";
-      args.push("--yes");
-      break;
-    case "yarn":
-      command = "yarn";
-      break;
-    case "pnpm":
-      command = "pnpm";
-      args.push("exec");
-  }
-
-  return { args, command };
-}
