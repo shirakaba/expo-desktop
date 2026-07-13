@@ -39,18 +39,18 @@ module.exports.getPrebuildConfigAsync = getPrebuildConfigAsync;
 function getPrebuildConfig(
   projectRoot,
   {
-    platforms,
-    displayName,
-    filesafeName,
+    autolinkedModules,
+    bundleEntryFileCandidates,
     bundleIdentifier,
     bundleIdentifierIos = bundleIdentifier,
     bundleIdentifierMacos = bundleIdentifier,
+    displayName,
+    filesafeName,
     packageName,
+    platforms,
     windowsNamespace,
     windowsPackageGuid,
     windowsProjectGuid,
-    bundleEntryFileCandidates,
-    autolinkedModules,
   },
 ) {
   let { exp: config, ...rest } = getConfig(projectRoot, {
@@ -86,18 +86,30 @@ function getPrebuildConfig(
 
   if (platforms.includes("macos")) {
     if (!config.macos) config.macos = {};
+
     /** @type {string} */
-    let resolvedBundleIdentifierMacos =
+    const resolvedBundleIdentifierMacos =
       bundleIdentifierMacos ??
       config.macos.bundleIdentifier ??
       resolvedBundleIdentifierIos ??
       `com.placeholder.appid`;
     config.macos.bundleIdentifier = resolvedBundleIdentifierMacos;
 
+    /** @type {string} */
+    const resolvedDisplayNameMacos =
+      displayName ??
+      config.macos.infoPlist?.CFBundleName ??
+      config.ios.infoPlist?.CFBundleName ??
+      config.name;
+    if (!config.macos.infoPlist) {
+      config.macos.infoPlist = {};
+    }
+    config.macos.infoPlist.CFBundleName = resolvedDisplayNameMacos;
+
     // Add all built-in plugins
     config = withMacosExpoPlugins(config, {
       bundleIdentifier: resolvedBundleIdentifierMacos,
-      displayName,
+      displayName: resolvedDisplayNameMacos,
     });
   }
 
@@ -114,20 +126,32 @@ function getPrebuildConfig(
 
   if (platforms.includes("windows")) {
     if (!config.windows) config.windows = {};
-    config.windows.namespace =
+    /** @type {string} */
+    const resolvedNamespace =
       windowsNamespace ?? config.windows.namespace ?? `com.placeholder.appid`;
-    config.windows.projectGuid =
+    config.windows.namespace = resolvedNamespace;
+
+    /** @type {string} */
+    const resolvedProjectGuid =
       windowsProjectGuid ?? config.windows.projectGuid ?? crypto.randomUUID();
-    config.windows.packageGuid =
+    config.windows.projectGuid = resolvedProjectGuid;
+
+    /** @type {string} */
+    const resolvedPackageGuid =
       windowsPackageGuid ?? config.windows.packageGuid ?? crypto.randomUUID();
+    config.windows.packageGuid = resolvedPackageGuid;
+
+    /** @type {string} */
+    const resolvedDisplayName = displayName ?? config.windows.displayName ?? config.name;
+    config.windows.displayName = resolvedDisplayName;
 
     config = withWindowsExpoPlugins(config, {
-      displayName,
+      displayName: resolvedDisplayName,
       filesafeName,
       bundleEntryFileCandidates,
-      windowsNamespace,
-      windowsPackageGuid,
-      windowsProjectGuid,
+      windowsNamespace: resolvedNamespace,
+      windowsPackageGuid: resolvedPackageGuid,
+      windowsProjectGuid: resolvedProjectGuid,
     });
   }
 

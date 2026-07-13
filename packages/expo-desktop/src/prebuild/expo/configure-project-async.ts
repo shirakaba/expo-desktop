@@ -70,12 +70,13 @@ export async function configureProjectAsync(
   const displayName = await getOrPromptForDisplayNameAsync(projectRoot, exp);
 
   let { exp: config } = await getPrebuildConfigAsync(projectRoot, {
-    platforms,
-    packageName,
     bundleIdentifier,
     bundleIdentifierIos,
     bundleIdentifierMacos,
     displayName,
+    filesafeName: exp?.name,
+    packageName,
+    platforms,
     windowsNamespace,
     windowsPackageGuid,
     windowsProjectGuid,

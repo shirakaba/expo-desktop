@@ -66,6 +66,13 @@ function withMacosExpoPlugins(config, { bundleIdentifier, displayName }) {
     config.macos.bundleIdentifier = bundleIdentifier;
   }
 
+  if (displayName) {
+    if (!config.macos.infoPlist) {
+      config.macos.infoPlist = {};
+    }
+    config.macos.infoPlist.CFBundleName = displayName;
+  }
+
   return withPlugins(config, [
     [withBundleIdentifier, { bundleIdentifier }],
     // IOSConfig.Google.withGoogle,
