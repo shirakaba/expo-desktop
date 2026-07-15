@@ -62,6 +62,12 @@ const main = defineCommand({
         },
       },
       async run({ args }) {
+        // `args["no-install"]: true` gets coerced to `args["install"]: false`
+        // @ts-expect-error the typings do not represent no- args correctly.
+        args["no-install"] = !args["install"];
+        // @ts-expect-error the typings do not represent no- args correctly.
+        args["no-agents-md"] = !args["agents-md"];
+
         (await import("./create-app/command.ts")).newExpoDesktopProject(args);
       },
     }),
