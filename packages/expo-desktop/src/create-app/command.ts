@@ -4,6 +4,7 @@ import { green, grey } from "kleur/colors";
 import { platform } from "node:process";
 
 import { title } from "../common/clack.ts";
+import { attemptModification } from "../prebuild/modify-config-async.ts";
 import { createExpoDesktopApp } from "./create-expo-desktop-app.ts";
 import { previewFileTree } from "./preview-file-tree.ts";
 import { promptForVersion } from "./prompt-for-version.ts";
@@ -89,6 +90,68 @@ export async function newExpoDesktopProject(args: {
     versions,
     template: args.template,
   });
+
+  // TODO: Support creating app in path other than the filesafe name
+  const projectRoot = name.filesafeName;
+
+  // Persist displayName and rdns into app.json
+  await updateAppJson({ displayName: name.displayName, projectRoot, rdns: name.rdns });
+}
+
+async function updateAppJson({
+  displayName,
+  projectRoot,
+  rdns,
+}: {
+  displayName: string;
+  projectRoot: string;
+  rdns: string;
+}) {
+  const androidPackage = rdns.replaceAll(/[_-]/g, "_");
+  const bundleIdentifier = rdns.replaceAll("_", "-");
+  const windowsNamespace = rdns.replaceAll(/[_-]/g, "");
+
+  if (
+    await attemptModification(
+      projectRoot,
+      { android: { package: androidPackage } },
+      { android: { package: androidPackage } },
+    )
+  ) {
+    log.message(kleur.gray(`\u203A Android package: ${androidPackage}`));
+  }
+
+  if (
+    await attemptModification(
+      projectRoot,
+      { ios: { bundleIdentifier, infoPlist: { CFBundleName: displayName } } },
+      { ios: { bundleIdentifier, infoPlist: { CFBundleName: displayName } } },
+    )
+  ) {
+    log.message(kleur.gray(`\u203A iOS bundle identifier: ${bundleIdentifier}`));
+  }
+
+  if (
+    await attemptModification(
+      projectRoot,
+      // @ts-expect-error no 'macos' support
+      { macos: { bundleIdentifier, infoPlist: { CFBundleName: displayName } } },
+      { macos: { bundleIdentifier, infoPlist: { CFBundleName: displayName } } },
+    )
+  ) {
+    log.message(kleur.gray(`\u203A macOS bundle identifier: ${bundleIdentifier}`));
+  }
+
+  if (
+    await attemptModification(
+      projectRoot,
+      // @ts-expect-error no 'windows' support
+      { windows: { displayName, namespace: windowsNamespace } },
+      { windows: { displayName, namespace: windowsNamespace } },
+    )
+  ) {
+    log.message(kleur.gray(`\u203A Windows namespace: ${windowsNamespace}`));
+  }
 }
 
 type Arg = string | symbol | undefined;
