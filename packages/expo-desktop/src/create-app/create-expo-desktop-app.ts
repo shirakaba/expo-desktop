@@ -1,19 +1,9 @@
-import type { ModPlatform } from "@expo/config-plugins";
-
-import { log, tasks } from "@clack/prompts";
-import { type } from "arktype";
 import Debug from "debug";
-import { glob } from "glob";
-import { cyan, green, yellow } from "kleur/colors";
-import { spawn, type SpawnOptions } from "node:child_process";
+import { green } from "kleur/colors";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { platform } from "node:process";
 import process from "node:process";
 
-import { AppJson, PackageJson } from "../common/app-json.ts";
-import { makePrettySummary } from "../common/arktype.ts";
-import { title } from "../common/clack.ts";
 import {
   type CreateAsyncOptions,
   setupDependenciesAsync,
@@ -21,37 +11,29 @@ import {
 import { generateAgentFiles } from "../common/expo/generate-agent-files.ts";
 import { initGitRepoAsync } from "../common/expo/git.ts";
 import { extractAndPrepareTemplateAppAsync } from "../common/expo/template.ts";
+import {
+  assertFolderEmpty,
+  assertValidName,
+  resolveProjectRootAsync,
+} from "./resolve-project-root.ts";
 
-const debug = Debug("expo-desktop:create-app:git") as typeof console.log;
+const debug = Debug("expo-desktop:create-app") as typeof console.log;
 
 export async function createExpoDesktopApp({
   agentsMd,
-  yes,
+  displayName,
   install,
-  localDev,
-  name,
-  packageManager,
+  projectRoot: projectRootArg,
+  rdns,
   template,
   versions,
+  yes,
 }: {
   agentsMd: boolean;
-  yes: boolean;
+  displayName: string | undefined;
   install: boolean;
-  /**
-   * A crude switch to use to help with local development.
-   *
-   * - Skips the questionnaire at the start.
-   * - Installs the local copy of expo-desktop-config-plugins rather than pinning
-   *   to a published release.
-   * - Adds the apply-config-plugins.mjs script.
-   */
-  localDev?: boolean | undefined;
-  name: {
-    displayName: string;
-    filesafeName: string;
-    rdns: string;
-  };
-  packageManager: "npm" | "bun" | "pnpm" | "yarn";
+  projectRoot: string | undefined;
+  rdns: string | undefined;
   template?: string | undefined;
   versions: {
     minor: number;
@@ -61,6 +43,7 @@ export async function createExpoDesktopApp({
     windows: string;
     macos: string;
   };
+  yes: boolean;
 }) {
   const props: CreateAsyncOptions = {
     install,
@@ -69,9 +52,16 @@ export async function createExpoDesktopApp({
     yes,
     agentsMd,
   };
-  const projectRoot = path.resolve(process.cwd(), name.filesafeName);
 
-  await fs.mkdir(projectRoot, { recursive: true });
+  // The basename of the projectRoot is suitable to be used as the filesafeName.
+  const projectRoot = await resolveProjectRootArgAsync(
+    /**
+     * create-expo-app defaults this optional positional arg to an empty string:
+     * @see https://github.com/expo/expo/blob/037d1aa47f15e062cc2185393f08b3c08870ed65/packages/create-expo/src/utils/args.ts#L76-L77
+     */
+    projectRootArg ?? "",
+    { yes },
+  );
 
   // In create-expo, this coerces to `${name}@sdk-${selectedSdk}` for all known
   // expo templates (e.g. expo-desktop-template-blank-typescript@sdk-54).
@@ -80,9 +70,12 @@ export async function createExpoDesktopApp({
   const resolvedTemplate =
     template ?? `expo-desktop-template-blank-typescript@${versions.expoMajor}.${versions.minor}`;
 
+  await fs.mkdir(projectRoot, { recursive: true });
+
   await extractAndPrepareTemplateAppAsync({
     projectRoot,
-    name,
+    displayName,
+    rdns,
     rnwVersion: versions.windows,
     npmPackage: resolvedTemplate,
   });
@@ -98,5 +91,20 @@ export async function createExpoDesktopApp({
     await initGitRepoAsync(projectRoot);
   } catch (error) {
     debug(`Error initializing git: %O`, error);
+  }
+}
+
+async function resolveProjectRootArgAsync(
+  inputPath: string,
+  { yes }: { yes: boolean },
+): Promise<string> {
+  if (!inputPath && yes) {
+    const projectRoot = path.resolve(process.cwd());
+    const folderName = path.basename(projectRoot);
+    assertValidName(folderName);
+    assertFolderEmpty(projectRoot, folderName);
+    return projectRoot;
+  } else {
+    return await resolveProjectRootAsync(inputPath);
   }
 }

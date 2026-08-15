@@ -4,22 +4,28 @@ import type { ExpoConfig } from "@expo/config";
 import type { JSONObject } from "@expo/json-file";
 import type { default as JsonFileType } from "@expo/json-file";
 
+import { confirm, isCancel, text } from "@clack/prompts";
 import * as PackageManager from "@expo/package-manager";
 import chalk from "chalk";
 import Debug from "debug";
 import { glob } from "glob";
+import { default as kleur } from "kleur";
+import { grey } from "kleur/colors";
 import mustache from "mustache";
+import assert from "node:assert/strict";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import { createRequire } from "node:module";
 import os from "node:os";
 import path from "node:path";
 import ora from "ora";
+import prompts from "prompts";
 
 import type { PackageManagerName } from "./resolve-package-manager.ts";
 
 import packageJson from "../../../package.json" with { type: "json" };
-import { getOrGenerateGuidsAsync } from "../../prebuild/ensure-config-async.ts";
+import { previewFileTree } from "../../create-app/preview-file-tree.ts";
+import { validateBundleId } from "../../prebuild/validate-application-id.ts";
 import { sanitizedName } from "./create-file-transform.ts";
 import { env } from "./env.ts";
 import { downloadAndExtractGitHubRepositoryAsync } from "./github.ts";
@@ -31,6 +37,7 @@ import {
   getResolvedTemplateName,
 } from "./npm.ts";
 import { formatRunCommand } from "./resolve-package-manager.ts";
+import * as Template from "./template.ts";
 
 const require = createRequire(import.meta.url);
 
@@ -135,27 +142,33 @@ export function resolvePackageModuleId(moduleId: string) {
  */
 export async function extractAndPrepareTemplateAppAsync({
   projectRoot,
-  name,
+  displayName,
+  rdns,
   npmPackage,
   rnwVersion,
 }: {
   projectRoot: string;
-  name: { displayName: string; filesafeName: string; rdns: string };
+  displayName: string | undefined;
+  rdns: string | undefined;
   rnwVersion: string;
   npmPackage?: string | null;
 }) {
-  const projectName = name.filesafeName;
+  /**
+   * create-expo-app takes the basename of the projectRoot here.
+   * @see https://github.com/expo/expo/blob/037d1aa47f15e062cc2185393f08b3c08870ed65/packages/create-expo/src/Template.ts#L131
+   *
+   * We
+   */
+  const projectName = path.basename(projectRoot);
 
-  debug(`Extracting template app (pkg: ${npmPackage}, projectName: ${projectName})`);
+  debug(`Extracting template app (pkg: ${npmPackage}; projectName: ${projectName})`);
 
   const { type, uri } = resolvePackageModuleId(
     npmPackage || "expo-desktop-template-blank-typescript",
   );
 
   if (type === "repository") {
-    await downloadAndExtractGitHubRepositoryAsync(uri, projectRoot, {
-      expName: projectName,
-    });
+    await downloadAndExtractGitHubRepositoryAsync(uri, projectRoot, { expName: projectName });
   } else {
     const resolvedUri = type === "file" ? uri : getResolvedTemplateName(applyBetaTag(uri));
     await downloadAndExtractNpmModuleAsync(resolvedUri, projectRoot, {
@@ -164,21 +177,29 @@ export async function extractAndPrepareTemplateAppAsync({
     });
   }
 
-  await sanitizeTemplateAsync(projectRoot);
+  // Unlike create-expo-app, we run this step *before*
+  // renameTemplateAppNameAsync(), because we need to establish the name and
+  // windowsTemplateStrings in order to rename the Windows template properly.
+  const { name, windowsTemplateStrings } = await sanitizeTemplateAsync({
+    displayName,
+    projectRoot,
+    rdns,
+    rnwVersion,
+  });
 
   // TODO: Should we remove this step? It made sense while we had a
   // single-template model (i.e. blank-typescript had a /windows folder in it),
   // but now we're doing a step that's redundant with the prebuild step. i.e.
   // we again ensure these GUIDs are generated and written into the app.json
   // when we call ensureConfigAsync() and configureProjectAsync().
-  const { packageGuid, projectGuid } = await getOrGenerateGuidsAsync(projectRoot);
-
-  const windowsTemplateStrings = getWindowsTemplateStrings({
-    name,
-    rnwVersion,
-    packageGuid,
-    projectGuid,
-  });
+  // const { packageGuid, projectGuid } = await getOrGenerateGuidsAsync(projectRoot);
+  //
+  // const windowsTemplateStrings = getWindowsTemplateStrings({
+  //   name,
+  //   rnwVersion,
+  //   packageGuid,
+  //   projectGuid,
+  // });
 
   try {
     const files = await getTemplateFilesToRenameAsync({ cwd: projectRoot });
@@ -503,7 +524,17 @@ function templateHasNativeCode(root: string): boolean {
 /**
  * Sanitize a template (or example) with expected `package.json` properties and files.
  */
-export async function sanitizeTemplateAsync(projectRoot: string) {
+export async function sanitizeTemplateAsync({
+  displayName: displayNameArg,
+  rdns: rdnsArg,
+  rnwVersion,
+  projectRoot,
+}: {
+  displayName: string | undefined;
+  rdns: string | undefined;
+  rnwVersion: string;
+  projectRoot: string;
+}) {
   const projectName = path.basename(projectRoot);
 
   debug(`Sanitizing template or example app (projectName: ${projectName})`);
@@ -527,9 +558,52 @@ export async function sanitizeTemplateAsync(projectRoot: string) {
     }
   }
 
+  const name = await configureAppName({
+    "display-name": displayNameArg,
+    "filesafe-name": projectName,
+    rdns: rdnsArg,
+  });
+  const { displayName, filesafeName, rdns } = name;
+  const androidPackage = rdns.replaceAll(/[_-]/g, "_");
+  const bundleIdentifier = rdns.replaceAll("_", "-");
+  const windowsNamespace = rdns.replaceAll(/[_-]/g, "");
+
+  const packageGuid = crypto.randomUUID();
+  const projectGuid = crypto.randomUUID();
+
+  const windowsTemplateStrings = getWindowsTemplateStrings({
+    name: { displayName, rdns },
+    rnwVersion,
+    packageGuid,
+    projectGuid,
+  });
+
   const defaultConfig: ExpoConfig = {
-    name: projectName,
-    slug: projectName,
+    name: filesafeName,
+    slug: filesafeName,
+    // @ts-expect-error macos and windows missing from types
+    platforms: ["ios", "android", "macos", "windows"],
+    ios: {
+      bundleIdentifier,
+      infoPlist: {
+        CFBundleName: displayName,
+      },
+    },
+    android: {
+      package: androidPackage,
+    },
+    windows: {
+      displayName,
+      namespace: windowsNamespace,
+      packageGuid: crypto.randomUUID(),
+      projectGuid: crypto.randomUUID(),
+    },
+    macos: {
+      bundleIdentifier,
+      infoPlist: {
+        CFBundleName: displayName,
+      },
+    },
   };
 
   const appFile = new JsonFile(path.join(projectRoot, "app.json"), { default: {} });
@@ -578,6 +652,7 @@ export async function sanitizeTemplateAsync(projectRoot: string) {
         windows: "rnc-cli run-windows",
       };
     } else if (nativeFoldersIgnored) {
+      // TODO: Figure out why this didn't run
       packageJson.scripts = {
         ...packageJson.scripts,
         android: "expo start --android",
@@ -599,15 +674,131 @@ export async function sanitizeTemplateAsync(projectRoot: string) {
   }
 
   await packageFile.writeAsync(packageJson);
+
+  return { name, windowsTemplateStrings };
 }
 
+async function configureAppName(args: {
+  "filesafe-name": string | undefined;
+  initialFilesafeName?: string;
+  "display-name": string | undefined;
+  initialDisplayName?: string;
+  rdns: string | undefined;
+  initialRdns?: string;
+}) {
+  const { initialFilesafeName, initialDisplayName, initialRdns } = args;
+
+  // TODO: Upon any cancel, provide the CLI command to get back to the cancelled
+  //       step.
+
+  let filesafeName = args["filesafe-name"];
+  if (!filesafeName) {
+    const { answer } = await prompts({
+      type: "text",
+      name: "answer",
+      message: `Please provide the ${kleur.bold("filesafe name")} for the app in ${kleur.bold("alphanumeric")} format. ${grey("(Example: 'MyApp123')")}`,
+      initial: initialFilesafeName ?? "MyApp",
+      validate: (name) => {
+        const validation = Template.validateName(path.basename(path.resolve(name)));
+        if (typeof validation === "string") {
+          return "Invalid filesafe name: " + validation;
+        }
+        return true;
+      },
+    });
+
+    filesafeName = answer;
+    assert.ok(filesafeName, "Expected prompt to provide truthy string.");
+  }
+
+  let displayName = args["display-name"];
+  if (!displayName) {
+    const { answer } = await prompts({
+      type: "text",
+      name: "answer",
+      message: `Please provide the ${kleur.bold("display name")} for the app. ${grey("(Examples: 'My App 123', '俺のアプリ')")}`,
+      initial: initialDisplayName ?? "My App",
+      validate: (name) => {
+        if (!name) {
+          return "Must be at least one character long.";
+        }
+
+        return true;
+      },
+    });
+
+    displayName = answer;
+    assert.ok(displayName, "Expected prompt to provide truthy string.");
+  }
+
+  let rdns = args.rdns;
+  if (!rdns) {
+    const { answer } = await prompts({
+      type: "text",
+      name: "answer",
+      message: `Please provide the ${kleur.bold("reverse DNS")} for the app. ${grey("(Example: 'com.example.my-app-123')")}`,
+      initial: initialRdns ?? "com.example.my-app",
+      validate: (rdns) => {
+        // TODO: Improve the validateBundleId() regex so that we don't have to
+        //       do this initial check before handing over to it.
+        if (!/^[a-zA-Z]+$/.test(rdns)) {
+          return "Must begin with a letter.";
+        }
+
+        if (!validateBundleId(rdns.replaceAll("_", "-"))) {
+          return "Must use only alphanumerics, periods, and hyphens (or underscores)";
+        }
+
+        return true;
+      },
+    });
+
+    rdns = answer;
+    assert.ok(rdns, "Expected prompt to provide truthy string.");
+  }
+
+  const structureIsOkay = await confirm({
+    message: `Will create an Expo app with the following structure. Does this look okay?\n\n${previewFileTree({ filesafeName, rdns })}\n`,
+    initialValue: true,
+  });
+  if (isCancel(structureIsOkay)) {
+    process.exit(0);
+  }
+  if (!structureIsOkay) {
+    return await configureAppName({
+      "filesafe-name": undefined,
+      initialFilesafeName: filesafeName,
+      "display-name": undefined,
+      initialDisplayName: displayName,
+      rdns: undefined,
+      initialRdns: rdns,
+    });
+  }
+
+  return {
+    filesafeName,
+    displayName,
+    rdns,
+  };
+}
+
+/**
+ * Validate the filesafeName for the app.
+ *
+ * create-expo-app normally accepts some punctuation beyond alphanumerics,
+ * but we accept strictly alphanumerics so that we can use the
+ * filesafeName more widely for other purposes as-is, without coercing.
+ * - https://github.com/expo/expo/blob/6e418b5947dd8806ac97c19eb959ded3a1b14ea2/packages/create-expo/src/resolveProjectRoot.ts#L46-L53
+ * - https://github.com/expo/expo/blob/037d1aa47f15e062cc2185393f08b3c08870ed65/packages/create-expo/src/Template.ts#L439
+ */
 export function validateName(name?: string): string | true {
   if (typeof name !== "string" || name === "") {
-    return "The project name can not be empty.";
+    return "The filesafe name can not be empty.";
   }
-  if (!/^[a-z0-9@.\-_]+$/i.test(name)) {
-    return "The project name can only contain URL-friendly characters.";
+  if (!/^[a-zA-Z0-9]+$/.test(name)) {
+    return "Invalid filesafe name: The filesafe name can only contain alpanumeric characters.";
   }
+
   return true;
 }
 

@@ -34,17 +34,17 @@ ${`${rdns.replaceAll("-", "_")}.…`
 │   └── ${colouredFilesafeName}.xcworkspace
 └── ${blue("windows")}
     ├── …
-    ├── ${colouredFilesafeName}
+    ├── MyApp
     │   ├── …
-    │   ├── ${colouredFilesafeName}.cpp
-    │   ├── ${colouredFilesafeName}.h
-    │   ├── ${colouredFilesafeName}.ico
-    │   ├── ${colouredFilesafeName}.rc
-    │   ├── ${colouredFilesafeName}.vcxproj
-    │   └── ${colouredFilesafeName}.vcxproj.filters
-    ├── ${colouredFilesafeName}.Package
+    │   ├── MyApp.cpp
+    │   ├── MyApp.h
+    │   ├── MyApp.ico
+    │   ├── MyApp.rc
+    │   ├── MyApp.vcxproj
+    │   └── MyApp.vcxproj.filters
+    ├── MyApp.Package
     │   ├── …
-    │   └── ${colouredFilesafeName}.Package.wapproj
-    └── ${colouredFilesafeName}.sln
+    │   └── MyApp.Package.wapproj
+    └── MyApp.sln
 `.trim();
 }

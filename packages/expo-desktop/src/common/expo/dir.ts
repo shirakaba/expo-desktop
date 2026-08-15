@@ -72,3 +72,29 @@ export function isPathInside(child: string, parent: string): boolean {
   const relative = path.relative(parent, child);
   return !!relative && !relative.startsWith("..") && !path.isAbsolute(relative);
 }
+
+export function getConflictsForDirectory(projectRoot: string): string[] {
+  return fs
+    .readdirSync(projectRoot)
+    .filter((file: string) => !(/\.iml$/.test(file) || tolerableFiles.includes(file)));
+}
+
+// Any of these files are allowed to exist in the projectRoot
+const tolerableFiles = [
+  // System
+  ".DS_Store",
+  "Thumbs.db",
+  // Git
+  ".git",
+  ".gitattributes",
+  ".gitignore",
+  // Project
+  ".npmignore",
+  "LICENSE",
+  "docs",
+  ".idea",
+  // Package manager
+  "npm-debug.log",
+  "yarn-debug.log",
+  "yarn-error.log",
+];
