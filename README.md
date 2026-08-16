@@ -9,7 +9,9 @@ Best-effort support for using Expo with desktop platforms [react-native-macos](h
 To create a new Expo app that targets iOS, Android, macOS, and Windows, run the following command:
 
 ```sh
-npx expo-desktop@latest create-app
+# This long --template-macos arg will be needed until expo-desktop v1 comes out.
+# https://github.com/shirakaba/expo-desktop/issues/17
+npx expo-desktop@latest create-app --template-macos "microsoft/react-native-macos#0.81-stable:packages/react-native/local-cli/generator-macos/templates"
 ```
 
 While `npx expo prebuild` will work as expected for iOS and Android platforms, the equivalent `npx expo-desktop prebuild` command needed for macOS and Windows platforms is not yet implemented, so it is best to commit the `macos` and `windows` directories to source for now. In other words, [CNG](https://docs.expo.dev/workflow/continuous-native-generation/) is not yet supported in Expo Desktop.
