@@ -18,6 +18,7 @@ const main = defineCommand({
       args: {
         "project-root": {
           type: "positional",
+          required: false,
           description: `The ${kleur.bold("project root")} for the app in alphanumeric format ${grey("(Example: 'MyApp123')")}`,
         },
         "display-name": {

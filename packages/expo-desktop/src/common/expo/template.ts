@@ -741,7 +741,7 @@ async function configureAppName(args: {
       validate: (rdns) => {
         // TODO: Improve the validateBundleId() regex so that we don't have to
         //       do this initial check before handing over to it.
-        if (!/^[a-zA-Z]+$/.test(rdns)) {
+        if (!/^[a-zA-Z]+/.test(rdns)) {
           return "Must begin with a letter.";
         }
 
