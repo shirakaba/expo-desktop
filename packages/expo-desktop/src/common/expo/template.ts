@@ -786,7 +786,7 @@ export function validateName(name?: string): string | true {
     return "The filesafe name can not be empty.";
   }
   if (!/^[a-zA-Z0-9]+$/.test(name)) {
-    return "Invalid filesafe name: The filesafe name can only contain alpanumeric characters.";
+    return "Invalid filesafe name: The filesafe name can only contain alphanumeric characters.";
   }
 
   return true;
