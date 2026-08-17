@@ -579,8 +579,6 @@ export async function sanitizeTemplateAsync({
   const defaultConfig: ExpoConfig = {
     name: filesafeName,
     slug: filesafeName,
-    // @ts-expect-error macos and windows missing from types
-    platforms: ["ios", "android", "macos", "windows"],
     ios: {
       bundleIdentifier,
       infoPlist: {
@@ -590,6 +588,7 @@ export async function sanitizeTemplateAsync({
     android: {
       package: androidPackage,
     },
+    // @ts-expect-error macos and windows missing from types
     windows: {
       displayName,
       namespace: windowsNamespace,
@@ -606,6 +605,17 @@ export async function sanitizeTemplateAsync({
 
   const appFile = new JsonFile(path.join(projectRoot, "app.json"), { default: {} });
   const appContent = (await appFile.readAsync()) as ExpoConfig | Record<"expo", ExpoConfig>;
+
+  // deepMerge() is a little inconvenient for arrays. Here, we merge in
+  // whichever platforms, out of "ios", "android", "macos", and "windows", that
+  // the app.json doesn't have already.
+  const platforms = new Set<string>(
+    "expo" in appContent ? appContent.expo.platforms : appContent.platforms,
+  );
+  defaultConfig.platforms = ["ios", "android", "macos", "windows"].filter(
+    (platform) => !platforms.has(platform),
+  ) as NonNullable<ExpoConfig["platforms"]>;
+
   const appJson = deepMerge(
     appContent,
     "expo" in appContent ? { expo: defaultConfig } : defaultConfig,
