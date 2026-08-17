@@ -4,7 +4,6 @@ import type { ExpoConfig } from "@expo/config";
 import type { JSONObject } from "@expo/json-file";
 import type { default as JsonFileType } from "@expo/json-file";
 
-import { confirm, isCancel, text } from "@clack/prompts";
 import * as PackageManager from "@expo/package-manager";
 import chalk from "chalk";
 import Debug from "debug";
@@ -24,7 +23,6 @@ import prompts from "prompts";
 import type { PackageManagerName } from "./resolve-package-manager.ts";
 
 import packageJson from "../../../package.json" with { type: "json" };
-import { previewFileTree } from "../../create-app/preview-file-tree.ts";
 import { validateBundleId } from "../../prebuild/validate-application-id.ts";
 import { sanitizedName } from "./create-file-transform.ts";
 import { env } from "./env.ts";
@@ -755,24 +753,6 @@ async function configureAppName(args: {
 
     rdns = answer;
     assert.ok(rdns, "Expected prompt to provide truthy string.");
-  }
-
-  const structureIsOkay = await confirm({
-    message: `Will create an Expo app with the following structure. Does this look okay?\n\n${previewFileTree({ filesafeName, rdns })}\n`,
-    initialValue: true,
-  });
-  if (isCancel(structureIsOkay)) {
-    process.exit(0);
-  }
-  if (!structureIsOkay) {
-    return await configureAppName({
-      "filesafe-name": undefined,
-      initialFilesafeName: filesafeName,
-      "display-name": undefined,
-      initialDisplayName: displayName,
-      rdns: undefined,
-      initialRdns: rdns,
-    });
   }
 
   return {

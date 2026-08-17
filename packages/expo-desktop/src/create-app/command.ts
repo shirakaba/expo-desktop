@@ -1,5 +1,4 @@
-import { log } from "@clack/prompts";
-import { default as kleur } from "kleur";
+import chalk from "chalk";
 
 import { createExpoDesktopApp } from "./create-expo-desktop-app.ts";
 
@@ -14,13 +13,17 @@ export async function newExpoDesktopProject(args: {
   template: string | undefined;
   version: string | undefined;
 }) {
-  log.info(
-    `🏎️  Running ${kleur.yellow("expo-desktop create-app")}. Let's create a new Expo Desktop app!`,
-    { withGuide: false },
+  console.log(
+    chalk.bold(
+      `🏎️  Running ${chalk.yellow("expo-desktop create-app")}. Let's create a new Expo Desktop app!`,
+    ),
   );
+  console.log();
 
-  // TODO: revisit the --version arg and promptForVersion(), now that we
-  //       manage our own template.
+
+  // TODO: Revisit the --version arg and promptForVersion(), now that we
+  //       manage our own template. This is the last usage of @clack/prompts in
+  //       expo-desktop.
   // const versions = await promptForVersion(args.version);
   // log.info(
   //   `Will use versions: ${green(`react-native@${versions.mobile}`)}, ${green(`react-native-macos@${versions.macos}`)}, and ${green(`react-native-windows@${versions.windows}`)}, with ${green(`Expo ${versions.expoMajor}`)}.`,
