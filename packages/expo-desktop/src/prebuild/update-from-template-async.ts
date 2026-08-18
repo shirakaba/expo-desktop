@@ -67,17 +67,12 @@ export async function updateFromTemplateAsync(
     templateDirectory = createTempDirectoryPath();
   }
 
-  // If React Native Windows isn't installed, then it doesn't matter what
-  // template strings we generate anyway, so we provide a fallback.
-  const rnwVersion = pkg.dependencies?.["react-native-windows"] ?? "0.81.27";
-
   const { copiedPaths, templateChecksum } = await cloneTemplateAndCopyToProjectAsync({
     projectRoot,
     template,
     templateDirectory,
     exp,
     platforms,
-    rnwVersion,
   });
 
   const depsResults = await updatePackageJSONAsync(projectRoot, {
@@ -107,14 +102,12 @@ export async function cloneTemplateAndCopyToProjectAsync({
   template,
   exp,
   platforms: unknownPlatforms,
-  rnwVersion,
 }: {
   projectRoot: string;
   templateDirectory: string;
   template?: ResolvedTemplateOption | undefined;
   exp: ExpoConfig;
   platforms: Array<"ios" | "android" | "macos" | "windows">;
-  rnwVersion: string;
 }): Promise<{ copiedPaths: string[]; templateChecksum: string }> {
   const platformDirectories = unknownPlatforms
     .map((platform) => `./${platform}`)
@@ -169,7 +162,6 @@ export async function cloneTemplateAndCopyToProjectAsync({
     // packages/expo-desktop-config-plugins/src/plugins/with-expo-desktop.js
     const windowsTemplateStrings = getWindowsTemplateStrings({
       name,
-      rnwVersion,
       packageGuid,
       projectGuid,
     });

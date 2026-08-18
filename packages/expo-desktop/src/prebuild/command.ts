@@ -119,8 +119,6 @@ export async function prebuild(args: {
 
   const { exp, pkg } = await ensureConfigAsync(projectRoot, { platforms });
 
-  // windowsTemplateStrings, rnwVersion
-
   // Create native projects from template.
   // https://github.com/expo/expo/blob/8dd645080f52927e2a8bf406167da7241a1d46d8/packages/%40expo/cli/src/prebuild/prebuildAsync.ts#L112-L120
   // https://github.com/expo/expo/blob/e2aa8935077d88fbbb22b1f4dc1f8a1586080b97/packages/%40expo/cli/src/prebuild/updateFromTemplate.ts#L23

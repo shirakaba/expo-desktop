@@ -76,7 +76,6 @@ export async function createExpoDesktopApp({
     projectRoot,
     displayName,
     rdns,
-    rnwVersion: versions.windows,
     npmPackage: resolvedTemplate,
   });
   console.log(`${green("◆")}  Applied templates.\n`);

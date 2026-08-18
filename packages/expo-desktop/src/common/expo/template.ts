@@ -143,12 +143,10 @@ export async function extractAndPrepareTemplateAppAsync({
   displayName,
   rdns,
   npmPackage,
-  rnwVersion,
 }: {
   projectRoot: string;
   displayName: string | undefined;
   rdns: string | undefined;
-  rnwVersion: string;
   npmPackage?: string | null;
 }) {
   /**
@@ -182,22 +180,7 @@ export async function extractAndPrepareTemplateAppAsync({
     displayName,
     projectRoot,
     rdns,
-    rnwVersion,
   });
-
-  // TODO: Should we remove this step? It made sense while we had a
-  // single-template model (i.e. blank-typescript had a /windows folder in it),
-  // but now we're doing a step that's redundant with the prebuild step. i.e.
-  // we again ensure these GUIDs are generated and written into the app.json
-  // when we call ensureConfigAsync() and configureProjectAsync().
-  // const { packageGuid, projectGuid } = await getOrGenerateGuidsAsync(projectRoot);
-  //
-  // const windowsTemplateStrings = getWindowsTemplateStrings({
-  //   name,
-  //   rnwVersion,
-  //   packageGuid,
-  //   projectGuid,
-  // });
 
   try {
     const files = await getTemplateFilesToRenameAsync({ cwd: projectRoot });
@@ -219,12 +202,10 @@ export function getWindowsTemplateStrings({
   packageGuid,
   projectGuid,
   name,
-  rnwVersion,
 }: {
   packageGuid: string;
   projectGuid: string;
   name: { displayName: string; rdns: string };
-  rnwVersion: string;
 }) {
   const namespace = name.rdns.replaceAll(/[-_]/g, "");
   const namespaceCpp = namespace.replaceAll(".", "::");
@@ -254,7 +235,6 @@ export function getWindowsTemplateStrings({
     name: "MyApp",
     namespace,
     namespaceCpp,
-    rnwVersion,
     // We can't reliably fill in the path to react-native-windows without first
     // installing node modules. However, in create-app, we unpack the template
     // before that, so we have a chicken-and-egg problem.
@@ -525,12 +505,10 @@ function templateHasNativeCode(root: string): boolean {
 export async function sanitizeTemplateAsync({
   displayName: displayNameArg,
   rdns: rdnsArg,
-  rnwVersion,
   projectRoot,
 }: {
   displayName: string | undefined;
   rdns: string | undefined;
-  rnwVersion: string;
   projectRoot: string;
 }) {
   const projectName = path.basename(projectRoot);
@@ -571,7 +549,6 @@ export async function sanitizeTemplateAsync({
 
   const windowsTemplateStrings = getWindowsTemplateStrings({
     name: { displayName, rdns },
-    rnwVersion,
     packageGuid,
     projectGuid,
   });
