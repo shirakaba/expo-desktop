@@ -6,6 +6,11 @@ export async function getPackageInfo(packageName: string) {
   const res = await fetch(`https://registry.npmjs.org/${packageName}`);
   const data = await res.json();
 
+  const errorResponse = NpmErrorResponse(data);
+  if (!(errorResponse instanceof type.errors)) {
+    throw new Error(`Got error response from npm: ${errorResponse.error}`);
+  }
+
   const response = NpmResponse(data);
   if (response instanceof type.errors) {
     // console.log(`Invalid config:\n${makePrettySummary(partial).join("\n")}`);
@@ -159,6 +164,7 @@ export function getHighestStableMinors(map: VersionsMap) {
   return minorMap;
 }
 
+const NpmErrorResponse = type({ error: "string" });
 const NpmResponse = type({
   name: "string",
   "dist-tags": "Record<string, string.semver>",

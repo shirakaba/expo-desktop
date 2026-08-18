@@ -16,6 +16,7 @@ import {
   assertValidName,
   resolveProjectRootAsync,
 } from "./resolve-project-root.ts";
+import { selectTemplateVersion } from "./template-versions.ts";
 
 const debug = Debug("expo-desktop:create-app") as typeof console.log;
 
@@ -26,7 +27,7 @@ export async function createExpoDesktopApp({
   projectRoot: projectRootArg,
   rdns,
   template,
-  versions,
+  version,
   yes,
 }: {
   agentsMd: boolean;
@@ -35,14 +36,7 @@ export async function createExpoDesktopApp({
   projectRoot: string | undefined;
   rdns: string | undefined;
   template?: string | undefined;
-  versions: {
-    minor: number;
-    expoMajor: number;
-    expoBlankTypeScript: string;
-    mobile: string;
-    windows: string;
-    macos: string;
-  };
+  version: string | undefined;
   yes: boolean;
 }) {
   const props: CreateAsyncOptions = {
@@ -63,12 +57,21 @@ export async function createExpoDesktopApp({
     { yes },
   );
 
-  // In create-expo, this coerces to `${name}@sdk-${selectedSdk}` for all known
-  // expo templates (e.g. expo-desktop-template-blank-typescript@sdk-54).
+  // In create-expo, known Expo templates are resolved as
+  // `${name}@sdk-${selectedSdk}`, (e.g. expo-template-blank-typescript@sdk-54).
   // - https://github.com/expo/expo/blob/6e418b5947dd8806ac97c19eb959ded3a1b14ea2/packages/create-expo/src/createAsync.ts#L97-L114
   // - https://github.com/expo/expo/blob/6e418b5947dd8806ac97c19eb959ded3a1b14ea2/packages/create-expo/src/promptSdkVersion.ts#L78
-  const resolvedTemplate =
-    template ?? `expo-desktop-template-blank-typescript@${versions.expoMajor}.${versions.minor}`;
+  //
+  // But in our case, we'll use expo-desktop-template-blank-typescript@54.81.0.
+  // The major version conveys the Expo SDK, the minor version conveys the React
+  // Native minor, and the patch version is for patches of the template. We'll
+  // revisit this once React Native hits v1.
+  const resolvedTemplate = await selectTemplateVersion({
+    defaultPackageName: "expo-desktop-template-blank-typescript",
+    template,
+    version,
+    yes,
+  });
 
   await fs.mkdir(projectRoot, { recursive: true });
 

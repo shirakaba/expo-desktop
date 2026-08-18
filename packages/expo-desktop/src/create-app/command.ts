@@ -20,15 +20,6 @@ export async function newExpoDesktopProject(args: {
   );
   console.log();
 
-
-  // TODO: Revisit the --version arg and promptForVersion(), now that we
-  //       manage our own template. This is the last usage of @clack/prompts in
-  //       expo-desktop.
-  // const versions = await promptForVersion(args.version);
-  // log.info(
-  //   `Will use versions: ${green(`react-native@${versions.mobile}`)}, ${green(`react-native-macos@${versions.macos}`)}, and ${green(`react-native-windows@${versions.windows}`)}, with ${green(`Expo ${versions.expoMajor}`)}.`,
-  // );
-
   // Looking for the "packageManager" option?
   //
   // Pass the `npm_config_user_agent` env var so that it gets picked up by
@@ -45,14 +36,7 @@ export async function newExpoDesktopProject(args: {
       projectRoot: "YourApp456",
       rdns: "uk.co.birchlabs.your-app-456",
       template: args.template,
-      versions: {
-        expoMajor: 54,
-        expoBlankTypeScript: "54.0.45",
-        minor: 81,
-        mobile: "0.81.6",
-        windows: "0.81.15",
-        macos: "0.81.7",
-      },
+      version: args.version,
       yes: true,
     });
   } else {
@@ -63,14 +47,7 @@ export async function newExpoDesktopProject(args: {
       projectRoot: args["project-root"],
       rdns: args.rdns,
       template: args.template,
-      versions: {
-        expoMajor: 54,
-        expoBlankTypeScript: "54.0.45",
-        minor: 81,
-        mobile: "0.81.6",
-        windows: "0.81.15",
-        macos: "0.81.7",
-      },
+      version: args.version,
       yes: !!args.yes,
     });
   }
