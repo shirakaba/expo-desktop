@@ -57,6 +57,12 @@ export async function cloneTemplateAsync({
       throw new Error(`Unknown template type: ${type}`);
     }
   } else {
+    // Try to resolve the template in the following order:
+    // 1. From source inside the expo/expo monorepo (which it packs into a
+    //    tarball on-the-spot).
+    // 2. From expo/template.tgz (via require.resolve(), relative to the project
+    //    root).
+    // 3. Via npm download: 'expo-desktop-template-bare-minimum@54'.
     try {
       return await resolveLocalTemplateAsync({ templateDirectory, projectRoot, exp });
     } catch (error: any) {
@@ -79,7 +85,10 @@ function getTemplateNpmPackageNameFromSdkVersion(sdkVersion?: string): string {
     Log.log("Using an unspecified Expo SDK version. The latest template will be used.");
     return `expo-desktop-template-bare-minimum@latest`;
   }
-  return `expo-desktop-template-bare-minimum@sdk-${semver.major(sdkVersion)}`;
+
+  // We may move to @sdk tags in future, but for now, we don't use them.
+  // return `expo-desktop-template-bare-minimum@sdk-${semver.major(sdkVersion)}`;
+  return `expo-desktop-template-bare-minimum@${semver.major(sdkVersion)}`;
 }
 
 async function getRepoInfo(url: any, examplePath?: string): Promise<RepoInfo | undefined> {
