@@ -1,0 +1,46 @@
+{
+  "name": "expo-desktop-template-blank-typescript",
+  "version": "54.81.0",
+  "description": "An Expo Desktop template for React Native v0.81, based on Expo SDK 54",
+  "license": "0BSD",
+  "main": "index.ts",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "macos": "node -e \"console.log('Please run \\`npx expo-desktop prebuild\\` to set up the React Native macOS project.'); process.exit(1);\"",
+    "windows": "node -e \"console.log('Please run \\`npx expo-desktop prebuild\\` to set up the React Native Windows project.'); process.exit(1);\"",
+    "web": "expo start --web",
+    "autolink-windows": "react-native autolink-windows"
+  },
+  "dependencies": {
+    "expo": "~54.0.35",
+    "expo-desktop-modules-core": "~54.0.13",
+    "expo-desktop-prebuild-config": "~1.0.20",
+    "expo-desktop-stubs": "~54.0.13",
+    "expo-status-bar": "~3.0.9",
+    "react": "19.1.4",
+    "react-native": "0.81.6",
+    "react-native-macos": "0.81.7",
+    "react-native-windows": "0.81.27"
+  },
+  "devDependencies": {
+    "@react-native-community/cli": "^20.1.3",
+    "@react-native/metro-config": "0.81.6",
+    "@rnx-kit/metro-config": "^2.2.4",
+    "@types/react": "~19.2.17",
+    "typescript": "~5.9.2"
+  },
+  "overrides": {
+    "react": "19.1.4",
+    "react-native": "0.81.6"
+  },
+  "expo": {
+    "install": {
+      "exclude": [
+        "react",
+        "react-native"
+      ]
+    }
+  }
+}
