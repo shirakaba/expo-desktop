@@ -155,10 +155,12 @@ export async function cloneTemplateAndCopyToProjectAsync({
     );
     const { packageGuid, projectGuid } = typedConfig.windows;
 
-    // FIXME: Once the mustache is rendered once (e.g. during create-app)
-    // this function is no good for updating the packageGuid, projectGuid, and
-    // namespace. We need to add that logic to withExpoDesktop() to run at
-    // prebuild time based on values configured in app.json.
+    // When first unpacking the template, we render the mustache-syntax template
+    // strings, including the packageGuid, projectGuid, and namespace.
+    //
+    // On subsequent prebuilds, the same properties get updated via config
+    // plugins (by modifying the XML trees of the wapproj, vcxproj,
+    // appxManifest, sln, etc.) in withExpoDesktop().
     // packages/expo-desktop-config-plugins/src/plugins/with-expo-desktop.js
     const windowsTemplateStrings = getWindowsTemplateStrings({
       name,
