@@ -18,6 +18,7 @@
     "expo-desktop-modules-core": "~54.0.13",
     "expo-desktop-prebuild-config": "~1.0.20",
     "expo-desktop-stubs": "~54.0.13",
+    "expo-desktop-template-bare-minimum": "~54.81.0",
     "expo-status-bar": "~3.0.9",
     "react": "19.1.4",
     "react-native": "0.81.6",
