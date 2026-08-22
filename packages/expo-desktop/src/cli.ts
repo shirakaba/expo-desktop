@@ -118,8 +118,15 @@ const main = defineCommand({
         },
       },
       async run({ args }) {
-        // `args["no-install"]: true` gets coerced to `args["install"]: false`
-        // @ts-expect-error the typings do not represent no- args correctly.
+        // When `--no-install` is passed, it parses as:
+        // { install: false, "no-install": undefined }
+        //
+        // When `--no-install` is omitted, it parses as:
+        // { install: undefined, "no-install": undefined }
+        if (args.install === undefined) {
+          args.install = true;
+        }
+        // @ts-expect-error "no-install" missing from typings.
         args["no-install"] = !args["install"];
 
         (await import("./prebuild/command.ts")).prebuild(args);
