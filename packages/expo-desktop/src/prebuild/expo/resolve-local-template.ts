@@ -2,7 +2,6 @@ import type { ExpoConfig } from "@expo/config";
 
 import Debug from "debug";
 import fs from "node:fs/promises";
-import { createRequire } from "node:module";
 import path from "path";
 import { argv } from "process";
 import resolveFrom from "resolve-from";
@@ -10,7 +9,6 @@ import semver from "semver";
 
 import { packNpmTarballAsync, extractLocalNpmTarballAsync } from "../../common/expo/npm.ts";
 
-const require = createRequire(import.meta.url);
 const debug = Debug("expo-desktop:prebuild:resolveLocalTemplate") as typeof console.log;
 
 /** Returns the `local-template` target path, only for the `expo/expo` monorepo */
@@ -58,9 +56,6 @@ const getMonorepoTemplatePath = async () => {
   return path.resolve(bareMinimum, highestVersion);
 };
 
-// FIXME: This is logic for working within the expo/expo monorepo and would need
-//        to be adapted for our workflow. Currently I manage the templates in
-//        the expo-desktop-templates repo.
 export async function resolveLocalTemplateAsync({
   templateDirectory,
   projectRoot,
@@ -91,9 +86,64 @@ export async function resolveLocalTemplateAsync({
       throw error;
     }
   } else {
-    // The default is to use `expo/template.tgz` which exists in all published versions of it
-    templatePath = resolveFrom(projectRoot, "expo/template.tgz");
-    debug("Using local template from Expo package:", templatePath);
+    // In Expo projects, the default is to use `expo/template.tgz` as it exists
+    // in all published versions of `expo`.
+    //
+    // In Expo Desktop projects, we can't follow the same convention. The
+    // expo-desktop package is a CLI tool and isn't appropriate to be added as a
+    // dependency of Expo Desktop apps, so we can't simply bundle a template.tgz
+    // into it.
+    //
+    // So instead, in expo-desktop-template-blank-typescript, we add
+    // expo-desktop-template-bare-minimum as a dependency so that we can resolve
+    // it relative to the project root. If we don't find it (e.g. because the
+    // user has removed that dependency, or hasn't installed dependencies at all
+    // yet), then fine, we'll throw an error here and they'll just have to
+    // download it afresh from npm.
+
+    // templatePath = resolveFrom(projectRoot, "expo/template.tgz");
+    // debug("Using local template from Expo package:", templatePath);
+
+    const npmPackagePath = path.dirname(
+      resolveFrom(projectRoot, "expo-desktop-template-bare-minimum/package.json"),
+    );
+
+    // The below is going to look rather redundant (we repack a package that
+    // came straight from npm), but we need to turn it into a tarball in order
+    // to reuse the complex renaming logic built into
+    // extractLocalNpmTarballAsync().
+
+    // If we've already packed this on a previous run, reuse it.
+    let existingTarball: string | undefined;
+    try {
+      for await (const match of fs.glob("expo-desktop-template-bare-minimum-*.tgz", {
+        cwd: npmPackagePath,
+      })) {
+        existingTarball = match;
+        break;
+      }
+    } catch (error) {
+      debug(
+        "Failed to confirm whether existing tarball was present, so will regenerate. Error: %O",
+        error,
+      );
+    }
+
+    if (existingTarball) {
+      templatePath = path.resolve(npmPackagePath, existingTarball);
+      debug("Reusing existing tarball for local template at:", templatePath);
+    } else {
+      try {
+        templatePath = await packNpmTarballAsync(npmPackagePath);
+        debug("Using packed local template at:", templatePath);
+      } catch (error) {
+        debug(
+          "Failed to pack expo-desktop-template-bare-minimum found in node_modules to be used as a prebuild template: %O",
+          error,
+        );
+        throw error;
+      }
+    }
   }
 
   return await extractLocalNpmTarballAsync(templatePath, templateDirectory, {

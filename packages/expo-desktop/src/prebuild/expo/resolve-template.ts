@@ -58,10 +58,10 @@ export async function cloneTemplateAsync({
     }
   } else {
     // Try to resolve the template in the following order:
-    // 1. From source inside the expo/expo monorepo (which it packs into a
+    // 1. From source inside the expo-desktop monorepo (which it packs into a
     //    tarball on-the-spot).
-    // 2. From expo/template.tgz (via require.resolve(), relative to the project
-    //    root).
+    // 2. From an expo-desktop-template-bare-minimum dependency found relative
+    //    to the project root (which again, it packs into a tarball).
     // 3. Via npm download: 'expo-desktop-template-bare-minimum@54'.
     try {
       return await resolveLocalTemplateAsync({ templateDirectory, projectRoot, exp });
