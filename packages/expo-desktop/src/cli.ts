@@ -125,9 +125,10 @@ const main = defineCommand({
 
 await runMain(main);
 
-function parseNoArg<K extends NoKeys<T>, T extends ArgsDef = ArgsDef>(
+function parseNoArg<K extends NoKeys<BooleanArgs<T>>, T extends ArgsDef>(
   args: ParsedArgs<T>,
   noKey: K,
+  defaultValue: NonNullable<ParsedArgs<T>[K]> = true as NonNullable<ParsedArgs<T>[K]>,
 ) {
   const [, yesKey] = noKey.split("no-");
 
@@ -139,7 +140,7 @@ function parseNoArg<K extends NoKeys<T>, T extends ArgsDef = ArgsDef>(
   // When `--no-install` is omitted, it parses as:
   // { install: undefined, "no-install": undefined }
   if (args[yesKey] === undefined) {
-    args[yesKey as keyof typeof args] = true as any;
+    args[yesKey as keyof typeof args] = defaultValue as any;
   }
   args[noKey] = !args[yesKey] as any;
 
@@ -147,3 +148,4 @@ function parseNoArg<K extends NoKeys<T>, T extends ArgsDef = ArgsDef>(
 }
 
 type NoKeys<T> = Extract<keyof T, `no-${string}`>;
+type BooleanArgs<T> = { [K in keyof T]: T[K] extends boolean ? K : never };
