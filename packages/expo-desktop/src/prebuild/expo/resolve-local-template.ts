@@ -1,23 +1,61 @@
 import type { ExpoConfig } from "@expo/config";
 
 import Debug from "debug";
-import fs from "fs";
+import fs from "node:fs/promises";
+import { createRequire } from "node:module";
 import path from "path";
+import { argv } from "process";
 import resolveFrom from "resolve-from";
+import semver from "semver";
 
 import { packNpmTarballAsync, extractLocalNpmTarballAsync } from "../../common/expo/npm.ts";
 
+const require = createRequire(import.meta.url);
 const debug = Debug("expo-desktop:prebuild:resolveLocalTemplate") as typeof console.log;
 
 /** Returns the `local-template` target path, only for the `expo/expo` monorepo */
 const getMonorepoTemplatePath = async () => {
-  const cliPath = path.dirname(require.resolve("@expo/cli/package.json"));
-  const localTemplateOriginPath = path.join(cliPath, "local-template");
-  try {
-    return await fs.promises.realpath(localTemplateOriginPath);
-  } catch {
+  /** The logic that Expo use in the `expo/expo` monorepo: */
+  // const cliPath = path.dirname(require.resolve("@expo/cli/package.json"));
+  // const localTemplateOriginPath = path.join(cliPath, "local-template");
+  // try {
+  //   return await fs.promises.realpath(localTemplateOriginPath);
+  // } catch {
+  //   return null;
+  // }
+
+  // If it's being run from source, e.g. `node ../src/cli.ts prebuild`, then we
+  // know we're in development mode.
+  if (!argv.at(1)?.endsWith(".ts")) {
     return null;
   }
+
+  let expoDesktopPath;
+  try {
+    expoDesktopPath = path.dirname(
+      new URL(import.meta.resolve("expo-desktop/package.json")).pathname,
+    );
+  } catch (error) {
+    return null;
+  }
+
+  const monorepoRoot = path.resolve(expoDesktopPath, "../..");
+  const bareMinimum = path.resolve(monorepoRoot, "templates/bare-minimum");
+
+  // Unlike the expo monorepo, we plan to maintain multiple versions of
+  // bare-minimum side-by-side on the same branch. Let's resolve the latest one.
+  let versions: Array<string>;
+  try {
+    versions = await fs.readdir(bareMinimum, "utf-8");
+  } catch (error) {
+    return null;
+  }
+
+  const highestVersion = semver.rsort(versions).at(0);
+  if (!highestVersion) {
+    return null;
+  }
+  return path.resolve(bareMinimum, highestVersion);
 };
 
 // FIXME: This is logic for working within the expo/expo monorepo and would need
@@ -34,7 +72,10 @@ export async function resolveLocalTemplateAsync({
 }): Promise<string> {
   let templatePath: string;
 
-  // In the expo/expo monorepo only, we use `templates/expo-template-bare-minimum` directly
+  // In the expo/expo monorepo, they resolve packages/@expo/cli/local-template,
+  // which symlinks to templates/expo-template-bare-minimum.
+  //
+  // In our monorepo, we resolve templates/bare-minimum/<latest version>.
   const monorepoTemplatePath = await getMonorepoTemplatePath();
   if (monorepoTemplatePath) {
     debug("Packing local template from expo-template-bare-minimum path:", monorepoTemplatePath);
