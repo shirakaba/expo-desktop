@@ -1,0 +1,19 @@
+{
+  "name": "custom-changeset",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "add": "node src/add.ts",
+    "test": "node --test src/*.test.ts",
+    "version": "node src/version.ts",
+    "publish": "node src/publish.ts"
+  },
+  "dependencies": {
+    "@changesets/cli": "^3.0.1"
+  },
+  "devDependencies": {
+    "@tsconfig/node24": "catalog:base",
+    "@types/node": "catalog:base"
+  }
+}

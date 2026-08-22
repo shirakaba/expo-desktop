@@ -6,7 +6,7 @@ packages:
   - packages/expo-desktop-modules-core
   - packages/expo-desktop-prebuild-config
   - packages/expo-desktop-stubs
-  - scripts
+  - scripts/custom-changeset
 
 catalogs:
   base:

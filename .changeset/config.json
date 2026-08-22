@@ -7,5 +7,5 @@
   "fixed": [],
   "linked": [],
   "updateInternalDependencies": "patch",
-  "ignore": ["demo", "expo-desktop-monorepo-scripts", "expo-desktop-scripts"]
+  "ignore": ["demo", "expo-desktop-monorepo-custom-changeset", "expo-desktop-scripts"]
 }
