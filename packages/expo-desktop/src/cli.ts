@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { defineCommand, runMain } from "citty";
+import { type ArgsDef, defineCommand, type ParsedArgs, runMain } from "citty";
 import { default as kleur } from "kleur";
 import { dim, grey } from "kleur/colors";
 
@@ -62,11 +62,8 @@ const main = defineCommand({
         },
       },
       async run({ args }) {
-        // `args["no-install"]: true` gets coerced to `args["install"]: false`
-        // @ts-expect-error the typings do not represent no- args correctly.
-        args["no-install"] = !args["install"];
-        // @ts-expect-error the typings do not represent no- args correctly.
-        args["no-agents-md"] = !args["agents-md"];
+        parseNoArg(args, "no-agents-md");
+        parseNoArg(args, "no-install");
 
         (await import("./create-app/command.ts")).newExpoDesktopProject(args);
       },
@@ -118,16 +115,7 @@ const main = defineCommand({
         },
       },
       async run({ args }) {
-        // When `--no-install` is passed, it parses as:
-        // { install: false, "no-install": undefined }
-        //
-        // When `--no-install` is omitted, it parses as:
-        // { install: undefined, "no-install": undefined }
-        if (args.install === undefined) {
-          args.install = true;
-        }
-        // @ts-expect-error "no-install" missing from typings.
-        args["no-install"] = !args["install"];
+        parseNoArg(args, "no-install");
 
         (await import("./prebuild/command.ts")).prebuild(args);
       },
@@ -136,3 +124,26 @@ const main = defineCommand({
 });
 
 await runMain(main);
+
+function parseNoArg<K extends NoKeys<T>, T extends ArgsDef = ArgsDef>(
+  args: ParsedArgs<T>,
+  noKey: K,
+) {
+  const [, yesKey] = noKey.split("no-");
+
+  // Assuming the noArg has no default value:
+  //
+  // When `--no-install` is passed, it parses as:
+  // { install: false, "no-install": undefined }
+  //
+  // When `--no-install` is omitted, it parses as:
+  // { install: undefined, "no-install": undefined }
+  if (args[yesKey] === undefined) {
+    args[yesKey as keyof typeof args] = true as any;
+  }
+  args[noKey] = !args[yesKey] as any;
+
+  return noKey;
+}
+
+type NoKeys<T> = Extract<keyof T, `no-${string}`>;
