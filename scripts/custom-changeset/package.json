@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "add": "node src/add.ts",
+    "pre": "node src/pre.ts",
     "test": "node --test src/*.test.ts",
     "version": "node src/version.ts",
     "publish": "node src/publish.ts"

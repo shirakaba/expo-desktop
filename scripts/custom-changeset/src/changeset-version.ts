@@ -3,7 +3,7 @@
 // Every behavioral difference from upstream is enclosed in a FORK block.
 // Source: https://github.com/changesets/changesets/blob/bed458124f623463c581521ab56d040eba2a8b20/packages/cli/src/commands/version/index.ts
 
-import type { CommitFunctions, Config, Packages } from "@changesets/types";
+import type { CommitFunctions, Config, NewChangeset, Packages } from "@changesets/types";
 import type { Package as ManyPkgPackage } from "@manypkg/tools";
 
 import { applyReleasePlan } from "@changesets/apply-release-plan";
@@ -23,7 +23,10 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 // FORK (start 2)
-import { disambiguatePackages } from "./package-identities.ts";
+import {
+  disambiguatePackages,
+  rebasePrereleaseChangesetPackageNames,
+} from "./package-identities.ts";
 // FORK (end 2)
 
 const cliPackageJsonUrl = import.meta.resolve("@changesets/cli/package.json");
@@ -84,7 +87,11 @@ export async function version(options: VersionOptions): Promise<void> {
   // Changesets keys its release plan by package name. Only duplicate package
   // names receive an in-memory `name@version` identity; package.json files on
   // disk retain their real npm names.
-  const { packageNamesByVirtualName, packages } = disambiguatePackages(discoveredPackages);
+  const { packageNamesByDir, packageNamesByVirtualName, packages, patchOnlyPackageNames } =
+    disambiguatePackages(
+      discoveredPackages,
+      new Set(options.extraPackages?.map(({ dir }) => path.resolve(dir))),
+    );
   // FORK (end 4)
   await ensureChangesetFolder(packages.rootDir);
   const config = await readConfig(packages);
@@ -114,7 +121,24 @@ export async function version(options: VersionOptions): Promise<void> {
     log.error(messages.join("\n"));
     throw new ExitError(1);
   }
-  const [changesets, preState] = await Promise.all([readChangesets(cwd), readPreState(cwd)]);
+  const [readChangesetResult, preState] = await Promise.all([
+    readChangesets(cwd),
+    readPreState(cwd),
+  ]);
+  // FORK (start 5)
+  // Changesets retains applied changesets under `.changeset/pre`. Repoint a
+  // retained template's old name@version identity to the current prerelease
+  // identity on the same patch-only template line.
+  const changesets =
+    preState == null
+      ? readChangesetResult
+      : rebasePrereleaseChangesetPackageNames(
+          readChangesetResult,
+          options.extraPackages ?? [],
+          packageNamesByDir,
+        );
+  validatePatchOnlyPackageBumps(changesets, patchOnlyPackageNames);
+  // FORK (end 5)
   if (preState?.mode === "pre") {
     if (options.snapshot != null) {
       log.error(
@@ -160,11 +184,11 @@ You can then run ${src_default.cyan("changeset version")} again to do a normal r
     options.snapshot,
     contextDir,
   );
-  // FORK (start 5)
+  // FORK (start 6)
   // applyReleasePlan uses the in-memory identity as a new changelog heading.
   // Restore only that heading; package manifests were never renamed on disk.
   await restoreChangelogHeadings(touchedFiles, packageNamesByVirtualName);
-  // FORK (end 5)
+  // FORK (end 6)
   const [{ getVersionMessage }, commitOpts] = await getCommitFunctions(
     releaseConfig.commit,
     cwd,
@@ -184,6 +208,26 @@ You can then run ${src_default.cyan("changeset version")} again to do a normal r
     log.success("All files have been updated. Review them and commit at your leisure");
   }
 }
+
+// FORK (start 7)
+function validatePatchOnlyPackageBumps(
+  changesets: NewChangeset[],
+  patchOnlyPackageNames: ReadonlySet<string>,
+) {
+  const messages = new Array<string>();
+  for (const changeset of changesets)
+    for (const release of changeset.releases) {
+      if (!patchOnlyPackageNames.has(release.name) || release.type === "patch") continue;
+      messages.push(
+        `The template ${src_default.blue(release.name)} requests a ${release.type} bump in changeset ${src_default.blue(changeset.id)}, but side-by-side template versions may only receive patch bumps.`,
+      );
+    }
+  if (messages.length > 0) {
+    log.error(messages.join("\n"));
+    throw new ExitError(1);
+  }
+}
+// FORK (end 7)
 
 function validateIgnoredPackageNames(
   packages: Packages,

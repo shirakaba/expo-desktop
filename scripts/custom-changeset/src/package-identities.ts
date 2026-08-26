@@ -1,6 +1,8 @@
+import type { NewChangeset } from "@changesets/types";
 import type { Package as ManyPkgPackage, Packages as ManyPkgPackages } from "@manypkg/tools";
 
 import path from "node:path";
+import semverParse from "semver/functions/parse.js";
 
 /**
  * Changesets uses package names as identities. For the only unsupported case
@@ -100,4 +102,67 @@ export function restoreReleaseName<T extends { name: string }>(
 ): T {
   const packageName = packageNamesByVirtualName.get(release.name);
   return packageName && packageName !== release.name ? { ...release, name: packageName } : release;
+}
+
+/**
+ * Changesets keeps applied changesets while in prerelease mode. A template's
+ * virtual identity changes when its version does, so point retained release
+ * entries at the current identity for the same template version line.
+ */
+export function rebasePrereleaseChangesetPackageNames(
+  changesets: NewChangeset[],
+  extraPackages: readonly ManyPkgPackage[],
+  packageNamesByDir: ReadonlyMap<string, string>,
+): NewChangeset[] {
+  const currentPackageNames = new Set(packageNamesByDir.values());
+  const currentNamesByLine = new Map<string, string>();
+  const actualPackageNames = new Set<string>();
+
+  for (const pkg of extraPackages) {
+    const version = semverParse(pkg.packageJson.version);
+    if (version == null) {
+      throw new Error(
+        `Cannot identify the template version line for ${pkg.packageJson.name}@${pkg.packageJson.version}.`,
+      );
+    }
+    const currentName = packageNamesByDir.get(path.resolve(pkg.dir));
+    if (currentName == null) continue;
+
+    const line = templateVersionLine(pkg.packageJson.name, version.major, version.minor);
+    const existingName = currentNamesByLine.get(line);
+    if (existingName != null && existingName !== currentName) {
+      throw new Error(
+        `Cannot distinguish side-by-side packages on the ${pkg.packageJson.name}@${version.major}.${version.minor} version line.`,
+      );
+    }
+    actualPackageNames.add(pkg.packageJson.name);
+    currentNamesByLine.set(line, currentName);
+  }
+
+  return changesets.map((changeset) => {
+    if (!changeset.id.startsWith("pre/")) return changeset;
+    return {
+      ...changeset,
+      releases: changeset.releases.map((release) => {
+        if (currentPackageNames.has(release.name)) return release;
+
+        for (const actualPackageName of actualPackageNames) {
+          const prefix = `${actualPackageName}@`;
+          if (!release.name.startsWith(prefix)) continue;
+
+          const version = semverParse(release.name.slice(prefix.length));
+          if (version == null) continue;
+          const currentName = currentNamesByLine.get(
+            templateVersionLine(actualPackageName, version.major, version.minor),
+          );
+          if (currentName != null) return { ...release, name: currentName };
+        }
+        return release;
+      }),
+    };
+  });
+}
+
+function templateVersionLine(name: string, major: number, minor: number): string {
+  return `${name}\0${major}\0${minor}`;
 }
