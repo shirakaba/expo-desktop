@@ -44,6 +44,7 @@ const JsonFile = (require("@expo/json-file") as typeof JsonFileType).default;
 const debug = Debug("expo-desktop:create-app:template") as typeof console.log;
 
 const isMacOS = process.platform === "darwin";
+const isWindows = process.platform === "win32";
 
 // keep this list in sync with the validation helper in WWW: src/utils/experienceParser.ts
 const FORBIDDEN_NAMES = [
@@ -793,14 +794,14 @@ export function logProjectReady({
 
   console.log(`- ${chalk.bold(formatRunCommand(packageManager, "android"))}`);
 
-  let macOSComment = "";
-  if (!isMacOS) {
-    macOSComment =
-      " # you need to use macOS to build the iOS or macOS projects - use the Expo app if you need to do Apple development without a Mac";
-  }
+  const macOSComment = isMacOS
+    ? ""
+    : " # you need to use macOS to build the iOS or macOS projects - use the Expo app if you need to do Apple development without a Mac";
   console.log(`- ${chalk.bold(formatRunCommand(packageManager, "ios"))}${macOSComment}`);
   console.log(`- ${chalk.bold(formatRunCommand(packageManager, "macos"))}${macOSComment}`);
 
+  const windowsComment = isWindows ? "" : " # you need to use Windows to build the Windows project";
+  console.log(`- ${chalk.bold(formatRunCommand(packageManager, "windows"))}${windowsComment}`);
   console.log(`- ${chalk.bold(formatRunCommand(packageManager, "web"))}`);
 }
 
