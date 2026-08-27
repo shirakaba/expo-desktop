@@ -2,7 +2,11 @@
   "name": "expo-desktop-template-blank-typescript",
   "version": "54.81.1-beta.0",
   "description": "An Expo Desktop template for React Native v0.81, based on Expo SDK 54",
-  "license": "0BSD",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shirakaba/expo-desktop.git",
+    "directory": "templates/blank-typescript/54.81"
+  },
   "main": "index.ts",
   "scripts": {
     "start": "expo start",

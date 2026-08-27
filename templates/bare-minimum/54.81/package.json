@@ -3,6 +3,11 @@
   "version": "54.81.1-beta.0",
   "description": "This bare project template includes a minimal setup for using unimodules with React Native.",
   "license": "0BSD",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shirakaba/expo-desktop.git",
+    "directory": "templates/bare-minimum/54.81"
+  },
   "main": "index.js",
   "scripts": {
     "start": "expo start --dev-client",
