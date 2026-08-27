@@ -2,10 +2,12 @@ import type { Config } from "@changesets/types";
 import type { Packages } from "@manypkg/tools";
 
 import assert from "node:assert/strict";
+import { execFile } from "node:child_process";
 import fs from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { promisify } from "node:util";
 
 import { getPublishPlan } from "./changeset-publish-plan.ts";
 import {
@@ -17,6 +19,8 @@ import {
 import { disambiguatePackages } from "./package-identities.ts";
 import { getTemplatePackages } from "./template-packages.ts";
 import { writeTemplateFixtures } from "./test-fixtures.ts";
+
+const execFileAsync = promisify(execFile);
 
 test("builds one publish-plan entry per tuple while querying real npm names", async () => {
   await using fixture = await fakeRegistryFixture();
@@ -86,6 +90,64 @@ test("runs the complete forked publish flow for every tuple without contacting n
   } finally {
     process.env.PATH = oldPath;
   }
+});
+
+test("reports workspace tags to Changesets Action and routes template tags separately", async () => {
+  await using fixture = await fakeRegistryFixture();
+  await writePublishFixture(fixture.rootDir);
+  const normalPackageDir = path.join(fixture.rootDir, "packages/normal");
+  await fs.mkdir(normalPackageDir, { recursive: true });
+  await fs.writeFile(
+    path.join(normalPackageDir, "package.json"),
+    `${JSON.stringify({ name: "normal", version: "1.0.0" }, undefined, 2)}\n`,
+  );
+  await initializeGitRepository(fixture.rootDir);
+
+  const templates = await getTemplatePackages(fixture.rootDir);
+  const outputPath = path.join(fixture.rootDir, "changesets-output.ndjson");
+  const templateTags = new Array<string>();
+  const oldPath = process.env.PATH;
+  process.env.PATH = `${fixture.binDir}${path.delimiter}${oldPath ?? ""}`;
+  try {
+    await publish({
+      cwd: fixture.rootDir,
+      extraPackages: templates,
+      onExtraPackageGitTag: ({ event, pkg }) => {
+        templateTags.push(`${event.tag}:${pkg.relativeDir}`);
+      },
+      output: outputPath,
+    });
+  } finally {
+    process.env.PATH = oldPath;
+  }
+
+  assert.deepEqual(
+    (await fs.readFile(outputPath, "utf8"))
+      .trim()
+      .split("\n")
+      .filter(Boolean)
+      .map((line) => JSON.parse(line)),
+    [{ packageName: "normal", tag: "normal@1.0.0", type: "git-tag" }],
+  );
+  assert.deepEqual(templateTags.toSorted(), [
+    "expo-desktop-template-bare-minimum@54.81.0:templates/bare-minimum/54.81",
+    "expo-desktop-template-bare-minimum@55.82.0:templates/bare-minimum/55.82",
+    "expo-desktop-template-blank-typescript@54.81.0:templates/blank-typescript/54.81",
+    "expo-desktop-template-blank-typescript@55.82.0:templates/blank-typescript/55.82",
+  ]);
+  assert.deepEqual(
+    (await execFileAsync("git", ["tag", "--list"], { cwd: fixture.rootDir })).stdout
+      .trim()
+      .split("\n")
+      .toSorted(),
+    [
+      "expo-desktop-template-bare-minimum@54.81.0",
+      "expo-desktop-template-bare-minimum@55.82.0",
+      "expo-desktop-template-blank-typescript@54.81.0",
+      "expo-desktop-template-blank-typescript@55.82.0",
+      "normal@1.0.0",
+    ],
+  );
 });
 
 test("resolves each virtual publish-plan identity to its actual package and npm name", async () => {
@@ -237,4 +299,14 @@ async function writePublishFixture(rootDir: string) {
     )}\n`,
   );
   await writeTemplateFixtures(rootDir);
+}
+
+async function initializeGitRepository(rootDir: string) {
+  await execFileAsync("git", ["init", "--initial-branch=main"], { cwd: rootDir });
+  await execFileAsync("git", ["config", "user.name", "Changesets Test"], { cwd: rootDir });
+  await execFileAsync("git", ["config", "user.email", "changesets@example.com"], {
+    cwd: rootDir,
+  });
+  await execFileAsync("git", ["add", "."], { cwd: rootDir });
+  await execFileAsync("git", ["commit", "-m", "fixture"], { cwd: rootDir });
 }

@@ -87,6 +87,19 @@ const {
   t(): UsingContext;
 } = await import(new URL("./dist/usingCtx.mjs", cliPackageJsonUrl).href);
 
+// FORK (start 2)
+export type GitTagOutputEvent = {
+  packageName: string;
+  tag: string;
+  type: "git-tag";
+};
+
+export type ExtraPackageGitTag = {
+  event: GitTagOutputEvent;
+  pkg: ManyPkgPackage;
+};
+// FORK (end 2)
+
 export type PublishOptions = {
   cwd?: string;
   fromPackDir?: string;
@@ -94,10 +107,12 @@ export type PublishOptions = {
   otp?: string;
   output?: string;
   tag?: string;
-  // FORK (start 2)
+  // FORK (start 3)
   /** Packages intentionally excluded from the monorepo workspace config. */
   extraPackages?: ManyPkgPackage[];
-  // FORK (end 2)
+  /** Handle extra-package tags without exposing them to Changesets Action workspace lookup. */
+  onExtraPackageGitTag?: (tag: ExtraPackageGitTag) => void;
+  // FORK (end 3)
 };
 
 type OutputReporter = AsyncDisposable & {
@@ -109,6 +124,50 @@ type UsingContext = {
   d(): Promise<void>;
   e?: unknown;
 };
+
+// FORK (start 4)
+function isGitTagOutputEvent(event: Record<string, unknown>): event is GitTagOutputEvent {
+  return (
+    event.type === "git-tag" &&
+    typeof event.tag === "string" &&
+    typeof event.packageName === "string"
+  );
+}
+
+function getExtraPackagesByGitTag(extraPackages: readonly ManyPkgPackage[]) {
+  const packagesByGitTag = new Map<string, ManyPkgPackage>();
+  for (const pkg of extraPackages) {
+    const tag = `${pkg.packageJson.name}@${pkg.packageJson.version}`;
+    if (packagesByGitTag.has(tag)) {
+      throw new Error(`Cannot report multiple extra packages with the same git tag: ${tag}.`);
+    }
+    packagesByGitTag.set(tag, pkg);
+  }
+  return packagesByGitTag;
+}
+
+function routeOutputReporter(
+  reporter: OutputReporter | undefined,
+  extraPackagesByGitTag: ReadonlyMap<string, ManyPkgPackage>,
+  onExtraPackageGitTag: PublishOptions["onExtraPackageGitTag"],
+): OutputReporter | undefined {
+  if (onExtraPackageGitTag == null) return reporter;
+
+  return {
+    write(event) {
+      if (isGitTagOutputEvent(event)) {
+        const pkg = extraPackagesByGitTag.get(event.tag);
+        if (pkg != null) {
+          onExtraPackageGitTag({ event, pkg });
+          return;
+        }
+      }
+      reporter?.write(event);
+    },
+    async [Symbol.asyncDispose]() {},
+  };
+}
+// FORK (end 4)
 
 export type PublishResult = {
   code?: string;
@@ -171,9 +230,9 @@ export async function bulkPublishPackages({
   artifactDir,
   otpCode,
   onResult,
-  // FORK (start 3)
+  // FORK (start 5)
   packageNamesByVirtualName,
-  // FORK (end 3)
+  // FORK (end 5)
 }: {
   artifactDir: string | undefined;
   onResult?: (result: PublishResult) => void;
@@ -181,25 +240,25 @@ export async function bulkPublishPackages({
   packagesByName: ReadonlyMap<string, ManyPkgPackage>;
   publishQueue: PublishQueueItem[];
   publishTool: PublishTool;
-  // FORK (start 4)
+  // FORK (start 6)
   packageNamesByVirtualName: ReadonlyMap<string, string>;
-  // FORK (end 4)
+  // FORK (end 6)
 }) {
   if (publishQueue.length === 0) return [];
   const publishPromises = publishQueue.map(async (item) => {
-    // FORK (start 5)
+    // FORK (start 7)
     const pkg = restorePackageName(
       packagesByName.get(item.release.name)!,
       packageNamesByVirtualName,
     );
     const release = restoreReleaseName(item.release, packageNamesByVirtualName);
-    // FORK (end 5)
+    // FORK (end 7)
     const result = await npmPublishQueue.add(() =>
       publishTool.publish({
         pkg,
-        // FORK (start 6)
+        // FORK (start 8)
         release,
-        // FORK (end 6)
+        // FORK (end 8)
         tarballPath: artifactDir ? resolve(artifactDir, item.release.tarball!.path) : null,
         interactive: false,
         otpCode,
@@ -221,11 +280,17 @@ export async function publish(options?: PublishOptions): Promise<void> {
     const reporter = _usingCtx$1.a(await createOutputReport(options?.output));
     const cwd = options?.cwd ?? process.cwd();
     const artifactDir = options?.fromPackDir ? path.resolve(cwd, options.fromPackDir) : undefined;
-    // FORK (start 7)
+    // FORK (start 9)
     const discoveredPackages = await getPackages(cwd);
     discoveredPackages.packages.push(...(options?.extraPackages ?? []));
     const { packageNamesByVirtualName, packages } = disambiguatePackages(discoveredPackages);
-    // FORK (end 7)
+    const extraPackagesByGitTag = getExtraPackagesByGitTag(options?.extraPackages ?? []);
+    const publishReporter = routeOutputReporter(
+      reporter,
+      extraPackagesByGitTag,
+      options?.onExtraPackageGitTag,
+    );
+    // FORK (end 9)
     const packagesByName = new Map(packages.packages.map((pkg) => [pkg.packageJson.name, pkg]));
     const publishTool = await getPublishTool(packages);
     await ensureChangesetFolder(packages.rootDir);
@@ -246,7 +311,7 @@ To resolve this exit the pre mode by running ${src_default.cyan("changeset pre e
     }
     if (releaseTag || preState) showNonLatestTagWarning(options?.tag, preState);
     const config = await readConfig(packages);
-    // FORK (start 8)
+    // FORK (start 10)
     if (artifactDir && options?.extraPackages?.length) {
       throw new Error(
         "Publishing extra packages from a Changesets pack directory is not supported.",
@@ -257,7 +322,7 @@ To resolve this exit the pre mode by running ${src_default.cyan("changeset pre e
       : await getPublishPlan(packages, config, packageNamesByVirtualName, {
           tag: releaseTag,
         });
-    // FORK (end 8)
+    // FORK (end 10)
     if (plan.length === 0) {
       log.warn("No unpublished projects to publish.");
       return;
@@ -287,11 +352,11 @@ To resolve this exit the pre mode by running ${src_default.cyan("changeset pre e
       for (const release of chunk) {
         if (release.kind === "tag-only") {
           if (options?.gitTag ?? true) {
-            // FORK (start 9)
+            // FORK (start 11)
             const actualRelease = restoreReleaseName(release, packageNamesByVirtualName);
             gitTagReleases.push(actualRelease);
             tagOnlyReleases.add(actualRelease);
-            // FORK (end 9)
+            // FORK (end 11)
           }
           continue;
         }
@@ -304,21 +369,21 @@ To resolve this exit the pre mode by running ${src_default.cyan("changeset pre e
         if (sequential) {
           const item = publishQueue.shift()!;
           let interactive = false;
-          // FORK (start 10)
+          // FORK (start 12)
           const pkg = restorePackageName(
             packagesByName.get(item.release.name)!,
             packageNamesByVirtualName,
           );
           const release = restoreReleaseName(item.release, packageNamesByVirtualName);
-          // FORK (end 10)
+          // FORK (end 12)
           let result =
             item.result ??
             (await npmPublishQueue.add(() =>
               publishTool.publish({
                 pkg,
-                // FORK (start 11)
+                // FORK (start 13)
                 release,
-                // FORK (end 11)
+                // FORK (end 13)
                 tarballPath: artifactDir
                   ? path.resolve(artifactDir, item.release.tarball!.path)
                   : null,
@@ -343,9 +408,9 @@ for every package being published after this!
             result = await npmPublishQueue.add(() =>
               publishTool.publish({
                 pkg,
-                // FORK (start 12)
+                // FORK (start 14)
                 release,
-                // FORK (end 12)
+                // FORK (end 14)
                 tarballPath: artifactDir
                   ? path.resolve(artifactDir, item.release.tarball!.path)
                   : null,
@@ -382,9 +447,9 @@ for every package being published after this!
             if (process.stdin.isTTY && result.result === "failed:needs-2fa") return;
             advanceProgress();
           },
-          // FORK (start 13)
+          // FORK (start 15)
           packageNamesByVirtualName,
-          // FORK (end 13)
+          // FORK (end 15)
         });
         const results = publishedItems.map((item) => item.result);
         const successes = results.filter(isPublishSuccessful);
@@ -439,7 +504,9 @@ ${formatPackageList(unsuccessfulNpmPublishes, src_default.red)}
       const results = await createGitTags({
         packages,
         releases: gitTagReleases,
-        reporter,
+        // FORK (start 16)
+        reporter: publishReporter,
+        // FORK (end 16)
       });
       p.stop(
         formatGitTagResults(packages.tool, {

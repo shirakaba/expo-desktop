@@ -1,13 +1,6 @@
-This project vendors light forks of parts of @changesets/cli@3.0.1 to add
-support for extra packages, version-qualified identities for packages
-maintained side-by-side under the same npm name, and their version/publish
-workflows.
-
-===
-
 MIT License
 
-Copyright (c) 2019 Ben Conolly
+Copyright (c) Changesets team and other contributors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
