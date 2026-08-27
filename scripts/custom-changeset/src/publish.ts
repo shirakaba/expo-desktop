@@ -10,5 +10,5 @@ const extraPackages = await getTemplatePackages(monorepoRoot);
 if (process.argv.includes("--dry-run")) {
   await publishDryRun({ cwd: monorepoRoot, extraPackages });
 } else {
-  await publish({ cwd: monorepoRoot, extraPackages });
+  await publish({ cwd: monorepoRoot, extraPackages, output: process.env.CHANGESETS_OUTPUT });
 }
