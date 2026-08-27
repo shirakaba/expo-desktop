@@ -1,5 +1,11 @@
 # expo-desktop
 
+## 1.0.0-beta.4
+
+### Patch Changes
+
+- Handle output of `npm pack` on Windows
+
 ## 1.0.0-beta.3
 
 ### Patch Changes
