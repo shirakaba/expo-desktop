@@ -200,9 +200,6 @@ importers:
       semver:
         specifier: ^7.6.0
         version: 7.7.4
-      shescape:
-        specifier: ^2.1.12
-        version: 2.1.12
       toml:
         specifier: ^4.1.1
         version: 4.1.1
@@ -3244,10 +3241,6 @@ packages:
   isexe@2.0.0:
     resolution: {integrity: sha512-RHxMLp9lnKHGHRng9QFhRCMbYAcVpn69smSGcq3f36xjgVVWThj4qqLbTLlq7Ssj8B+fIQ1EuCEGI2lKsyQeIw==}
 
-  isexe@4.0.0:
-    resolution: {integrity: sha512-FFUtZMpoZ8RqHS3XeXEmHWLA4thH+ZxCv2lOiPIn1Xc7CxrqhWzNSDzD+/chS/zbYezmiwWLdQC09JdQKmthOw==}
-    engines: {node: '>=20'}
-
   istanbul-lib-coverage@3.2.2:
     resolution: {integrity: sha512-O8dpsF+r0WV/8MNRKfnmrtCWhuKjxrq2w+jpzBL5UZKTi2LeVWnWOmWRxFlesJONmc+wLAGvKQZEOanko0LFTg==}
     engines: {node: '>=8'}
@@ -4330,15 +4323,6 @@ packages:
     engines: {node: '>=4'}
     hasBin: true
 
-  shescape@2.1.12:
-    resolution: {integrity: sha512-NmqfUl0VvDF7F5Oox3IZzJb1NP4OBJjaVUpS1C00isIx3drhaKKdKGXzTGRkGwUbYiQkBv3Am1t0wBszjJQkbw==}
-    engines: {node: ^14.18.0 || ^16.13.0 || ^18 || ^19 || ^20 || ^22 || ^24 || ^25 || ^26}
-    peerDependencies:
-      '@ericcornelissen/lregexp': ^1.0.9
-    peerDependenciesMeta:
-      '@ericcornelissen/lregexp':
-        optional: true
-
   side-channel-list@1.0.1:
     resolution: {integrity: sha512-mjn/0bi/oUURjc5Xl7IaWi/OJJJumuoJFQJfDDyO46+hBWsfaVM65TBHq2eoZBhzl9EchxOijpkbRC8SVBQU0w==}
     engines: {node: '>= 0.4'}
@@ -4810,11 +4794,6 @@ packages:
   which@2.0.2:
     resolution: {integrity: sha512-BLI3Tl1TW3Pvl70l3yq3Y64i+awpwXqsGBYWkkqMtnbXgrMD+yj7rhW0kuEDxzJaYXGjEW5ogapKNMEKNMjibA==}
     engines: {node: '>= 8'}
-    hasBin: true
-
-  which@6.0.1:
-    resolution: {integrity: sha512-oGLe46MIrCRqX7ytPUf66EAYvdeMIZYn3WaocqqKZAxrBpkqHfL/qvTyJ/bTk5+AqHCjXmrv3CEWgy368zhRUg==}
-    engines: {node: ^20.17.0 || >=22.9.0}
     hasBin: true
 
   why-is-node-running@2.3.0:
@@ -8553,8 +8532,6 @@ snapshots:
 
   isexe@2.0.0: {}
 
-  isexe@4.0.0: {}
-
   istanbul-lib-coverage@3.2.2: {}
 
   istanbul-lib-instrument@5.2.1(supports-color@8.1.1):
@@ -9996,10 +9973,6 @@ snapshots:
       interpret: 1.4.0
       rechoir: 0.6.2
 
-  shescape@2.1.12:
-    dependencies:
-      which: 6.0.1
-
   side-channel-list@1.0.1:
     dependencies:
       es-errors: 1.3.0
@@ -10428,10 +10401,6 @@ snapshots:
   which@2.0.2:
     dependencies:
       isexe: 2.0.0
-
-  which@6.0.1:
-    dependencies:
-      isexe: 4.0.0
 
   why-is-node-running@2.3.0:
     dependencies:
