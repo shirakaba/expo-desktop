@@ -1,5 +1,11 @@
 # expo-desktop
 
+## 1.0.0-beta.3
+
+### Patch Changes
+
+- Remove unused "shescape" dependency
+
 ## 1.0.0-beta.2
 
 ### Patch Changes
