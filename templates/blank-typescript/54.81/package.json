@@ -1,6 +1,6 @@
 {
   "name": "expo-desktop-template-blank-typescript",
-  "version": "54.81.0",
+  "version": "54.81.1-beta.0",
   "description": "An Expo Desktop template for React Native v0.81, based on Expo SDK 54",
   "license": "0BSD",
   "main": "index.ts",
@@ -16,9 +16,9 @@
   "dependencies": {
     "expo": "~54.0.35",
     "expo-desktop-modules-core": "~54.0.13",
-    "expo-desktop-prebuild-config": "~1.0.20",
+    "expo-desktop-prebuild-config": "~1.1.0-beta.0",
     "expo-desktop-stubs": "~54.0.13",
-    "expo-desktop-template-bare-minimum": "~54.81.0",
+    "expo-desktop-template-bare-minimum": "~54.81.1-beta.0",
     "expo-status-bar": "~3.0.9",
     "react": "19.1.4",
     "react-native": "0.81.6",

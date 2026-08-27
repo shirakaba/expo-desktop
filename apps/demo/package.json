@@ -14,9 +14,9 @@
   },
   "dependencies": {
     "expo": "catalog:react-native-81",
-    "expo-desktop-config-plugins": "workspace:^1.1.34",
+    "expo-desktop-config-plugins": "workspace:^1.2.0-beta.0",
     "expo-desktop-modules-core": "workspace:^54.0.13",
-    "expo-desktop-prebuild-config": "workspace:^1.0.20",
+    "expo-desktop-prebuild-config": "workspace:^1.1.0-beta.0",
     "expo-desktop-stubs": "workspace:^54.0.13",
     "expo-status-bar": "~3.0.9",
     "react": "catalog:react-native-81",
