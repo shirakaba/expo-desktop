@@ -1,5 +1,11 @@
 # expo-desktop
 
+## 1.0.0-beta.2
+
+### Patch Changes
+
+- Fix logic for upgrading scripts upon prebuild
+
 ## 1.0.0-beta.1
 
 ### Patch Changes
