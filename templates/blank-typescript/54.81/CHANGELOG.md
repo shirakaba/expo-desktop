@@ -1,5 +1,13 @@
 # expo-desktop-template-blank-typescript
 
+## 54.81.1-beta.1
+
+### Patch Changes
+
+- Add provenance to templates, to enable Trusted Publishing
+- Updated dependencies
+  - expo-desktop-template-bare-minimum@54.81.1-beta.1
+
 ## 54.81.1-beta.0
 
 ### Patch Changes
