@@ -566,7 +566,6 @@ export async function sanitizeTemplateAsync({
     android: {
       package: androidPackage,
     },
-    // @ts-expect-error macos and windows missing from types
     windows: {
       displayName,
       namespace: windowsNamespace,
@@ -578,6 +577,10 @@ export async function sanitizeTemplateAsync({
       infoPlist: {
         CFBundleName: displayName,
       },
+    },
+    experiments: {
+      // @ts-expect-error Earlier Expo SDKs don't provide typings for this.
+      outOfTreePlatforms: true,
     },
   };
 

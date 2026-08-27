@@ -87,6 +87,14 @@ function getPrebuildConfig(
   if (platforms.includes("macos")) {
     if (!config.macos) config.macos = {};
 
+    if (!config.experiments) {
+      config.experiments = {};
+    }
+    // Needed, otherwise "macos" and "windows" just get filtered out of
+    // config.platforms by getPlatformsFromConfig() in @expo/config.
+    // https://github.com/expo/expo/pull/46497
+    config.experiments.outOfTreePlatforms = true;
+
     /** @type {string} */
     const resolvedBundleIdentifierMacos =
       bundleIdentifierMacos ??
@@ -126,6 +134,11 @@ function getPrebuildConfig(
 
   if (platforms.includes("windows")) {
     if (!config.windows) config.windows = {};
+    if (!config.experiments) {
+      config.experiments = {};
+    }
+    config.experiments.outOfTreePlatforms = true;
+
     /** @type {string} */
     const resolvedNamespace =
       windowsNamespace ?? config.windows.namespace ?? `com.placeholder.appid`;
