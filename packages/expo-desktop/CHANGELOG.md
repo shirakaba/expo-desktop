@@ -1,5 +1,13 @@
 # expo-desktop
 
+## 1.0.0-beta.1
+
+### Patch Changes
+
+- Avoid out-of-tree platforms being filtered out at prebuild time
+- Updated dependencies
+  - expo-desktop-prebuild-config@1.1.0-beta.1
+
 ## 1.0.0-beta.0
 
 ### Major Changes

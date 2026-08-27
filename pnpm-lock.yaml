@@ -92,7 +92,7 @@ importers:
         specifier: workspace:^54.0.13
         version: link:../../packages/expo-desktop-modules-core
       expo-desktop-prebuild-config:
-        specifier: workspace:^1.1.0-beta.0
+        specifier: workspace:^1.1.0-beta.1
         version: link:../../packages/expo-desktop-prebuild-config
       expo-desktop-stubs:
         specifier: workspace:^54.0.13
