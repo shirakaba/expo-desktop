@@ -63,10 +63,10 @@ module.exports.getName = getName;
 function setDisplayName(configOrName, { CFBundleDisplayName, ...infoPlist }) {
   /** @type {string | null} */
   let name = null;
-  if (typeof configOrName === "string") {
-    name = configOrName;
-  } else {
+  if (typeof configOrName === "object") {
     name = getName(configOrName);
+  } else {
+    name = configOrName;
   }
 
   if (!name) {

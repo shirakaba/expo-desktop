@@ -6,6 +6,11 @@
   // prioritize ArkType's "type" for autoimports
   // "js/ts.preferences.autoImportSpecifierExcludeRegexes": ["^(node:)?os$"],
 
+  // Reduces TS Server file watching.
+  "js/ts.tsserver.watchOptions": {
+    "excludeDirectories": ["templates/**"]
+  },
+
   "js/ts.experimental.useTsgo": false,
   "oxc.fmt.configPath": ".oxfmtrc.json",
   "oxc.enable.oxfmt": true,

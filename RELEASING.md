@@ -6,10 +6,14 @@ From any directory in the monorepo:
 
 ```sh
 # Generate the changeset (i.e. which packages to bump, and the description).
-pnpm -w changeset
+pnpm -w r1
 
 # Consume it.
-pnpm -w release:version
+pnpm -w r2
+
+# Optionally validate the template tarballs without contacting the registry or
+# publishing anything.
+pnpm -w r3 --dry-run
 
 # Finally, commit and push it to `main` and it will trigger a release.
 ```

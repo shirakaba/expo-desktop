@@ -6,12 +6,14 @@ const { withExpoAppDelegate } = require("./macos/withExpoAppDelegate");
 const { withExpoXcodeBuildPhase } = require("./macos/withExpoXcodeBuildPhase");
 const { withExpoAppCpp } = require("./windows/withExpoAppCpp");
 const { withReactNativeDirs } = require("./windows/withReactNativeDirs");
+const { withTemplateVariables } = require("./windows/withTemplateVariables");
 
 /**
- * @type {import("@expo/config-plugins").ConfigPlugin<{ displayName: string; bundleIdentifier?: string; bundleEntryFileCandidates?: Array<string>; }>}
+ * @type {import("@expo/config-plugins").ConfigPlugin<{ displayName: string; filesafeName?: string | undefined; bundleIdentifier?: string; bundleEntryFileCandidates?: Array<string>; windowsNamespace?: string | undefined; windowsPackageGuid?: string | undefined; windowsProjectGuid?: string | undefined; }>}
  */
 module.exports = function withExpoDesktop(config, props) {
-  // TODO: Either make all props optional, or throw error when missing.
+  // FIXME: Either make all props optional, or throw error when missing. Many
+  //        are strictly needed in the case of Windows.
 
   config = withNameSettingsGradle(config, props);
 
@@ -28,9 +30,18 @@ module.exports = function withExpoDesktop(config, props) {
   config = withExpoXcodeBuildPhase(config, props);
 
   // Windows-only config plugins
+  // TODO: We need a config plugin for renaming the Windows namespace,
+  // packageGuid, and projectGuid from the app.json.
   config = withExpoAppCpp(config, { windowTitle: props.displayName });
   config = withReactNativeDirs(config, {
     bundleEntryFileCandidates: props.bundleEntryFileCandidates,
+  });
+  config = withTemplateVariables(config, {
+    displayName: props.displayName,
+    filesafeName: props.filesafeName,
+    windowsNamespace: props.windowsNamespace,
+    windowsPackageGuid: props.windowsPackageGuid,
+    windowsProjectGuid: props.windowsProjectGuid,
   });
 
   // TODO: We need a plugin to rename files like `myapp6.xcodeproj` to the

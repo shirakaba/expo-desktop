@@ -6,6 +6,11 @@ export async function getPackageInfo(packageName: string) {
   const res = await fetch(`https://registry.npmjs.org/${packageName}`);
   const data = await res.json();
 
+  const errorResponse = NpmErrorResponse(data);
+  if (!(errorResponse instanceof type.errors)) {
+    throw new Error(`Got error response from npm: ${errorResponse.error}`);
+  }
+
   const response = NpmResponse(data);
   if (response instanceof type.errors) {
     // console.log(`Invalid config:\n${makePrettySummary(partial).join("\n")}`);
@@ -159,6 +164,7 @@ export function getHighestStableMinors(map: VersionsMap) {
   return minorMap;
 }
 
+const NpmErrorResponse = type({ error: "string" });
 const NpmResponse = type({
   name: "string",
   "dist-tags": "Record<string, string.semver>",
@@ -178,25 +184,3 @@ export type NpmResponseType = typeof NpmResponse.inferOut;
  */
 export const semverMatcher =
   /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[A-Za-z-][\dA-Za-z-]*)(?:\.(?:0|[1-9]\d*|\d*[A-Za-z-][\dA-Za-z-]*))*))?(?:\+([\dA-Za-z-]+(?:\.[\dA-Za-z-]+)*))?$/;
-
-export function packageManagerExec(packageManager: "npm" | "bun" | "pnpm" | "yarn") {
-  const args = new Array<string>();
-  let command: string;
-  switch (packageManager) {
-    case "bun":
-      command = "bunx";
-      break;
-    case "npm":
-      command = "npx";
-      args.push("--yes");
-      break;
-    case "yarn":
-      command = "yarn";
-      break;
-    case "pnpm":
-      command = "pnpm";
-      args.push("exec");
-  }
-
-  return { args, command };
-}

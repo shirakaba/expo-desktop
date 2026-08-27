@@ -66,6 +66,13 @@ function withMacosExpoPlugins(config, { bundleIdentifier, displayName }) {
     config.macos.bundleIdentifier = bundleIdentifier;
   }
 
+  if (displayName) {
+    if (!config.macos.infoPlist) {
+      config.macos.infoPlist = {};
+    }
+    config.macos.infoPlist.CFBundleName = displayName;
+  }
+
   return withPlugins(config, [
     [withBundleIdentifier, { bundleIdentifier }],
     // IOSConfig.Google.withGoogle,
@@ -101,9 +108,19 @@ module.exports.withMacosExpoPlugins = withMacosExpoPlugins;
  *
  * Skips when there is no `windows/` folder (e.g. mobile-only workflows).
  *
- * @type {import("@expo/config-plugins").ConfigPlugin<{ displayName?: string, bundleEntryFileCandidates?: Array<string> }>}
+ * @type {import("@expo/config-plugins").ConfigPlugin<{ displayName?: string; filesafeName?: string | undefined; bundleEntryFileCandidates?: Array<string>; windowsNamespace?: string | undefined; windowsPackageGuid?: string | undefined; windowsProjectGuid?: string | undefined; }>}
  */
-function withWindowsExpoPlugins(config, { displayName, bundleEntryFileCandidates } = {}) {
+function withWindowsExpoPlugins(
+  config,
+  {
+    displayName,
+    filesafeName,
+    bundleEntryFileCandidates,
+    windowsNamespace,
+    windowsPackageGuid,
+    windowsProjectGuid,
+  } = {},
+) {
   const projectRoot = config._internal?.projectRoot;
   if (typeof projectRoot === "string" && !projectHasWindowsNativeTree(projectRoot)) {
     return config;
@@ -114,7 +131,17 @@ function withWindowsExpoPlugins(config, { displayName, bundleEntryFileCandidates
   }
 
   return withPlugins(config, [
-    [withExpoDesktop, { displayName: displayName ?? config.name, bundleEntryFileCandidates }],
+    [
+      withExpoDesktop,
+      {
+        displayName: displayName ?? config.name,
+        filesafeName: filesafeName ?? config.name,
+        bundleEntryFileCandidates,
+        windowsNamespace,
+        windowsPackageGuid,
+        windowsProjectGuid,
+      },
+    ],
   ]);
 }
 module.exports.withWindowsExpoPlugins = withWindowsExpoPlugins;

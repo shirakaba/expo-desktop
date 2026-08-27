@@ -1,0 +1,5 @@
+# `npm pack` tarballs
+/**/*.tgz
+/**/package
+/**/*.tgz
+/**/package

@@ -6,12 +6,12 @@
     "prepare": "husky",
     "lint-staged": "lint-staged",
     "format": "oxfmt",
-    "changeset": "changeset",
-    "release:version": "changeset version && pnpm install --lockfile-only",
-    "release:publish": "changeset publish"
+    "rp": "pnpm --filter custom-changeset run pre",
+    "r1": "pnpm --filter custom-changeset run add",
+    "r2": "pnpm --filter custom-changeset run version && pnpm install --lockfile-only",
+    "r3": "pnpm --filter custom-changeset run publish"
   },
   "devDependencies": {
-    "@changesets/cli": "^2.31.0",
     "husky": "^9.1.7",
     "lint-staged": "^16.4.0",
     "oxfmt": "^0.47.0"

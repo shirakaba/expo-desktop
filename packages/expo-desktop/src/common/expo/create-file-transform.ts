@@ -1,0 +1,88 @@
+// https://github.com/expo/expo/blob/main/packages/create-expo/src/createFileTransform.ts
+
+import Debug from "debug";
+import { TarTypeFlag } from "multitars";
+import path from "node:path";
+import picomatch from "picomatch";
+
+const debug = Debug("expo-desktop:create-app:fileTransform") as typeof console.log;
+
+export function sanitizedName(name: string) {
+  return name
+    .replace(/[\W_]+/g, "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+// Directories that can be added to the template with an underscore instead of a dot, e.g. `.vscode` and be added with `_vscode`.
+const SUPPORTED_DIRECTORIES = ["eas", "vscode", "github", "cursor"];
+const SUPPORTED_DIRECTORIES_PATTERN = new RegExp(
+  `(^|/|\\\\)_(${SUPPORTED_DIRECTORIES.join("|")})(/|\\\\|$)`,
+);
+
+function renameDirectories(input: string, typeflag: TarTypeFlag): string {
+  if (typeflag === TarTypeFlag.FILE || typeflag === TarTypeFlag.DIRECTORY) {
+    // Detect if the file contains one of the supported directories
+    // and rename it to the correct format.
+    // For example, if the file is `_vscode`, we want to rename it to `.vscode`.
+    input = input.replace(SUPPORTED_DIRECTORIES_PATTERN, (match, p1, p2, p3) => `${p1}.${p2}${p3}`);
+  }
+  return input;
+}
+
+function renameConfigs(input: string, typeflag: TarTypeFlag): string {
+  if (typeflag === TarTypeFlag.FILE && /_?gitignore$/.test(path.basename(input))) {
+    // Rename `gitignore` and `_gitignore`, because npm ignores files named
+    // `.gitignore` when publishing.
+    // See: https://github.com/npm/npm/issues/1862
+    input = input.replace(/_?gitignore$/, ".gitignore");
+  }
+  if (typeflag === TarTypeFlag.FILE && path.basename(input) === "NuGet_Config") {
+    // Rename `NuGet_Config` to `NuGet.config`.
+    input = input.replace(/NuGet_Config$/, "NuGet.config");
+  }
+  return input;
+}
+
+export function createEntryRenamer(name: string) {
+  return (input: string, typeflag: TarTypeFlag): string => {
+    if (name) {
+      // Rewrite paths for bare workflow
+      input = input
+        .replace(
+          /HelloWorld/g,
+          input.includes("android") ? sanitizedName(name.toLowerCase()) : sanitizedName(name),
+        )
+        /*
+         * The Windows template placeholder name is "MyApp" rather than
+         * "HelloWorld". The React Native Windows CLI renames files like
+         * MyApp.cpp to `${filesafeName}.cpp`, which we used to do too (via the
+         * commented-out code below).
+         *
+         * However, I've decided to fix it to "MyApp", because by keeping the
+         * names stable as MyApp, we can avoid desyncs between dirty
+         * prebuilds (which don't rename files) and clean prebuilds (which do).
+         */
+        // .replace(/MyApp/g, sanitizedName(name))
+        .replace(/helloworld/g, sanitizedName(name).toLowerCase());
+    }
+    input = renameConfigs(input, typeflag);
+    input = renameDirectories(input, typeflag);
+    return input;
+  };
+}
+
+export function createGlobFilter(
+  globPattern: picomatch.Glob,
+  options?: picomatch.PicomatchOptions,
+) {
+  const matcher = picomatch(globPattern, options);
+
+  debug("filter: created for pattern %s (%s)", globPattern);
+
+  return (path: string) => {
+    const included = matcher(path);
+    debug("filter: %s - %s", included ? "include" : "exclude", path);
+    return included;
+  };
+}

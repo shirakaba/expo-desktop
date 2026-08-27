@@ -28,7 +28,7 @@ module.exports.withDefaultBaseMods = withDefaultBaseMods;
 
 /**
  * @param {import("@expo/config-plugins").ExportedConfig} config
- * @param {{ projectRoot: string; platforms?: Array<import("@expo/config-plugins").ModPlatform>; introspect?: boolean; assertMissingModProviders?: boolean; ignoreExistingNativeFiles?: boolean; }} props
+ * @param {{ projectRoot: string; platforms?: Array<import("@expo/config-plugins").ModPlatform | "macos" | "windows">; introspect?: boolean; assertMissingModProviders?: boolean; ignoreExistingNativeFiles?: boolean; }} props
  * @returns {Promise<import("@expo/config-plugins").ExportedConfig>}
  */
 async function compileModsAsync(config, props) {
@@ -136,7 +136,7 @@ const precedences = {
 
 /**
  * @param {import("@expo/config-plugins").ExportedConfig} config
- * @param {{ projectRoot: string; platforms?: Array<import("@expo/config-plugins").ModPlatform>; introspect?: boolean; assertMissingModProviders?: boolean; ignoreExistingNativeFiles?: boolean; }} props
+ * @param {{ projectRoot: string; platforms?: Array<import("@expo/config-plugins").ModPlatform | "macos" | "windows">; introspect?: boolean; assertMissingModProviders?: boolean; ignoreExistingNativeFiles?: boolean; }} props
  * @returns {Promise<import("@expo/config-plugins").ExportedConfig>}
  */
 async function evalModsAsync(
@@ -164,7 +164,7 @@ async function evalModsAsync(
       debug(`run in order: ${entries.map(([name]) => name).join(", ")}`);
       const platformProjectRoot = path.join(projectRoot, platformName);
       const projectName =
-        platformName === "ios" ? getHackyProjectName(projectRoot, config) : undefined;
+        platformName === "ios" ? getHackyProjectName(projectRoot, platformName, config) : undefined;
 
       for (const [modName, mod] of entries) {
         const modRequest = {

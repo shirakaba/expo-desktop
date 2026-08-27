@@ -1,13 +1,31 @@
 import { log } from "@clack/prompts";
-import { type } from "arktype";
+import { getConfig } from "@expo/config";
+import chalk from "chalk";
+import Debug from "debug";
 import { default as kleur } from "kleur";
-import fs from "node:fs/promises";
-import path from "node:path";
-import { exit } from "node:process";
 
-import { AppJson } from "../common/app-json.ts";
-import { type TemplateSelection, applySelectedTemplatesAsync } from "../common/template.ts";
-import { resolvePackageManagerOptions } from "./resolve-options.ts";
+import { setupDependenciesAsync } from "../common/expo/create-async-utils.ts";
+import { env } from "../common/expo/env.ts";
+import { Log } from "../common/expo/log.ts";
+import { clearNodeModulesAsync } from "../common/expo/node-modules.ts";
+import { logNewSection } from "../common/expo/ora.ts";
+import { confirmAsync } from "../common/expo/prompts-cli.ts";
+import { loadEnvFiles, setNodeEnv } from "../common/node-env.ts";
+import { ensureConfigAsync } from "./ensure-config-async.ts";
+import { clearNativeFolder } from "./expo/clear-native-folder.ts";
+import { promptToClearMalformedNativeProjectsAsync } from "./expo/clear-native-folder.ts";
+import { configureProjectAsync } from "./expo/configure-project-async.ts";
+import { updateXcodeProject } from "./expo/inline-modules.ts";
+import {
+  assertPlatforms,
+  ensureValidPlatforms,
+  resolvePackageManagerOptions,
+  resolveSkipDependencyUpdate,
+  resolveTemplateOption,
+} from "./expo/resolve-options.ts";
+import { updateFromTemplateAsync } from "./update-from-template-async.ts";
+
+const debug = Debug("expo-desktop:prebuild:command") as typeof console.log;
 
 /**
  * The entrypoint for `npx expo prebuild` is here:
@@ -19,20 +37,7 @@ import { resolvePackageManagerOptions } from "./resolve-options.ts";
  * @see https://github.com/expo/expo/blob/15d35298c9a397c23bcbf6b20e2b9761564acbc4/packages/%40expo/cli/src/prebuild/index.ts#L7
  * @see https://github.com/expo/expo/blob/15d35298c9a397c23bcbf6b20e2b9761564acbc4/packages/%40expo/cli/src/prebuild/configureProjectAsync.ts#L37
  */
-export async function prebuild({
-  clean,
-  "no-install": noInstall,
-  npm,
-  yarn,
-  bun,
-  pnpm,
-  template,
-  "template-ios": templateIos,
-  "template-android": templateAndroid,
-  "template-macos": templateMacos,
-  "template-windows": templateWindows,
-  platform,
-}: {
+export async function prebuild(args: {
   clean: boolean | undefined;
   "no-install": boolean | undefined;
   npm: boolean | undefined;
@@ -40,110 +45,249 @@ export async function prebuild({
   bun: boolean | undefined;
   pnpm: boolean | undefined;
   template: string | undefined;
-  "template-ios": string | undefined;
-  "template-android": string | undefined;
-  "template-macos": string | undefined;
-  "template-windows": string | undefined;
   platform: string | undefined;
+  "skip-dependency-update": boolean | undefined;
 }) {
+  const options: typeof args & {
+    noInstall: boolean | undefined;
+    install: boolean;
+    skipDependencyUpdate: boolean | undefined;
+  } = {
+    clean: args.clean,
+    noInstall: args["no-install"],
+    ["no-install"]: args["no-install"],
+    npm: args.npm,
+    yarn: args.yarn,
+    bun: args.bun,
+    pnpm: args.pnpm,
+    template: args.template,
+    platform: args.platform,
+    ["skip-dependency-update"]: args["skip-dependency-update"],
+    skipDependencyUpdate: args["skip-dependency-update"],
+    install: !args["no-install"],
+  };
+
   log.info(`🏎️  Running ${kleur.yellow("expo-desktop prebuild")}.`, { withGuide: false });
 
-  // TODO: if packageManager undefined, infer from lockfiles
-  const _packageManager = resolvePackageManagerOptions({ noInstall, npm, yarn, bun, pnpm });
+  let platforms = resolvePlatformsOption(options.platform);
+  const projectRoot = process.cwd();
 
+  setNodeEnv("development");
+  loadEnvFiles(projectRoot);
+
+  // Filter out platforms that aren't in the app.json.
+  // https://github.com/expo/expo/blob/8dd645080f52927e2a8bf406167da7241a1d46d8/packages/%40expo/cli/src/prebuild/prebuildAsync.ts#L74
+  const { exp: expoConfig } = getConfig(projectRoot);
+  if (expoConfig.platforms?.length) {
+    const finalPlatforms = platforms.filter((platform) =>
+      (expoConfig.platforms as Array<"ios" | "android" | "web" | "macos" | "windows">).includes(
+        platform,
+      ),
+    );
+    if (finalPlatforms.length > 0) {
+      platforms = finalPlatforms;
+    } else {
+      const requestedPlatforms = platforms.join(", ");
+      console.warn(
+        `⚠️  Requested prebuild for "${requestedPlatforms}", but only "${expoConfig.platforms.join(", ")}" is present in app config ("expo.platforms" entry). Continuing with "${requestedPlatforms}".`,
+      );
+    }
+  }
+
+  if (options.clean) {
+    const { maybeBailOnGitStatusAsync } = await import("../common/expo/git-cli.ts");
+    // Clean the project folders...
+    if (await maybeBailOnGitStatusAsync()) {
+      return null;
+    }
+
+    // Skipping: maybeBailOnNativeModuleAsync()
+    // (as it depends on the "expo" npm package and is no longer important after
+    // SDK 56)
+
+    // Clear the native folders before syncing
+    await clearNativeFolder(projectRoot, platforms);
+  } else {
+    // Check if the existing project folders are malformed.
+    await promptToClearMalformedNativeProjectsAsync(projectRoot, platforms);
+  }
+
+  // Warn if the project is attempting to prebuild an unsupported platform (iOS on Windows).
+  platforms = ensureValidPlatforms(platforms);
+  // Assert if no platforms are left over after filtering.
+  assertPlatforms(platforms);
+
+  const { exp, pkg } = await ensureConfigAsync(projectRoot, { platforms });
+
+  // Create native projects from template.
+  // https://github.com/expo/expo/blob/8dd645080f52927e2a8bf406167da7241a1d46d8/packages/%40expo/cli/src/prebuild/prebuildAsync.ts#L112-L120
+  // https://github.com/expo/expo/blob/e2aa8935077d88fbbb22b1f4dc1f8a1586080b97/packages/%40expo/cli/src/prebuild/updateFromTemplate.ts#L23
+  const {
+    hasNewProjectFiles,
+    needsPodInstallIos,
+    needsPodInstallMacos,
+    templateChecksum,
+    changedDependencies,
+  } = await updateFromTemplateAsync(projectRoot, {
+    exp,
+    pkg,
+    template: options.template != null ? resolveTemplateOption(options.template) : undefined,
+    platforms,
+    skipDependencyUpdate: resolveSkipDependencyUpdate(options.skipDependencyUpdate),
+  });
+
+  // Install node modules
+  if (options.install) {
+    // Validate options
+    resolvePackageManagerOptions({
+      noInstall: options.noInstall,
+      npm: options.npm,
+      yarn: options.yarn,
+      bun: options.bun,
+      pnpm: options.pnpm,
+    });
+
+    if (changedDependencies.length) {
+      if (options.npm) {
+        await clearNodeModulesAsync(projectRoot);
+      }
+
+      Log.log(chalk.gray(chalk`Dependencies in the {bold package.json} changed:`));
+      Log.log(chalk.gray("  " + changedDependencies.join(", ")));
+
+      // Installing dependencies is a legacy feature from the unversioned
+      // command. We know opt to not change dependencies unless a template
+      // indicates a new dependency is required, or if the core dependencies are wrong.
+      if (
+        await confirmAsync({
+          message: `Install the updated dependencies?`,
+          initial: true,
+        })
+      ) {
+        // The real Expo CLI effectively runs `expo install` here. However,
+        // that's a very deep rabbit hole to port to Expo Desktop, and in this
+        // case really doesn't offer much value over setupDependenciesAsync().
+
+        // await installAsync([], {
+        //   npm: !!options.npm,
+        //   yarn: !!options.yarn,
+        //   pnpm: !!options.pnpm,
+        //   bun: !!options.bun,
+        //   silent: !(env.EXPO_DEBUG || env.CI),
+        // });
+
+        await setupDependenciesAsync(projectRoot, { install: true });
+      }
+    }
+  }
+
+  // Apply Expo config to native projects. Prevent log-spew from ora when running in debug mode.
+  const configSyncingStep: { succeed(text?: string): unknown; fail(text?: string): unknown } =
+    env.EXPO_DEBUG
+      ? {
+          succeed(text) {
+            Log.log(text!);
+          },
+          fail(text) {
+            Log.error(text!);
+          },
+        }
+      : logNewSection("Running prebuild");
+  try {
+    await configureProjectAsync(projectRoot, {
+      platforms,
+      exp,
+      templateChecksum,
+    });
+    configSyncingStep.succeed("Finished prebuild");
+  } catch (error) {
+    configSyncingStep.fail("Prebuild failed");
+    throw error;
+  }
+
+  // Install CocoaPods
+  let podsInstalledIos: boolean = false;
+  let podsInstalledMacos: boolean = false;
+
+  const shouldPodInstallForIos = platforms.includes("ios") && options.install && needsPodInstallIos;
+  const shouldPodInstallForMacos =
+    platforms.includes("macos") && options.install && needsPodInstallMacos;
+
+  // err towards running pod install less because it's slow and users can easily
+  // run npx pod-install afterwards.
+  if (shouldPodInstallForIos || shouldPodInstallForMacos) {
+    const { installCocoaPodsAsync } = await import("../common/expo/cocoapods.ts");
+
+    if (shouldPodInstallForIos) {
+      podsInstalledIos = await installCocoaPodsAsync(projectRoot, "ios");
+    }
+    if (shouldPodInstallForMacos) {
+      podsInstalledMacos = await installCocoaPodsAsync(projectRoot, "macos");
+    }
+  } else {
+    debug("Skipped pod install");
+  }
+
+  const inlineModules = exp.experiments?.inlineModules ?? false;
+  if (inlineModules) {
+    const watchedDirectories = inlineModules.watchedDirectories ?? [];
+    if (platforms.includes("ios")) {
+      await updateXcodeProject({
+        projectRoot,
+        inlineModulesXcodeParams: { platform: "ios", watchedDirectories },
+      });
+    }
+    if (platforms.includes("macos")) {
+      await updateXcodeProject({
+        projectRoot,
+        inlineModulesXcodeParams: { platform: "macos", watchedDirectories },
+      });
+    }
+  }
+
+  return {
+    nodeInstall: !!options.install,
+    podInstall: !(podsInstalledIos || podsInstalledMacos),
+    platforms: platforms,
+    hasNewProjectFiles,
+    exp,
+  };
+}
+
+function resolvePlatformsOption(
+  platform: string | undefined,
+): Array<"ios" | "android" | "macos" | "windows"> {
   if (
+    platform !== "ios" &&
+    platform !== "android" &&
+    platform !== "mobile" &&
     platform !== "macos" &&
     platform !== "windows" &&
     platform !== "desktop" &&
+    platform !== "all" &&
     typeof platform !== "undefined"
   ) {
     throw new Error(
-      "Expected --platform arg to be one of: macos | windows | desktop | <undefined>",
+      "Expected --platform arg to be one of: ios | android | mobile | macos | windows | desktop | all | <undefined>",
     );
   }
 
-  const platforms = new Array<"macos" | "windows">();
-  if (platform === "desktop" || platform === "macos") {
+  const platforms = new Array<"ios" | "android" | "macos" | "windows">();
+  if (platform === "all" || platform === "mobile" || platform === "ios") {
+    platforms.push("ios");
+  }
+  if (platform === "all" || platform === "mobile" || platform === "android") {
+    platforms.push("android");
+  }
+  if (platform === "all" || platform === "desktop" || platform === "macos") {
     platforms.push("macos");
   }
-  if (platform === "desktop" || platform === "windows") {
+  if (platform === "all" || platform === "desktop" || platform === "windows") {
     platforms.push("windows");
   }
   if (!platforms.length) {
-    throw new Error("At least one platform must be enabled when syncing");
+    platforms.push("ios", "android", "macos", "windows");
   }
 
-  const templateSelection = {
-    template,
-    "template-ios": templateIos,
-    "template-android": templateAndroid,
-    "template-macos": templateMacos,
-    "template-windows": templateWindows,
-  } satisfies TemplateSelection;
-
-  if (clean && hasTemplateSelection(templateSelection)) {
-    const projectRoot = process.cwd();
-    const appName = await readAppNameFromConfigAsync(projectRoot);
-    await applySelectedTemplatesAsync({
-      projectRoot,
-      selection: templateSelection,
-      enabledPlatforms: platforms,
-      name: appName,
-      respectTemplateConfig: false,
-    });
-    log.info("Applied project templates for clean prebuild.", { withGuide: false });
-  }
-
-  // TODO:
-  // - prebuildAsync()
-  //   - https://github.com/expo/expo/blob/8dd645080f52927e2a8bf406167da7241a1d46d8/packages/%40expo/cli/src/prebuild/prebuildAsync.ts#L49
-  //   - getConfig() from expo-desktop-config
-  //   - ensureConfigAsync() is easy to port
-  //   - updateFromTemplateAsync() will involve the macos/windows templates
-  //   - install node_modules via chosen package manager
-  //   - configureProjectAsync()
-  //     - https://github.com/expo/expo/blob/8dd645080f52927e2a8bf406167da7241a1d46d8/packages/%40expo/cli/src/prebuild/configureProjectAsync.ts#L14
-  //     - Prompt for bundle ID and package name
-  //     - getPrebuildConfigAsync() from expo-desktop-prebuild-config
-  //     - compileModsAsync()
-  //       - https://github.com/expo/expo/blob/8dd645080f52927e2a8bf406167da7241a1d46d8/packages/%40expo/config-plugins/src/plugins/mod-compiler.ts#L82
-  //       - withDefaultBaseMods()
-  //       - evalModsAsync()
-  //         - https://github.com/expo/expo/blob/8dd645080f52927e2a8bf406167da7241a1d46d8/packages/%40expo/config-plugins/src/plugins/mod-compiler.ts#L126
-  //   - Install pods
-  //   - updateXcodeProject()
-  //     - https://github.com/expo/expo/blob/8dd645080f52927e2a8bf406167da7241a1d46d8/packages/%40expo/inline-modules/src/xcodeProjectUpdates.ts#L12
-  //     - This seems to be something to do with experimental Inline Modules:
-  //       - https://docs.expo.dev/modules/inline-modules-reference/
-
-  log.error(`${kleur.yellow("expo-desktop prebuild")} not yet implemented.`);
-  return exit(1);
-}
-
-function hasTemplateSelection(selection: TemplateSelection) {
-  return Boolean(
-    selection.template ||
-    selection["template-ios"] ||
-    selection["template-android"] ||
-    selection["template-macos"] ||
-    selection["template-windows"],
-  );
-}
-
-async function readAppNameFromConfigAsync(projectRoot: string) {
-  const appJsonPath = path.join(projectRoot, "app.json");
-  const contents = await fs.readFile(appJsonPath, "utf8");
-  const parsed = AppJson(JSON.parse(contents));
-  if (parsed instanceof type.errors) {
-    throw new Error("Invalid app.json while resolving template replacements.");
-  }
-  const filesafeName = parsed.expo?.name ?? "HelloWorld";
-  const displayName = parsed.expo?.name ?? filesafeName;
-  const rdns =
-    parsed.expo?.ios?.bundleIdentifier ?? parsed.expo?.android?.package ?? "com.helloworld";
-  return {
-    filesafeName,
-    displayName,
-    rdns,
-  };
+  return platforms;
 }
