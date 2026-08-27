@@ -205,10 +205,16 @@ async function npmPackAsync(
     return null;
   }
 
+  const [packageNameWithoutVersion] = packageName.split("@");
+
   try {
     const json = JSON.parse(results);
+    // On macOS, on Node.js v24.14.0, npm v11.11.0, we get an array.
     if (Array.isArray(json) && json.every(isNpmPackageInfo)) {
       return json.map(sanitizeNpmPackageFilename);
+      // On Windows, on Node.js v26.8.1, npm v12.0.2, we get a record.
+    } else if (isNpmPackageInfo(json[packageNameWithoutVersion])) {
+      return [sanitizeNpmPackageFilename(json[packageNameWithoutVersion])];
     } else {
       throw new Error(`Invalid response from npm: ${results}`);
     }
