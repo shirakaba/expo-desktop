@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.3.32929.385
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{A83FD526-20D0-45C2-88F2-10BE26BAC5A0}") = "ExpoModulesCore", "ExpoModulesCore\ExpoModulesCore.vcxproj", "{45CCA11B-4C7D-406D-9DCB-A823993FC653}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ExpoModulesCore", "ExpoModulesCore\ExpoModulesCore.vcxproj", "{45CCA11B-4C7D-406D-9DCB-A823993FC653}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
