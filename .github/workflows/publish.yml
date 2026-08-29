@@ -5,20 +5,8 @@ on:
     branches:
       - main
     paths:
-      - ".github/workflows/publish.yml"
-      - "pnpm-workspace.yaml"
-      - "pnpm-lock.yaml"
-      - "packages/expo-desktop/tsconfig.build.json"
-      - "packages/expo-desktop/package.json"
-      - "packages/expo-desktop/CHANGELOG.md"
-      - "packages/expo-desktop-prebuild-config/package.json"
-      - "packages/expo-desktop-prebuild-config/CHANGELOG.md"
-      - "packages/expo-desktop-config-plugins/package.json"
-      - "packages/expo-desktop-config-plugins/CHANGELOG.md"
-      - "templates/bare-minimum/*/package.json"
-      - "templates/bare-minimum/*/CHANGELOG.md"
-      - "templates/blank-typescript/*/package.json"
-      - "templates/blank-typescript/*/CHANGELOG.md"
+      - "packages/*/CHANGELOG.md"
+      - "templates/*/*/CHANGELOG.md"
   workflow_dispatch:
 
 concurrency:
