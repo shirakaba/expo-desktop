@@ -1,5 +1,11 @@
 # expo-desktop-template-bare-minimum
 
+## 54.81.1-beta.3
+
+### Patch Changes
+
+- Update to latest RNW patch to use VS 2026 without problem
+
 ## 54.81.1-beta.2
 
 ### Patch Changes
