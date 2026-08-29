@@ -1,5 +1,14 @@
 # expo-desktop-template-bare-minimum
 
+## 54.81.1-beta.2
+
+### Patch Changes
+
+- 8b39c1b: Prevent rnc-cli from trying to autolink bare-minimum
+- Updated dependencies [8b39c1b]
+  - expo-desktop-modules-core@54.0.14-beta.0
+  - expo-desktop-stubs@54.0.14-beta.0
+
 ## 54.81.1-beta.1
 
 ### Patch Changes

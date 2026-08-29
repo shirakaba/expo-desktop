@@ -89,13 +89,13 @@ importers:
         specifier: workspace:^1.2.0-beta.0
         version: link:../../packages/expo-desktop-config-plugins
       expo-desktop-modules-core:
-        specifier: workspace:^54.0.13
+        specifier: workspace:^54.0.14-beta.0
         version: link:../../packages/expo-desktop-modules-core
       expo-desktop-prebuild-config:
         specifier: workspace:^1.1.0-beta.1
         version: link:../../packages/expo-desktop-prebuild-config
       expo-desktop-stubs:
-        specifier: workspace:^54.0.13
+        specifier: workspace:^54.0.14-beta.0
         version: link:../../packages/expo-desktop-stubs
       expo-status-bar:
         specifier: ~3.0.9
