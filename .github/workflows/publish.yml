@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - "packages/*/CHANGELOG.md"
+      - "packages/expo-desktop-metro-config/*/CHANGELOG.md"
       - "templates/*/*/CHANGELOG.md"
   workflow_dispatch:
 
@@ -42,6 +43,7 @@ jobs:
             --frozen-lockfile \
             --filter expo-desktop \
             --filter expo-desktop-config-plugins \
+            --filter expo-desktop-metro-config \
             --filter expo-desktop-modules-core \
             --filter expo-desktop-prebuild-config \
             --filter expo-desktop-stubs \

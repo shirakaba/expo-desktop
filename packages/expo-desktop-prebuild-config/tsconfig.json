@@ -4,7 +4,6 @@
     "allowJs": true,
     "types": ["node"],
     "rootDir": "src",
-    "typeRoots": ["../../node_modules/@types"],
     "noEmit": false,
     "exactOptionalPropertyTypes": true,
     "declaration": true,

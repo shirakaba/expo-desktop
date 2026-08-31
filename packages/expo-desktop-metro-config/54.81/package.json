@@ -1,0 +1,39 @@
+{
+  "name": "expo-desktop-metro-config",
+  "version": "54.81.0-beta.1",
+  "description": "Desktop-friendly Expo Metro config",
+  "keywords": [
+    "android",
+    "expo",
+    "ios",
+    "macos",
+    "react native",
+    "react native desktop",
+    "windows"
+  ],
+  "homepage": "https://github.com/shirakaba/expo-desktop/tree/main/packages/expo-desktop-metro-config/54.81",
+  "bugs": {
+    "url": "https://github.com/shirakaba/expo-desktop/issues"
+  },
+  "license": "MIT",
+  "author": "Jamie Birch <14055146+shirakaba@users.noreply.github.com> (https://github.com/shirakaba)",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shirakaba/expo-desktop.git",
+    "directory": "packages/expo-desktop-metro-config/54.81"
+  },
+  "files": [
+    "src"
+  ],
+  "type": "commonjs",
+  "exports": {
+    ".": {
+      "require": "./src/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "dependencies": {
+    "@react-native/metro-config": "catalog:react-native-81",
+    "@rnx-kit/metro-config": "^2.2.4"
+  }
+}
