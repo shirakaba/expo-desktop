@@ -1,5 +1,11 @@
 # expo-desktop-template-bare-minimum
 
+## 54.81.1-beta.4
+
+### Patch Changes
+
+- Fixed failing Windows release-mode builds by correcting `config.resolver.platforms`.
+
 ## 54.81.1-beta.3
 
 ### Patch Changes
