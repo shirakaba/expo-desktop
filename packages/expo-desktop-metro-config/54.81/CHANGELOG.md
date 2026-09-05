@@ -1,5 +1,11 @@
 # expo-desktop-metro-config
 
+## 54.81.0-beta.3
+
+### Patch Changes
+
+- Fix export
+
 ## 54.81.0-beta.2
 
 ### Patch Changes
