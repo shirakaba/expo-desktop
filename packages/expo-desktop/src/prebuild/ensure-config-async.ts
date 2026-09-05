@@ -100,7 +100,7 @@ export async function getOrPromptForBundleIdentifierAsync(
     },
   });
   if (isCancel(rdns)) {
-    process.exit(0);
+    process.exit(130);
   }
 
   const bundleIdentifier = rdns.replaceAll("_", "-");
@@ -146,7 +146,7 @@ export async function getOrPromptForDisplayNameAsync(
     },
   });
   if (isCancel(displayName)) {
-    process.exit(0);
+    process.exit(130);
   }
 
   await ensureExpoDesktopConfigPlugins(projectRoot, { displayName });
@@ -226,7 +226,7 @@ export async function getOrPromptForPackageAsync(
     },
   });
   if (isCancel(rdns)) {
-    process.exit(0);
+    process.exit(130);
   }
 
   const androidPackage = rdns.replaceAll(/[_-]/g, "_");
@@ -275,7 +275,7 @@ export async function getOrPromptForNamespaceAsync(
     },
   });
   if (isCancel(rdns)) {
-    process.exit(0);
+    process.exit(130);
   }
 
   const windowsNamespace = rdns.replaceAll(/[_-]/g, "");

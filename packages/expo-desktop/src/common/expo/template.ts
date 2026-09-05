@@ -17,6 +17,7 @@ import fs from "node:fs";
 import { createRequire } from "node:module";
 import os from "node:os";
 import path from "node:path";
+import process from "node:process";
 import ora from "ora";
 import prompts from "prompts";
 
@@ -681,7 +682,11 @@ async function configureAppName(args: {
   //       step.
 
   let filesafeName = args["filesafe-name"];
-  if (!filesafeName) {
+  if (filesafeName) {
+    console.log(
+      `${kleur.green("✔")} ${kleur.bold("Using provided filesafe name:")} ${filesafeName}`,
+    );
+  } else {
     const { answer } = await prompts({
       type: "text",
       name: "answer",
@@ -697,11 +702,13 @@ async function configureAppName(args: {
     });
 
     filesafeName = answer;
-    assert.ok(filesafeName, "Expected prompt to provide truthy string.");
+    assertTruthyPrompt(filesafeName);
   }
 
   let displayName = args["display-name"];
-  if (!displayName) {
+  if (displayName) {
+    console.log(`${kleur.green("✔")} ${kleur.bold("Using provided display name:")} ${displayName}`);
+  } else {
     const { answer } = await prompts({
       type: "text",
       name: "answer",
@@ -717,11 +724,13 @@ async function configureAppName(args: {
     });
 
     displayName = answer;
-    assert.ok(displayName, "Expected prompt to provide truthy string.");
+    assertTruthyPrompt(displayName);
   }
 
   let rdns = args.rdns;
-  if (!rdns) {
+  if (rdns) {
+    console.log(`${kleur.green("✔")} ${kleur.bold("Using provided reverse DNS:")} ${rdns}`);
+  } else {
     const { answer } = await prompts({
       type: "text",
       name: "answer",
@@ -743,7 +752,7 @@ async function configureAppName(args: {
     });
 
     rdns = answer;
-    assert.ok(rdns, "Expected prompt to provide truthy string.");
+    assertTruthyPrompt(rdns);
   }
 
   return {
@@ -751,6 +760,17 @@ async function configureAppName(args: {
     displayName,
     rdns,
   };
+}
+
+/**
+ * Exits the process with exit code 130 if the value is falsy. Avoids printing a
+ * noisy stack trace just because the user triggered Ctrl+C during a prompt.
+ */
+function assertTruthyPrompt(value: unknown): asserts value {
+  if (!value) {
+    console.log("Prompt was interrupted.");
+    process.exit(130);
+  }
 }
 
 /**
