@@ -3,7 +3,7 @@
   "compilerOptions": {
     "allowJs": true,
     "types": ["node"],
-    "typeRoots": ["../../node_modules/@types", "typeRoot"],
+    "typeRoots": ["node_modules/@types", "../../node_modules/@types", "typeRoot"],
     "noEmit": false,
     "exactOptionalPropertyTypes": true,
     "declaration": true,

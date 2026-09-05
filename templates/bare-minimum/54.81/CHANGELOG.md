@@ -1,5 +1,11 @@
 # expo-desktop-template-bare-minimum
 
+## 54.81.1-beta.5
+
+### Patch Changes
+
+- Use expo-desktop-metro-config instead of unmaintained metro.config.js
+
 ## 54.81.1-beta.4
 
 ### Patch Changes

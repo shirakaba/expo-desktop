@@ -32,9 +32,10 @@ import fs from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+// FORK (start 3)
+import picomatch from "picomatch";
 import semverLt from "semver/functions/lt.js";
 
-// FORK (start 3)
 import { disambiguatePackages } from "./package-identities.ts";
 // FORK (end 3)
 
@@ -59,21 +60,6 @@ const {
 } = await import(new URL("./dist/src.mjs", cliPackageJsonUrl).href);
 type Color = Extract<Parameters<typeof import("node:util").styleText>[0], string>;
 type ColorProxy = Record<Color, (text: string) => string>;
-
-const {
-  t: getVersionableChangedPackages,
-}: {
-  t(
-    config: Config,
-    {
-      cwd,
-      ref,
-    }: {
-      cwd: string;
-      ref?: string;
-    },
-  ): Promise<Array<Package>>;
-} = await import(new URL("./dist/versionablePackages.mjs", cliPackageJsonUrl).href);
 
 const {
   t: getCommitFunctions,
@@ -108,6 +94,65 @@ type QuestionOptions = {
 };
 type MultiselectOptions<Value> = Record<string, Option<Value>[]>;
 
+// FORK (start 4)
+/**
+ * This is getChangedPackagesSinceRef() from @changesets/git, except that the
+ * caller supplies the package list. Our templates are intentionally not
+ * workspaces, so letting the upstream function rediscover packages would omit
+ * them from change detection.
+ */
+export async function getChangedPackagesSinceRef(
+  packages: ReadonlyArray<Package>,
+  {
+    cwd,
+    ref,
+    changedFilePatterns = ["**"],
+  }: {
+    cwd: string;
+    ref: string;
+    changedFilePatterns?: Config["changedFilePatterns"];
+  },
+): Promise<Array<Package>> {
+  const changedFiles = await git.getChangedFilesSince({ cwd, ref, fullPath: true });
+
+  // Assign files to the most deeply nested package, matching Changesets'
+  // behavior for repositories that contain nested packages.
+  return packages
+    .toSorted((pkgA, pkgB) => pkgB.dir.length - pkgA.dir.length)
+    .filter((pkg) => {
+      const changedPackageFiles = new Array<string>();
+      for (let i = changedFiles.length - 1; i >= 0; i--) {
+        const relativeFile = path.relative(pkg.dir, changedFiles[i]);
+        if (
+          relativeFile === "" ||
+          relativeFile === ".." ||
+          relativeFile.startsWith(`..${path.sep}`) ||
+          path.isAbsolute(relativeFile)
+        )
+          continue;
+
+        changedFiles.splice(i, 1);
+        changedPackageFiles.push(relativeFile);
+      }
+      return globMatchSome(changedPackageFiles, changedFilePatterns);
+    });
+}
+
+function globMatchSome(paths: Array<string>, patterns: Config["changedFilePatterns"]): boolean {
+  if (!patterns) return paths.length > 0;
+  const matchers = patterns.map((pattern) => picomatch(pattern, undefined, true));
+  return paths.some((filePath) => {
+    const normalizedPath = filePath.replace(/\\/g, "/");
+    let passed = false;
+    for (const matcher of matchers)
+      if (!passed) {
+        if (!matcher.state.negated && matcher(normalizedPath)) passed = true;
+      } else if (matcher.state.negated && !matcher(normalizedPath)) passed = false;
+    return passed;
+  });
+}
+// FORK (end 4)
+
 export async function add(options: {
   /**
    * Support specifying extra packages beyond the ones picked up by
@@ -137,7 +182,7 @@ export async function add(options: {
   // Changesets uses package names as map keys everywhere, including while it
   // validates the dependency graph. Give duplicate template lines a virtual,
   // version-qualified name before any Changesets code sees them.
-  const { packageNamesByDir, packages, patchOnlyPackageNames } = disambiguatePackages(
+  const { packages, patchOnlyPackageNames } = disambiguatePackages(
     discoveredPackages,
     new Set(options.extraPackages?.map(({ dir }) => path.resolve(dir))),
   );
@@ -177,17 +222,15 @@ export async function add(options: {
   else {
     let changedPackagesNames = new Array<string>();
     try {
+      // FORK (start 6)
       changedPackagesNames = (
-        await getVersionableChangedPackages(config, {
+        await getChangedPackagesSinceRef(versionablePackages, {
           cwd: packages.rootDir,
-          ref: options?.since,
+          ref: options?.since ?? config.baseBranch,
+          changedFilePatterns: config.changedFilePatterns,
         })
-      ).map(
-        (pkg) =>
-          // FORK (start 6)
-          packageNamesByDir.get(path.resolve(pkg.dir)) ?? pkg.packageJson.name,
-        // FORK (end 6)
-      );
+      ).map((pkg) => pkg.packageJson.name);
+      // FORK (end 6)
     } catch (error) {
       log.warn(
         `

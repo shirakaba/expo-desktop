@@ -1,6 +1,3 @@
-const { getDefaultConfig } = require("@expo/metro-config");
-const { makeMetroConfig } = require("@rnx-kit/metro-config");
+const { makeMetroConfig } = require("expo-desktop-metro-config");
 
-const config = makeMetroConfig(getDefaultConfig(__dirname));
-config.resolver.platforms = ["ios", "android", "macos", "windows", "web"];
-module.exports = config;
+module.exports = makeMetroConfig(__dirname);
