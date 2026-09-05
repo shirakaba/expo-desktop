@@ -33,6 +33,7 @@
     "./package.json": "./package.json"
   },
   "dependencies": {
+    "@expo/metro-config": "catalog:react-native-81",
     "@react-native/metro-config": "catalog:react-native-81",
     "@rnx-kit/metro-config": "^2.2.4"
   }
