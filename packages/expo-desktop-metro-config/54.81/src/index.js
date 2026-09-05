@@ -11,4 +11,4 @@ function makeMetroConfig(...args) {
   return config;
 }
 
-module.exports = makeMetroConfig;
+module.exports.makeMetroConfig = makeMetroConfig;
