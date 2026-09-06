@@ -35,7 +35,7 @@ import {
   downloadAndExtractNpmModuleAsync,
   getResolvedTemplateName,
 } from "./npm.ts";
-import { formatRunCommand } from "./resolve-package-manager.ts";
+import { formatRunCommand, formatSelfCommand } from "./resolve-package-manager.ts";
 import * as Template from "./template.ts";
 
 const require = createRequire(import.meta.url);
@@ -800,33 +800,42 @@ export function logProjectReady({
   cdPath: string;
   packageManager: PackageManagerName;
 }) {
-  console.log(chalk.bold(`✅ Your project is ready!`));
+  console.log(chalk.bold(`✅ Your project is created!`));
   console.log();
+
+  const exampleMacos = chalk.bold(formatRunCommand(packageManager, "macos"));
+  const exampleWindows = chalk.bold(formatRunCommand(packageManager, "windows"));
 
   // empty string if project was created in current directory
   if (cdPath) {
     console.log(
-      `To run your project, navigate to the directory and run one of the following ${packageManager} commands.`,
+      `Before you can run desktop platforms (with ${exampleMacos} or ${exampleWindows}), you need to navigate to the directory and generate a ${chalk.bold("development build")} as follows:`,
     );
     console.log();
     console.log(`- ${chalk.bold("cd " + cdPath)}`);
   } else {
-    console.log(`To run your project, run one of the following ${packageManager} commands.`);
+    console.log(
+      `Before you can run desktop platforms (with ${exampleMacos} or ${exampleWindows}), you need to generate a ${chalk.bold("development build")} as follows:`,
+    );
     console.log();
   }
 
-  console.log(`- ${chalk.bold(formatRunCommand(packageManager, "android"))}`);
+  console.log(
+    `${cdPath ? "- " : ""}${chalk.bold(`${formatSelfCommand(packageManager)} prebuild`)} `,
+  );
 
-  const iOSComment = isMacOS
-    ? ""
-    : " # you need to use macOS to build the iOS project - use the Expo app if you need to do iOS development without a Mac";
-  const macOSComment = isMacOS ? "" : " # you need to use macOS to build the macOS project";
-  console.log(`- ${chalk.bold(formatRunCommand(packageManager, "ios"))}${iOSComment}`);
-  console.log(`- ${chalk.bold(formatRunCommand(packageManager, "macos"))}${macOSComment}`);
+  // console.log(`- ${chalk.bold(formatRunCommand(packageManager, "android"))}`);
+  // const iOSComment = isMacOS
+  //   ? ""
+  //   : " # you need to use macOS to build the iOS project - use the Expo app if you need to do iOS development without a Mac";
+  // console.log(`- ${chalk.bold(formatRunCommand(packageManager, "ios"))}${iOSComment}`);
+  // console.log(`- ${chalk.bold(formatRunCommand(packageManager, "web"))}`);
 
-  const windowsComment = isWindows ? "" : " # you need to use Windows to build the Windows project";
-  console.log(`- ${chalk.bold(formatRunCommand(packageManager, "windows"))}${windowsComment}`);
-  console.log(`- ${chalk.bold(formatRunCommand(packageManager, "web"))}`);
+  // console.log(`To run a desktop platform, run one of the following ${packageManager} commands.`);
+  // const macOSComment = isMacOS ? "" : " # you need to use macOS to build the macOS project";
+  // console.log(`- ${chalk.bold(formatRunCommand(packageManager, "macos"))}${macOSComment}`);
+  // const windowsComment = isWindows ? "" : " # you need to use Windows to build the Windows project";
+  // console.log(`- ${chalk.bold(formatRunCommand(packageManager, "windows"))}${windowsComment}`);
 }
 
 export async function installPodsAsync(projectRoot: string, platform: "ios" | "macos") {

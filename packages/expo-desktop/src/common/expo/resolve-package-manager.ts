@@ -57,8 +57,7 @@ export function formatRunCommand(packageManager: PackageManagerName, cmd: string
   }
 }
 
-export function formatSelfCommand() {
-  const packageManager = resolvePackageManager();
+export function formatSelfCommand(packageManager = resolvePackageManager()) {
   switch (packageManager) {
     case "pnpm":
       return `pnpx ${CLI_NAME}`;
