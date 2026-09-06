@@ -1,5 +1,11 @@
 # expo-desktop
 
+## 1.0.0-beta.5
+
+### Patch Changes
+
+- Improve onboarding instructions
+
 ## 1.0.0-beta.4
 
 ### Patch Changes
