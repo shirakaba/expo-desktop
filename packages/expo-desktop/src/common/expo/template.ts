@@ -817,10 +817,11 @@ export function logProjectReady({
 
   console.log(`- ${chalk.bold(formatRunCommand(packageManager, "android"))}`);
 
-  const macOSComment = isMacOS
+  const iOSComment = isMacOS
     ? ""
-    : " # you need to use macOS to build the iOS or macOS projects - use the Expo app if you need to do Apple development without a Mac";
-  console.log(`- ${chalk.bold(formatRunCommand(packageManager, "ios"))}${macOSComment}`);
+    : " # you need to use macOS to build the iOS project - use the Expo app if you need to do iOS development without a Mac";
+  const macOSComment = isMacOS ? "" : " # you need to use macOS to build the macOS project";
+  console.log(`- ${chalk.bold(formatRunCommand(packageManager, "ios"))}${iOSComment}`);
   console.log(`- ${chalk.bold(formatRunCommand(packageManager, "macos"))}${macOSComment}`);
 
   const windowsComment = isWindows ? "" : " # you need to use Windows to build the Windows project";
