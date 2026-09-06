@@ -204,8 +204,8 @@ importers:
         specifier: ^7.6.0
         version: 7.7.4
       toml:
-        specifier: ^4.1.1
-        version: 4.1.1
+        specifier: ^4.2.0
+        version: 4.3.0
     devDependencies:
       '@octokit/types':
         specifier: ^13.5.0
@@ -4635,8 +4635,8 @@ packages:
     resolution: {integrity: sha512-o5sSPKEkg/DIQNmH43V0/uerLrpzVedkUh8tGNvaeXpfpuwjKenlSox/2O/BTlZUtEe+JG7s5YhEz608PlAHRA==}
     engines: {node: '>=0.6'}
 
-  toml@4.1.1:
-    resolution: {integrity: sha512-EBJnVBr3dTXdA89WVFoAIPUqkBjxPMwRqsfuo1r240tKFHXv3zgca4+NJib/h6TyvGF7vOawz0jGuryJCdNHrw==}
+  toml@4.3.0:
+    resolution: {integrity: sha512-lVb8X9BsPVuH0M4BKeS91tXAmJvCjQ5UIyAbQFaxkKGyUFK2RPkhwaFSQH8vbpl1d23eu/IBH+dwVMHWaq9A5A==}
     engines: {node: '>=20'}
 
   ts-interface-checker@0.1.13:
@@ -10355,7 +10355,7 @@ snapshots:
 
   toidentifier@1.0.1: {}
 
-  toml@4.1.1: {}
+  toml@4.3.0: {}
 
   ts-interface-checker@0.1.13: {}
 
