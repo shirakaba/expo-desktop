@@ -3,6 +3,7 @@
 import { type ArgsDef, defineCommand, type ParsedArgs, runMain } from "citty";
 import { default as kleur } from "kleur";
 import { dim, grey } from "kleur/colors";
+import process from "node:process";
 
 import packageJson from "../package.json" with { type: "json" };
 
@@ -118,6 +119,119 @@ const main = defineCommand({
         parseNoArg(args, "no-install");
 
         (await import("./prebuild/command.ts")).prebuild(args);
+      },
+    }),
+    run: defineCommand({
+      meta: { name: "run", description: "Run the macOS or Windows app binary locally" },
+      subCommands: {
+        macos: defineCommand({
+          meta: { name: "macos", description: "Run the macOS app binary locally" },
+          args: {
+            "no-build-cache": {
+              type: "boolean",
+              description: "Clear the native derived data before building",
+            },
+            "no-install": {
+              type: "boolean",
+              description: "Skip installing npm packages and CocoaPods",
+            },
+            "no-bundler": {
+              type: "boolean",
+              description: "Skip starting the Metro bundler",
+            },
+            scheme: {
+              type: "string",
+              valueHint: "scheme",
+              description: "Scheme to build.",
+            },
+            binary: {
+              type: "string",
+              valueHint: "path",
+              description: "Path to existing .app or .ipa to install.",
+            },
+            configuration: {
+              type: "string",
+              valueHint: "configuration",
+              description: "Xcode configuration to use. Debug or Release.",
+              default: "Debug",
+            },
+            port: {
+              type: "string",
+              valueHint: "port",
+              description: "Port to start the Metro bundler on.",
+              default: "8081",
+            },
+          },
+          async run({ args }) {
+            parseNoArg(args, "no-build-cache");
+            parseNoArg(args, "no-install");
+            parseNoArg(args, "no-bundler");
+
+            const { port, ...rest } = args;
+            const parsedPort = parseInt(port);
+            if (Number.isNaN(parsedPort) || String(parsedPort) !== port) {
+              console.log(`Expected port to be a number, but got ${port}.`);
+              return process.exit(1);
+            }
+
+            (await import("./run/macos/command.ts")).run({ port: parsedPort, ...rest });
+          },
+        }),
+
+        windows: defineCommand({
+          meta: { name: "windows", description: "Run the Windows app binary locally" },
+          args: {
+            "no-build-cache": {
+              type: "boolean",
+              description: "Clear the native derived data before building",
+            },
+            "no-install": {
+              type: "boolean",
+              description: "Skip installing npm packages",
+            },
+            "no-bundler": {
+              type: "boolean",
+              description: "Skip starting the Metro bundler",
+            },
+            scheme: {
+              type: "string",
+              valueHint: "scheme",
+              description: "Scheme to build.",
+            },
+            binary: {
+              type: "string",
+              valueHint: "path",
+              description: "Path to existing .exe to install.",
+            },
+            configuration: {
+              type: "string",
+              valueHint: "configuration",
+              description: "MSBuild configuration to use. Debug or Release.",
+              default: "Debug",
+            },
+            port: {
+              type: "string",
+              valueHint: "port",
+              description: "Port to start the Metro bundler on.",
+              default: "8081",
+            },
+          },
+          async run({ args }) {
+            parseNoArg(args, "no-build-cache");
+            parseNoArg(args, "no-install");
+            parseNoArg(args, "no-bundler");
+
+            const { port, ...rest } = args;
+
+            const parsedPort = parseInt(port);
+            if (Number.isNaN(parsedPort) || String(parsedPort) !== port) {
+              console.log(`Expected port to be a number, but got ${port}.`);
+              return process.exit(1);
+            }
+
+            (await import("./run/windows/command.ts")).run({ port: parsedPort, ...rest });
+          },
+        }),
       },
     }),
   },
