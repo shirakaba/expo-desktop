@@ -48,6 +48,7 @@
     "@expo/env": "catalog:expo-latest",
     "@expo/json-file": "catalog:expo-latest",
     "@expo/package-manager": "catalog:expo-latest",
+    "@expo/spawn-async": "catalog:expo-latest",
     "arktype": "^2.2.0",
     "chalk": "^4.1.2",
     "citty": "^0.2.2",
