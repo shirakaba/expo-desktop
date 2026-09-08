@@ -83,6 +83,7 @@ catalogs:
     "@expo/plist": "^0.7.0"
     "@expo/prebuild-config": ^56.0.15
     "@expo/spawn-async": ^1.8.0
+    "@expo/xcpretty": ^4.4.4
 
 # Formerly onlyBuiltDependencies/neverBuiltDependencies/ignoredBuiltDependencies
 allowBuilds:
