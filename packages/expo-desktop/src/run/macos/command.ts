@@ -2,6 +2,8 @@ import { log } from "@clack/prompts";
 import Debug from "debug";
 import { default as kleur } from "kleur";
 
+import type { Options } from "./XcodeBuild.types.ts";
+
 const debug = Debug("expo-desktop:run:command") as typeof console.log;
 
 /**
@@ -15,29 +17,22 @@ export async function run(args: {
   "no-bundler": boolean | undefined;
   scheme: string | undefined;
   binary: string | undefined;
+  output: string | undefined;
   configuration: string | undefined;
   port: number | undefined;
 }) {
-  const options: typeof args & {
-    noBuildCache: boolean | undefined;
-    noInstall: boolean | undefined;
-    install: boolean;
-    noBundler: boolean | undefined;
-  } = {
-    noBuildCache: args["no-build-cache"],
-    ["no-build-cache"]: args["no-build-cache"],
-    noBundler: args["no-bundler"],
-    ["no-bundler"]: args["no-bundler"],
-    noInstall: args["no-install"],
-    ["no-install"]: args["no-install"],
-    scheme: args.scheme,
-    binary: args.binary,
-    configuration: args.configuration,
-    port: args.port,
+  const options: Options = {
+    port: args.port ?? 8081,
     install: !args["no-install"],
+    buildCache: !args["no-build-cache"],
+    bundler: !args["no-bundler"],
+    ...(args.scheme !== undefined ? { scheme: args.scheme } : {}),
+    ...(args.binary !== undefined ? { binary: args.binary } : {}),
+    ...(args.output !== undefined ? { output: args.output } : {}),
+    ...(args.configuration !== undefined ? { configuration: args.configuration } : {}),
   };
 
   log.info(`🏎️  Running ${kleur.yellow("expo-desktop run macos")}.`, { withGuide: false });
 
-  // TODO
+  await (await import("./runMacosAsync.ts")).runMacosAsync(process.cwd(), options);
 }

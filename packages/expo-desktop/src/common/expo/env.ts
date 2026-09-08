@@ -3,6 +3,11 @@ import GetEnv from "getenv";
 const { boolish } = GetEnv;
 
 class Env {
+  /** Enable profiling metrics */
+  get EXPO_PROFILE() {
+    return boolish("EXPO_PROFILE", false);
+  }
+
   /** Enable debug logging */
   get EXPO_DEBUG() {
     return boolish("EXPO_DEBUG", false);

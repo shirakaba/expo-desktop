@@ -147,7 +147,12 @@ const main = defineCommand({
             binary: {
               type: "string",
               valueHint: "path",
-              description: "Path to existing .app or .ipa to install.",
+              description: "Path to existing .app to open.",
+            },
+            output: {
+              type: "string",
+              valueHint: "path",
+              description: "Directory to copy the built .app bundle to.",
             },
             configuration: {
               type: "string",
