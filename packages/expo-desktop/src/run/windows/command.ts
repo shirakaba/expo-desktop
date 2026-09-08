@@ -1,8 +1,7 @@
 import { log } from "@clack/prompts";
-import Debug from "debug";
 import { default as kleur } from "kleur";
 
-const debug = Debug("expo-desktop:run:command") as typeof console.log;
+import type { Options } from "./WindowsBuild.types.ts";
 
 /**
  * The entrypoint for `npx expo run ios` is here:
@@ -16,28 +15,19 @@ export async function run(args: {
   scheme: string | undefined;
   binary: string | undefined;
   configuration: string | undefined;
-  port: number | undefined;
+  port: number;
 }) {
-  const options: typeof args & {
-    noBuildCache: boolean | undefined;
-    noInstall: boolean | undefined;
-    install: boolean;
-    noBundler: boolean | undefined;
-  } = {
-    noBuildCache: args["no-build-cache"],
-    ["no-build-cache"]: args["no-build-cache"],
-    noBundler: args["no-bundler"],
-    ["no-bundler"]: args["no-bundler"],
-    noInstall: args["no-install"],
-    ["no-install"]: args["no-install"],
-    scheme: args.scheme,
-    binary: args.binary,
-    configuration: args.configuration,
+  const options: Options = {
     port: args.port,
     install: !args["no-install"],
+    buildCache: !args["no-build-cache"],
+    bundler: !args["no-bundler"],
+    ...(args.scheme !== undefined ? { scheme: args.scheme } : {}),
+    ...(args.binary !== undefined ? { binary: args.binary } : {}),
+    ...(args.configuration !== undefined ? { configuration: args.configuration } : {}),
   };
 
   log.info(`🏎️  Running ${kleur.yellow("expo-desktop run windows")}.`, { withGuide: false });
 
-  // TODO
+  await (await import("./runWindowsAsync.ts")).runWindowsAsync(process.cwd(), options);
 }

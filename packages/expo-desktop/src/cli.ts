@@ -188,7 +188,7 @@ const main = defineCommand({
           args: {
             "no-build-cache": {
               type: "boolean",
-              description: "Clear the native derived data before building",
+              description: "Clear the native build output before building",
             },
             "no-install": {
               type: "boolean",
@@ -201,12 +201,12 @@ const main = defineCommand({
             scheme: {
               type: "string",
               valueHint: "scheme",
-              description: "Scheme to build.",
+              description: "Windows project name or .vcxproj path to build.",
             },
             binary: {
               type: "string",
               valueHint: "path",
-              description: "Path to existing .exe to install.",
+              description: "Path to existing .exe to launch.",
             },
             configuration: {
               type: "string",
