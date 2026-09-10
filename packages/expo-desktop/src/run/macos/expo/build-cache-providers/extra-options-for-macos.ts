@@ -1,10 +1,9 @@
 // This is based on my port of @expo/fingerprint@0.15.2, originally written in:
 // https://github.com/shirakaba/rnmprebuilds/tree/main/build-cache-provider
 //
-// I have not yet caught it up to @expo/fingerprint@0.20.12.
-
 import type { HashSource, NormalizedOptions, Options } from "@expo/fingerprint";
 
+import { getOriginalEnv } from "@expo/env";
 import expoSpawnAsync from "@expo/spawn-async";
 import chalk from "chalk";
 import Debug from "debug";
@@ -13,6 +12,7 @@ import { createRequire } from "node:module";
 import path from "node:path";
 import process from "node:process";
 import resolveFrom from "resolve-from";
+import semver from "semver";
 
 const debug = Debug(
   "expo-desktop:run:macos:build-cache-provider:extra-options",
@@ -22,6 +22,7 @@ const require = createRequire(import.meta.url);
 require("@expo/fingerprint") as typeof import("@expo/fingerprint");
 const ExpoResolver = require("@expo/fingerprint/build/ExpoResolver") as {
   resolveExpoAutolinkingCliPath(projectRoot: string): string;
+  resolveExpoAutolinkingVersion(projectRoot: string): string | null;
 };
 const ExpoFingerprintOptions = require("@expo/fingerprint/build/Options") as {
   DEFAULT_SOURCE_SKIPS: 512;
@@ -69,6 +70,7 @@ const ExpoFingerprintUtils = require("@expo/fingerprint/build/sourcer/Utils") as
     filePath: string,
     reason: string,
   ): Promise<HashSource | null>;
+  maybeGetRealPathAsync(filePath: string): Promise<string>;
 };
 const ExpoPath = require("@expo/fingerprint/build/utils/Path") as {
   toPosixPath(filePath: string): string;
@@ -78,11 +80,12 @@ export async function getExtraOptionsForMacos(
   projectRoot: string,
   options: Options,
 ): Promise<Options> {
+  const expoAutolinkingVersion = ExpoResolver.resolveExpoAutolinkingVersion(projectRoot) ?? "0.0.0";
   const resolvedOptions: Options = {
     // @ts-expect-error Expo is only expecting "android" | "ios"
     platforms: ["macos"],
     // Based on some of DEFAULT_IGNORE_PATHS
-    // node_modules/.bun/@expo+fingerprint@0.15.2/node_modules/@expo/fingerprint/build/Options.js
+    // node_modules/@expo/fingerprint/build/Options.js
     ignorePaths: [
       "**/macos/Pods/**/*",
       "**/macos/build/**/*",
@@ -91,8 +94,9 @@ export async function getExtraOptionsForMacos(
       "**/macos/*.xcworkspace/xcuserdata/**/*",
     ],
 
-    // Just trying out.
-    useRNCoreAutolinkingFromExpo: true,
+    // expo-modules-autolinking supports the `react-native-config` core autolinking from 1.11.2.
+    // Match @expo/fingerprint's 1.12.0 default while still allowing an explicit override.
+    useRNCoreAutolinkingFromExpo: semver.gte(expoAutolinkingVersion, "1.12.0"),
 
     ...options,
   };
@@ -111,7 +115,7 @@ export async function getExtraOptionsForMacos(
     coreAutolinkingSourcesFromExpoMacos,
     defaultPackageSourcesAsync,
   ] = await Promise.all([
-    getExpoAutolinkingMacosSourcesAsync(projectRoot, sourcerOptions),
+    getExpoAutolinkingMacosSourcesAsync(projectRoot, sourcerOptions, expoAutolinkingVersion),
     getPackageJsonScriptSourcesAsync(projectRoot, sourcerOptions),
     getBareMacosSourcesAsync(projectRoot, sourcerOptions),
     getCoreAutolinkingSourcesFromExpoMacos(
@@ -138,6 +142,7 @@ exports.getExtraOptionsForMacos = getExtraOptionsForMacos;
 async function getExpoAutolinkingMacosSourcesAsync(
   projectRoot: string,
   options: Pick<NormalizedOptions, "platforms">,
+  expoAutolinkingVersion: string,
 ): Promise<Array<HashSource>> {
   // @ts-expect-error Expo is only expecting "android" | "ios"
   if (!options.platforms.includes("macos")) {
@@ -145,17 +150,23 @@ async function getExpoAutolinkingMacosSourcesAsync(
   }
 
   try {
+    // expo-modules-autolinking 1.10.0 added support for the Apple platform.
+    if (semver.lt(expoAutolinkingVersion, "1.10.0")) {
+      return [];
+    }
+
     const reasons = ["expoAutolinkingMacos"];
     const results = [];
+    const realProjectRoot = await ExpoFingerprintUtils.maybeGetRealPathAsync(projectRoot);
     const { stdout } = await expoSpawnAsync(
       "node",
       [ExpoResolver.resolveExpoAutolinkingCliPath(projectRoot), "resolve", "-p", "apple", "--json"],
-      { cwd: projectRoot },
+      { cwd: projectRoot, env: getOriginalEnv() },
     );
     const config = JSON.parse(stdout);
     for (const module of config.modules) {
       for (const pod of module.pods) {
-        const filePath = ExpoPath.toPosixPath(path.relative(projectRoot, pod.podspecDir));
+        const filePath = ExpoPath.toPosixPath(path.relative(realProjectRoot, pod.podspecDir));
         pod.podspecDir = filePath; // use relative path for the dir
         debug(`Adding expo-modules-autolinking macos dir - ${chalk.dim(filePath)}`);
         results.push({ type: "dir", filePath, reasons });
@@ -266,7 +277,7 @@ async function getCoreAutolinkingSourcesFromExpoMacos(
         "--platform",
         "macos",
       ],
-      { cwd: projectRoot },
+      { cwd: projectRoot, env: getOriginalEnv() },
     );
     const config = JSON.parse(stdout);
     const results = await parseCoreAutolinkingSourcesAsync({
@@ -297,14 +308,13 @@ async function parseCoreAutolinkingSourcesAsync({
     ? `react-native core autolinking dir for ${platform}`
     : "react-native core autolinking dir";
   const results = [];
-  const { root } = config;
+  const root = await ExpoFingerprintUtils.maybeGetRealPathAsync(config.root);
   const autolinkingConfig = {};
   for (const [depName, depData] of Object.entries(config.dependencies)) {
     try {
       stripRncoreAutolinkingAbsolutePaths(depData, root);
       const filePath = ExpoPath.toPosixPath((depData as { root: string }).root);
       debug(`Adding ${logTag} - ${chalk.dim(filePath)}`);
-      // FIXME: @expo/fingerprint@0.20.12 has createAutolinkingHashSourceAsync() here
       results.push({ type: "dir", filePath, reasons });
       // @ts-ignore
       autolinkingConfig[depName] = depData;
