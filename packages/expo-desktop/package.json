@@ -46,6 +46,7 @@
     "@expo/config": "catalog:expo-latest",
     "@expo/config-plugins": "catalog:expo-latest",
     "@expo/env": "catalog:expo-latest",
+    "@expo/fingerprint": "catalog:expo-latest",
     "@expo/json-file": "catalog:expo-latest",
     "@expo/package-manager": "catalog:expo-latest",
     "@expo/plist": "catalog:expo-latest",

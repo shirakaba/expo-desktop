@@ -1,0 +1,260 @@
+import type {
+  ExpoConfig,
+  BuildCacheProviderPlugin,
+  BuildCacheProvider,
+  RunOptions,
+} from "@expo/config";
+
+import fs from "node:fs";
+import resolveFrom from "resolve-from";
+
+import * as Log from "../../../../common/expo/log.ts";
+import { getExtraOptionsForMacos } from "./extra-options-for-macos.ts";
+
+export const resolveBuildCacheProvider = async (
+  provider: Required<ExpoConfig>["buildCacheProvider"] | undefined,
+  projectRoot: string,
+): Promise<BuildCacheProvider | undefined> => {
+  if (!provider) {
+    return;
+  }
+
+  if (provider === "eas") {
+    Log.warn(
+      "Expo Desktop does not support the 'eas' build cache provider - please provide a custom one. Shall not enable build caching.",
+    );
+    return;
+  }
+
+  if (typeof provider === "object" && typeof provider.plugin === "string") {
+    const plugin = resolvePluginFunction(projectRoot, provider.plugin);
+
+    return { plugin, options: provider.options };
+  }
+
+  throw new Error("Invalid build cache provider");
+};
+
+export async function resolveBuildCache({
+  projectRoot,
+  platform,
+  provider,
+  runOptions,
+}: {
+  projectRoot: string;
+  platform: "android" | "ios";
+  provider: BuildCacheProvider;
+  runOptions: RunOptions;
+}): Promise<string | null> {
+  const fingerprintHash = await calculateFingerprintHashAsync({
+    projectRoot,
+    platform,
+    provider,
+    runOptions,
+  });
+  if (!fingerprintHash) {
+    return null;
+  }
+
+  if ("resolveRemoteBuildCache" in provider.plugin) {
+    Log.warn("The resolveRemoteBuildCache function is deprecated. Use resolveBuildCache instead.");
+    return await provider.plugin.resolveRemoteBuildCache(
+      { fingerprintHash, platform, runOptions, projectRoot },
+      provider.options,
+    );
+  }
+  return await provider.plugin.resolveBuildCache(
+    { fingerprintHash, platform, runOptions, projectRoot },
+    provider.options,
+  );
+}
+
+export async function uploadBuildCache({
+  projectRoot,
+  platform,
+  provider,
+  buildPath,
+  runOptions,
+}: {
+  projectRoot: string;
+  platform: "android" | "ios";
+  provider: BuildCacheProvider;
+  buildPath: string;
+  runOptions: RunOptions;
+}): Promise<void> {
+  const fingerprintHash = await calculateFingerprintHashAsync({
+    projectRoot,
+    platform,
+    provider,
+    runOptions,
+  });
+  if (!fingerprintHash) {
+    // debugEvent("build_cache:no_fingerprint", {});
+    return;
+  }
+
+  if ("uploadRemoteBuildCache" in provider.plugin) {
+    Log.warn("The uploadRemoteBuildCache function is deprecated. Use uploadBuildCache instead.");
+    await provider.plugin.uploadRemoteBuildCache(
+      {
+        projectRoot,
+        platform,
+        fingerprintHash,
+        buildPath,
+        runOptions,
+      },
+      provider.options,
+    );
+  } else {
+    await provider.plugin.uploadBuildCache(
+      {
+        projectRoot,
+        platform,
+        fingerprintHash,
+        buildPath,
+        runOptions,
+      },
+      provider.options,
+    );
+  }
+}
+
+/**
+ * Returns a fingerprint hash, e.g. "8599e6998f3a3682050d5d256b1afe6b419b937b".
+ *
+ * https://github.com/expo/expo/blob/0866d35160af6490e04699313822cb76430d323b/packages/%40expo/cli/src/utils/build-cache-providers/index.ts#L147
+ * node_modules/@expo/cli/build/src/utils/build-cache-providers/index.js
+ */
+async function calculateFingerprintHashAsync({
+  projectRoot,
+  platform,
+  provider,
+  runOptions,
+}: {
+  projectRoot: string;
+  platform: "android" | "ios" | "macos";
+  provider: BuildCacheProvider;
+  runOptions: RunOptions;
+}): Promise<string | null> {
+  if (provider.plugin.calculateFingerprintHash) {
+    return await provider.plugin.calculateFingerprintHash(
+      {
+        projectRoot,
+        // Did I stutter
+        platform: platform as "android" | "ios",
+        runOptions,
+      },
+      provider.options,
+    );
+  }
+
+  const Fingerprint = importFingerprintForDev(projectRoot);
+  if (!Fingerprint) {
+    Log.warn("@expo/fingerprint is not installed in the project, skipping build cache.");
+    return null;
+  }
+  const options = platform === "macos" ? await getExtraOptionsForMacos(projectRoot, {}) : {};
+
+  const fingerprint = await Fingerprint.createFingerprintAsync(projectRoot, options);
+  return fingerprint.hash;
+}
+
+function importFingerprintForDev(projectRoot: string): null | typeof import("@expo/fingerprint") {
+  try {
+    return require(require.resolve("@expo/fingerprint", { paths: [projectRoot] }));
+  } catch (error: any) {
+    if ("code" in error && error.code === "MODULE_NOT_FOUND") {
+      return null;
+    }
+    throw error;
+  }
+}
+
+/**
+ * Resolve the provider plugin from a node module or package.
+ * If the module or package does not include a provider plugin, this function throws.
+ * The resolution is done in following order:
+ *   1. Is the reference a relative file path or an import specifier with file path? e.g. `./file.js`, `pkg/file.js` or `@org/pkg/file.js`?
+ *     - Resolve the provider plugin as-is
+ *   2. Does the module have a valid provider plugin in the `main` field?
+ *     - Resolve the `main` entry point as provider plugin
+ */
+function resolvePluginFilePathForModule(projectRoot: string, pluginReference: string) {
+  if (moduleNameIsDirectFileReference(pluginReference)) {
+    // Only resolve `./file.js`, `package/file.js`, `@org/package/file.js`
+    const pluginScriptFile = resolveFrom.silent(projectRoot, pluginReference);
+    if (pluginScriptFile) {
+      return pluginScriptFile;
+    }
+  } else if (moduleNameIsPackageReference(pluginReference)) {
+    // Try to resole the `main` entry as config plugin
+    return resolveFrom(projectRoot, pluginReference);
+  }
+
+  throw new Error(
+    `Failed to resolve provider plugin for module "${pluginReference}" relative to "${projectRoot}". Do you have node modules installed?`,
+  );
+}
+
+export function moduleNameIsDirectFileReference(name: string): boolean {
+  // Check if path is a file. Matches lines starting with: . / ~/
+  if (name.match(/^(\.|~\/|\/)/g)) {
+    return true;
+  }
+
+  const slashCount = name.split("/")?.length;
+  // Orgs (like @expo/config ) should have more than one slash to be a direct file.
+  if (name.startsWith("@")) {
+    return slashCount > 2;
+  }
+
+  // Regular packages should be considered direct reference if they have more than one slash.
+  return slashCount > 1;
+}
+
+export function moduleNameIsPackageReference(name: string): boolean {
+  const slashCount = name.split("/")?.length;
+  return name.startsWith("@") ? slashCount === 2 : slashCount === 1;
+}
+
+export function fileExists(file: string): boolean {
+  try {
+    return fs.statSync(file).isFile();
+  } catch {
+    return false;
+  }
+}
+
+// Resolve the module function and assert type
+export function resolvePluginFunction(
+  projectRoot: string,
+  pluginReference: string,
+): BuildCacheProviderPlugin {
+  const pluginFile = resolvePluginFilePathForModule(projectRoot, pluginReference);
+
+  try {
+    let plugin = require(pluginFile);
+    if (plugin?.default != null) {
+      plugin = plugin.default;
+    }
+
+    if (
+      typeof plugin !== "object" ||
+      (typeof plugin.resolveRemoteBuildCache !== "function" &&
+        typeof plugin.resolveBuildCache !== "function") ||
+      (typeof plugin.uploadRemoteBuildCache !== "function" &&
+        typeof plugin.uploadBuildCache !== "function")
+    ) {
+      throw new Error(`
+        The provider plugin "${pluginReference}" must export an object containing
+        the resolveBuildCache and uploadBuildCache functions.
+      `);
+    }
+    return plugin;
+  } catch (error) {
+    if (error instanceof SyntaxError) {
+      // Add error linking to the docs of how create a valid provider plugin
+    }
+    throw error;
+  }
+}

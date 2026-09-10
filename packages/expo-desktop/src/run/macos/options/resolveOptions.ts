@@ -1,6 +1,9 @@
+import { getConfig } from "@expo/config";
+
 import type { Options, BuildProps } from "../XcodeBuild.types.ts";
 
 import { resolveBundlerPropsAsync } from "../../../common/expo/resolve-bundler-props.ts";
+import { resolveBuildCacheProvider } from "../expo/build-cache-providers/build-cache-providers.ts";
 import { resolveNativeSchemePropsAsync } from "./resolveNativeScheme.ts";
 import { resolveXcodeProject } from "./resolveXcodeProject.ts";
 
@@ -27,8 +30,17 @@ export async function resolveOptionsAsync(
     osType: "macOS" as const,
   };
 
-  // Debug macOS builds should load JavaScript from Metro when the bundler is enabled.
-  const shouldSkipInitialBundling = configuration === "Debug" && bundlerProps.shouldStartBundler;
+  const projectConfig = getConfig(projectRoot);
+  const buildCacheProvider = await resolveBuildCacheProvider(
+    projectConfig.exp?.buildCacheProvider ?? projectConfig.exp.experiments?.buildCacheProvider,
+    projectRoot,
+  );
+
+  // This optimization skips resetting the Metro cache needlessly.
+  // The cache is reset in `../node_modules/react-native/scripts/react-native-xcode.sh` when the
+  // project is running in Debug and built onto a physical device. It seems that this is done because
+  // the script is run from Xcode and unaware of the CLI instance.
+  const shouldSkipInitialBundling = configuration === "Debug";
 
   return {
     ...bundlerProps,
@@ -41,5 +53,6 @@ export async function resolveOptionsAsync(
     shouldSkipInitialBundling,
     buildCache: options.buildCache !== false,
     scheme,
+    buildCacheProvider,
   };
 }

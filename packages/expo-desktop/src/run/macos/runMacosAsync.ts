@@ -13,6 +13,10 @@ import { logProjectLogsLocation } from "../../common/expo/run-hints.ts";
 import { startBundlerAsync } from "../../common/expo/start-bundler.ts";
 import { loadEnvFiles, setNodeEnv } from "../../common/node-env.ts";
 import { ensureNativeProjectAsync } from "./ensureNativeProject.ts";
+import {
+  resolveBuildCache,
+  uploadBuildCache,
+} from "./expo/build-cache-providers/build-cache-providers.ts";
 import { getSchemesForMacosAsync } from "./expo/scheme.ts";
 import { getLaunchInfoForBinaryAsync, launchAppAsync } from "./launchApp.ts";
 import { resolveOptionsAsync } from "./options/resolveOptions.ts";
@@ -38,17 +42,17 @@ export async function runMacosAsync(projectRoot: string, options: Options) {
     Log.log(`› Using ${props.device.name}`);
   }
 
-  // if (!options.binary && props.buildCacheProvider) {
-  //   const localPath = await resolveBuildCache({
-  //     projectRoot,
-  //     platform: "ios",
-  //     runOptions: options,
-  //     provider: props.buildCacheProvider,
-  //   });
-  //   if (localPath) {
-  //     options.binary = localPath;
-  //   }
-  // }
+  if (!options.binary && props.buildCacheProvider) {
+    const localPath = await resolveBuildCache({
+      projectRoot,
+      platform: "macos",
+      runOptions: options,
+      provider: props.buildCacheProvider,
+    });
+    if (localPath) {
+      options.binary = localPath;
+    }
+  }
 
   if (options.rebundle) {
     throw new Error("expo-desktop does not currently support the --unstable-rebundle option.");
@@ -138,15 +142,15 @@ export async function runMacosAsync(projectRoot: string, options: Options) {
     await manager.stopAsync();
   }
 
-  // if (shouldUpdateBuildCache && props.buildCacheProvider) {
-  //   await uploadBuildCache({
-  //     projectRoot,
-  //     platform: "ios",
-  //     provider: props.buildCacheProvider,
-  //     buildPath: binaryPath,
-  //     runOptions: options,
-  //   });
-  // }
+  if (shouldUpdateBuildCache && props.buildCacheProvider) {
+    await uploadBuildCache({
+      projectRoot,
+      platform: "macos",
+      provider: props.buildCacheProvider,
+      buildPath: binaryPath,
+      runOptions: options,
+    });
+  }
 }
 
 function assertPlatform() {

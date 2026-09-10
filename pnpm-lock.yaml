@@ -31,6 +31,9 @@ catalogs:
     '@expo/env':
       specifier: ^2.3.0
       version: 2.3.0
+    '@expo/fingerprint':
+      specifier: ^0.20.12
+      version: 0.20.12
     '@expo/json-file':
       specifier: ^10.2.0
       version: 10.2.0
@@ -155,6 +158,9 @@ importers:
       '@expo/env':
         specifier: catalog:expo-latest
         version: 2.3.0(supports-color@8.1.1)
+      '@expo/fingerprint':
+        specifier: catalog:expo-latest
+        version: 0.20.12(supports-color@8.1.1)
       '@expo/json-file':
         specifier: catalog:expo-latest
         version: 10.2.0
@@ -1192,8 +1198,16 @@ packages:
     resolution: {integrity: sha512-9HnnIbzwTTdbwSjNLXTk0fPm9ZwMJ7c1/31tsni8HZ8Q62KzYCyspahH+V365vg5J6lr001DzNwBxVWSaYCQLg==}
     engines: {node: '>=20.12.0'}
 
+  '@expo/env@2.4.3':
+    resolution: {integrity: sha512-M1NXeZCA1mkMkYOyIe7PlyRX0/jqFtMoJgyblnlq/vpCRfmueFT7RnGSQG8uEFDF5WHOFGijAQ3fogPh3/n5Ng==}
+    engines: {node: '>=20.12.0'}
+
   '@expo/fingerprint@0.15.5':
     resolution: {integrity: sha512-mdVoAMcux1WlM6kd1RoWiHRNqKqS+J6mKmWQ/BKgeh937S/fcW58EE68O6nc4KDXtWi3PBeNHskOFcgyIuD4hw==}
+    hasBin: true
+
+  '@expo/fingerprint@0.20.12':
+    resolution: {integrity: sha512-FIR5fkZYeFaLSowmjgyB6RPKl8AXeE8HuCBHHvyxK8UhOjpPfCAmzT4E7v2yub4qqDafKnfcOFCYxvpUEu+01w==}
     hasBin: true
 
   '@expo/image-utils@0.10.1':
@@ -5994,6 +6008,14 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  '@expo/env@2.4.3(supports-color@8.1.1)':
+    dependencies:
+      chalk: 4.1.2
+      debug: 4.4.3(supports-color@8.1.1)
+      getenv: 2.0.0
+    transitivePeerDependencies:
+      - supports-color
+
   '@expo/fingerprint@0.15.5(supports-color@8.1.1)':
     dependencies:
       '@expo/spawn-async': 1.8.0
@@ -6010,6 +6032,22 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  '@expo/fingerprint@0.20.12(supports-color@8.1.1)':
+    dependencies:
+      '@expo/env': 2.4.3(supports-color@8.1.1)
+      '@expo/spawn-async': 1.8.0
+      arg: 5.0.2
+      chalk: 4.1.2
+      debug: 4.4.3(supports-color@8.1.1)
+      getenv: 2.0.0
+      glob: 13.0.6
+      ignore: 5.3.2
+      minimatch: 10.2.5
+      resolve-from: 5.0.0
+      semver: 7.8.5
+    transitivePeerDependencies:
+      - supports-color
+
   '@expo/image-utils@0.10.1(supports-color@8.1.1)':
     dependencies:
       '@expo/require-utils': 56.1.3(supports-color@8.1.1)
@@ -6018,7 +6056,7 @@ snapshots:
       getenv: 2.0.0
       jimp-compact: 0.16.1
       parse-png: 2.1.0
-      semver: 7.7.4
+      semver: 7.8.5
     transitivePeerDependencies:
       - supports-color
       - typescript
@@ -6709,7 +6747,7 @@ snapshots:
       fs-extra: 8.1.0
       graceful-fs: 4.2.11
       prompts: 2.4.2
-      semver: 7.7.4
+      semver: 7.8.5
     transitivePeerDependencies:
       - bufferutil
       - supports-color
@@ -6766,7 +6804,7 @@ snapshots:
       ora: 3.4.0
       prompts: 2.4.2
       react-native: 0.81.6(@babel/core@7.29.0(supports-color@8.1.1))(@react-native-community/cli@20.1.3(supports-color@8.1.1))(@react-native/metro-config@0.81.6(@babel/core@7.29.0(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.1.17)(react@19.1.4)(supports-color@8.1.1)
-      semver: 7.7.4
+      semver: 7.8.5
       shelljs: 0.8.5
       username: 5.1.0
       xml-formatter: 2.6.1
@@ -9354,7 +9392,7 @@ snapshots:
     dependencies:
       hosted-git-info: 7.0.2
       proc-log: 4.2.0
-      semver: 7.7.4
+      semver: 7.8.5
       validate-npm-package-name: 5.0.1
 
   npm-run-path@2.0.2:

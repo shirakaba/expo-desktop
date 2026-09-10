@@ -74,6 +74,7 @@ catalogs:
     react: 19.2.3
     react-native: 0.85.3
   expo-latest:
+    "@expo/fingerprint": ^0.20.12
     "@expo/config-plugins": ^56.0.8
     "@expo/config-types": ^56.0.5
     "@expo/config": ^56.0.9

@@ -1,5 +1,5 @@
 import plist from "@expo/plist";
-import binaryPlist from "bplist-parser";
+import * as binaryPlist from "bplist-parser";
 import fs from "fs/promises";
 
 import { CommandError } from "../../../common/expo/error.ts";
@@ -22,7 +22,7 @@ export async function parsePlistAsync(plistPath: string) {
 
 export function parsePlistBuffer(contents: Buffer) {
   if (contents[0] === CHAR_CHEVRON_OPEN) {
-    const info = plist.parse(contents.toString());
+    const info = plist.default.parse(contents.toString());
     if (Array.isArray(info)) return info[0];
     return info;
   } else if (contents[0] === CHAR_B_LOWER) {
