@@ -1,3 +1,5 @@
+import type { BuildCacheProvider } from "@expo/config";
+
 export type XcodeConfiguration = "Debug" | "Release" | string;
 
 export type Options = {
@@ -17,6 +19,9 @@ export type Options = {
   binary?: string;
   /** Directory to copy the built app binary to after build completes. */
   output?: string;
+
+  /** Re-bundle JS and assets, then embed in existing app, and install again. */
+  rebundle?: boolean;
 };
 
 export type ProjectInfo = {
@@ -45,8 +50,15 @@ export type BuildProps = {
   /** Should use derived data for builds. */
   buildCache: boolean;
   scheme: string;
-  /** Port to use for Metro. */
+  buildCacheProvider?: BuildCacheProvider;
+
+  /** Options that were used to create the eager bundle in release builds. */
+  eagerBundleOptions?: string;
+} & BundlerProps;
+
+export interface BundlerProps {
+  /** Port to start the dev server on. */
   port: number;
-  /** Start Metro after the native build. */
+  /** Skip opening the bundler from the native script. */
   shouldStartBundler: boolean;
-};
+}

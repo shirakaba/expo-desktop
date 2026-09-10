@@ -1,6 +1,5 @@
 import spawnAsync from "@expo/spawn-async";
 import chalk from "chalk";
-import fs from "node:fs";
 import path from "node:path";
 
 import type { DevServerManager } from "../../common/expo/start-bundler.ts";
@@ -8,6 +7,13 @@ import type { MacosDevice } from "./XcodeBuild.types.ts";
 
 import { CommandError } from "../../common/expo/error.ts";
 import * as Log from "../../common/expo/log.ts";
+import { profile } from "../../common/expo/profile.ts";
+import { parsePlistAsync } from "./expo/plist.ts";
+
+type BinaryLaunchInfo = {
+  bundleId: string;
+  schemes: Array<string>;
+};
 
 /** Install and launch the app binary on the host macOS device. */
 export async function launchAppAsync(
@@ -18,13 +24,15 @@ export async function launchAppAsync(
     device: MacosDevice;
     shouldStartBundler: boolean;
   },
+  appId?: string,
 ) {
-  Log.log(chalk.gray`› Installing ${binaryPath}`);
+  appId ??= (await profile(getLaunchInfoForBinaryAsync)(binaryPath)).bundleId;
+
+  Log.log(chalk.gray`› Launching ${binaryPath}`);
   if (props.device.osType !== "macOS") {
     throw new Error("Unexpected non-macOS device while launching a macOS app.");
   }
 
-  const appId = await getBundleIdentifierAsync(binaryPath);
   const args = ["-b", appId, binaryPath];
   try {
     await spawnAsync("open", args);
@@ -42,30 +50,26 @@ export async function launchAppAsync(
   }
 }
 
-async function getBundleIdentifierAsync(binaryPath: string): Promise<string> {
-  const infoPlistPaths = [
-    path.join(binaryPath, "Contents", "Info.plist"),
-    path.join(binaryPath, "Info.plist"),
-  ];
-  const infoPlistPath = infoPlistPaths.find((candidate) => fs.existsSync(candidate));
-  if (!infoPlistPath) {
-    throw new CommandError(
-      "MACOS_LAUNCH",
-      `Could not find Info.plist in the macOS app bundle: ${binaryPath}`,
-    );
+export async function getLaunchInfoForBinaryAsync(binaryPath: string): Promise<BinaryLaunchInfo> {
+  const builtInfoPlistPath = path.join(binaryPath, "Contents", "Info.plist");
+  const { CFBundleIdentifier, CFBundleURLTypes } = await parsePlistAsync(builtInfoPlistPath);
+
+  let schemes = new Array<string>();
+
+  if (Array.isArray(CFBundleURLTypes)) {
+    schemes =
+      CFBundleURLTypes.reduce<Array<string>>((acc, urlType: unknown) => {
+        if (
+          urlType &&
+          typeof urlType === "object" &&
+          "CFBundleURLSchemes" in urlType &&
+          Array.isArray(urlType.CFBundleURLSchemes)
+        ) {
+          return [...acc, ...urlType.CFBundleURLSchemes];
+        }
+        return acc;
+      }, []) ?? [];
   }
 
-  const result = await spawnAsync("/usr/libexec/PlistBuddy", [
-    "-c",
-    "Print:CFBundleIdentifier",
-    infoPlistPath,
-  ]);
-  const bundleIdentifier = result.stdout.trim();
-  if (!bundleIdentifier) {
-    throw new CommandError(
-      "MACOS_LAUNCH",
-      `CFBundleIdentifier was not found in the macOS app bundle: ${binaryPath}`,
-    );
-  }
-  return bundleIdentifier;
+  return { bundleId: CFBundleIdentifier, schemes };
 }

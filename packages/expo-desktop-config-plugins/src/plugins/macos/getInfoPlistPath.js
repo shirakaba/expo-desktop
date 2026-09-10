@@ -6,6 +6,7 @@ const Target = require("@expo/config-plugins/build/ios/Target");
  *
  * @param {string} projectRoot
  * @param {'ios' | 'macos'} platform
+ * @param {{ targetName?: string; buildConfiguration?: string | 'Release' | 'Debug' }} [args]
  */
 function getInfoPlistPathFromPbxproj(
   projectRootOrProject,
