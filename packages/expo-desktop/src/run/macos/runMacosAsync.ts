@@ -89,7 +89,7 @@ export async function runMacosAsync(projectRoot: string, options: Options) {
 
     // Find the path to the built app binary, this will be used to open the binary
     // on the host device.
-    binaryPath = await profile(XcodeBuild.getAppBinaryPath)(buildOutput);
+    binaryPath = profile(XcodeBuild.getAppBinaryPath)(buildOutput);
     shouldUpdateBuildCache = true;
   }
 
