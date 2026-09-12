@@ -1,12 +1,18 @@
 ObjC.import("AppKit");
 ObjC.import("Foundation");
 
-const TERMINATION_TIMEOUT_SECONDS = 120;
-
 function run(argv) {
   const bundleIdentifier = argv[0];
   if (!bundleIdentifier) {
     throw new Error("Expected an application bundle identifier.");
+  }
+  const terminationTimeoutSecondsArg = argv[1];
+  if (!terminationTimeoutSecondsArg) {
+    throw new Error("Expected a termination timeout to be given.");
+  }
+  const terminationTimeoutSeconds = parseInt(terminationTimeoutSecondsArg);
+  if (isNaN(terminationTimeoutSeconds) || terminationTimeoutSeconds <= 0) {
+    throw new Error("Expected termination timeout to be a number above 0.");
   }
 
   const processIds = new Set();
@@ -66,7 +72,7 @@ function run(argv) {
   }
 
   if (terminatedProcessIds.size < processIds.size) {
-    $.CFRunLoopRunInMode($.kCFRunLoopDefaultMode, TERMINATION_TIMEOUT_SECONDS, false);
+    $.CFRunLoopRunInMode($.kCFRunLoopDefaultMode, terminationTimeoutSeconds, false);
   }
 
   notificationCenter.removeObserver(observer);

@@ -62,7 +62,14 @@ async function waitForExistingInstancesToTerminateAsync(bundleId: string) {
   const scriptPath = fileURLToPath(
     new URL("../../../scripts/terminateApp.jxa.js", import.meta.url),
   );
-  await spawnAsync("osascript", ["-l", "JavaScript", scriptPath, bundleId]);
+  const terminationTimeoutSeconds = 60;
+  await spawnAsync("osascript", [
+    "-l",
+    "JavaScript",
+    scriptPath,
+    bundleId,
+    terminationTimeoutSeconds.toString(),
+  ]);
 }
 
 export async function getLaunchInfoForBinaryAsync(binaryPath: string): Promise<BinaryLaunchInfo> {
