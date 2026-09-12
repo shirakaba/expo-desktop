@@ -82,7 +82,7 @@ export async function getExtraOptionsForMacos(
 ): Promise<Options> {
   const expoAutolinkingVersion = ExpoResolver.resolveExpoAutolinkingVersion(projectRoot) ?? "0.0.0";
   const resolvedOptions: Options = {
-    // @ts-expect-error Expo is only expecting "android" | "ios"
+    // @ts-expect-error Expo is only expecting "android" | "ios".
     platforms: ["macos"],
     // Based on some of DEFAULT_IGNORE_PATHS
     // node_modules/@expo/fingerprint/build/Options.js
@@ -94,8 +94,10 @@ export async function getExtraOptionsForMacos(
       "**/macos/*.xcworkspace/xcuserdata/**/*",
     ],
 
-    // expo-modules-autolinking supports the `react-native-config` core autolinking from 1.11.2.
-    // Match @expo/fingerprint's 1.12.0 default while still allowing an explicit override.
+    // expo-modules-autolinking supports the `react-native-config` core
+    // autolinking from 1.11.2.
+    // Match @expo/fingerprint's 1.12.0 default while still allowing an explicit
+    // override.
     useRNCoreAutolinkingFromExpo: semver.gte(expoAutolinkingVersion, "1.12.0"),
 
     ...options,
@@ -103,19 +105,27 @@ export async function getExtraOptionsForMacos(
 
   const sourcerOptions: Pick<NormalizedOptions, "platforms" | "sourceSkips"> = {
     platforms:
-      // @ts-expect-error Expo is only expecting "android" | "ios"
+      // @ts-expect-error Expo is only expecting "android" | "ios".
       resolvedOptions.platforms?.filter((platform) => platform === "macos") ?? [],
     sourceSkips: resolvedOptions.sourceSkips ?? ExpoFingerprintOptions.DEFAULT_SOURCE_SKIPS,
   };
+  const configuredPlatforms = (resolvedOptions.platforms ?? []) as Array<string>;
+  const applePlatforms = configuredPlatforms.filter(
+    (platform) => platform === "ios" || platform === "macos",
+  ) as Array<"ios" | "macos">;
 
   const [
-    expoAutolinkingMacosSources,
+    expoAutolinkingAppleSources,
     packageJsonScriptSourcesAsync,
     bareMacosSources,
     coreAutolinkingSourcesFromExpoMacos,
     defaultPackageSourcesAsync,
   ] = await Promise.all([
-    getExpoAutolinkingMacosSourcesAsync(projectRoot, sourcerOptions, expoAutolinkingVersion),
+    getExpoAutolinkingAppleSourcesAsync(
+      projectRoot,
+      { platforms: applePlatforms },
+      expoAutolinkingVersion,
+    ),
     getPackageJsonScriptSourcesAsync(projectRoot, sourcerOptions),
     getBareMacosSourcesAsync(projectRoot, sourcerOptions),
     getCoreAutolinkingSourcesFromExpoMacos(
@@ -129,7 +139,7 @@ export async function getExtraOptionsForMacos(
   return {
     ...resolvedOptions,
     extraSources: [
-      ...expoAutolinkingMacosSources,
+      ...expoAutolinkingAppleSources,
       ...packageJsonScriptSourcesAsync,
       ...bareMacosSources,
       ...coreAutolinkingSourcesFromExpoMacos,
@@ -139,28 +149,44 @@ export async function getExtraOptionsForMacos(
 }
 exports.getExtraOptionsForMacos = getExtraOptionsForMacos;
 
-async function getExpoAutolinkingMacosSourcesAsync(
+async function getExpoAutolinkingAppleSourcesAsync(
   projectRoot: string,
-  options: Pick<NormalizedOptions, "platforms">,
+  options: { platforms: Array<"ios" | "macos" | "tvos"> },
   expoAutolinkingVersion: string,
 ): Promise<Array<HashSource>> {
-  // @ts-expect-error Expo is only expecting "android" | "ios"
-  if (!options.platforms.includes("macos")) {
+  if (
+    !options.platforms.some(
+      (platform) => platform === "ios" || platform === "macos" || platform === "tvos",
+    )
+  ) {
     return [];
   }
 
   try {
-    // expo-modules-autolinking 1.10.0 added support for the Apple platform.
-    if (semver.lt(expoAutolinkingVersion, "1.10.0")) {
-      return [];
-    }
-
-    const reasons = ["expoAutolinkingMacos"];
+    // `expo-modules-autolinking resolve`:
+    // - ≥ 1.10.1: use "apple" or "macos" for macOS; "apple" or "ios" for iOS;
+    //             and "apple" or "tvos" for tvOS:
+    //             https://github.com/expo/expo/pull/26398
+    // - = 1.10.0: use "macos" for macOS; "ios" for iOS; and "tvos" for tvOS:
+    //             https://github.com/expo/expo/pull/26287
+    // - < 1.10.0: use "ios" for macOS, iOS, and tvOS
+    const platform = semver.gte(expoAutolinkingVersion, "1.10.1")
+      ? "apple"
+      : semver.eq(expoAutolinkingVersion, "1.10.0")
+        ? "macos"
+        : "ios";
+    const reasons = ["expoAutolinkingApple"];
     const results = [];
     const realProjectRoot = await ExpoFingerprintUtils.maybeGetRealPathAsync(projectRoot);
     const { stdout } = await expoSpawnAsync(
       "node",
-      [ExpoResolver.resolveExpoAutolinkingCliPath(projectRoot), "resolve", "-p", "apple", "--json"],
+      [
+        ExpoResolver.resolveExpoAutolinkingCliPath(projectRoot),
+        "resolve",
+        "-p",
+        platform,
+        "--json",
+      ],
       { cwd: projectRoot, env: getOriginalEnv() },
     );
     const config = JSON.parse(stdout);
@@ -168,13 +194,13 @@ async function getExpoAutolinkingMacosSourcesAsync(
       for (const pod of module.pods) {
         const filePath = ExpoPath.toPosixPath(path.relative(realProjectRoot, pod.podspecDir));
         pod.podspecDir = filePath; // use relative path for the dir
-        debug(`Adding expo-modules-autolinking macos dir - ${chalk.dim(filePath)}`);
+        debug(`Adding expo-modules-autolinking Apple dir - ${chalk.dim(filePath)}`);
         results.push({ type: "dir", filePath, reasons });
       }
     }
     results.push({
       type: "contents",
-      id: "expoAutolinkingConfig:macos",
+      id: "expoAutolinkingConfig:apple",
       contents: JSON.stringify(config),
       reasons,
     });
@@ -262,8 +288,10 @@ async function getCoreAutolinkingSourcesFromExpoMacos(
 ): Promise<Array<HashSource>> {
   if (
     useRNCoreAutolinkingFromExpo === false ||
-    // @ts-expect-error Expo is only expecting "android" | "ios"
-    !options.platforms.includes("macos")
+    !options.platforms.some(
+      // @ts-expect-error Expo is only expecting "android" | "ios".
+      (platform) => platform === "ios" || platform === "macos" || platform === "tvos",
+    )
   ) {
     return [];
   }
@@ -275,7 +303,20 @@ async function getCoreAutolinkingSourcesFromExpoMacos(
         "react-native-config",
         "--json",
         "--platform",
-        "macos",
+        // `expo-modules-autolinking react-native-config`:
+        // - ≥ 55.0.25: both "macos" and "ios" flags are recognised, but the
+        //              "macos" flag seems to be useless for the purpose of
+        //              autolinking, as (per testing on v57.0.13) it does not
+        //              pick up podspecs under the "ios" folder that specify
+        //              "osx" in their "platforms".
+        //
+        //              So actually, I think your best hope is to use "ios" in
+        //              all cases..? There is actually precedent for this, as
+        //              the react-native-macos starter template has always used
+        //              `react-native-config --json --platform ios`.
+        //              https://github.com/expo/expo/pull/46344
+        // - < 55.0.25: only the "ios" flag is recognised.
+        "ios",
       ],
       { cwd: projectRoot, env: getOriginalEnv() },
     );
