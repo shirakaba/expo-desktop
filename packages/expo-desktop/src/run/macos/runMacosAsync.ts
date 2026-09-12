@@ -124,16 +124,11 @@ export async function runMacosAsync(projectRoot: string, options: Options) {
   });
 
   // Install and launch the app binary on the host device.
-  await launchAppAsync(
-    binaryPath,
-    manager,
-    {
-      isSimulator: false,
-      device: props.device,
-      shouldStartBundler: props.shouldStartBundler,
-    },
-    launchInfo.bundleId,
-  );
+  await launchAppAsync(binaryPath, manager, {
+    isSimulator: false,
+    device: props.device,
+    shouldStartBundler: props.shouldStartBundler,
+  });
 
   // Log the location of the JS logs for the host device.
   if (props.shouldStartBundler) {

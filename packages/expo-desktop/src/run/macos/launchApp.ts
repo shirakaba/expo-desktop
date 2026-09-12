@@ -7,7 +7,6 @@ import type { MacosDevice } from "./XcodeBuild.types.ts";
 
 import { CommandError } from "../../common/expo/error.ts";
 import * as Log from "../../common/expo/log.ts";
-import { profile } from "../../common/expo/profile.ts";
 import { parsePlistAsync } from "./expo/plist.ts";
 
 type BinaryLaunchInfo = {
@@ -24,16 +23,14 @@ export async function launchAppAsync(
     device: MacosDevice;
     shouldStartBundler: boolean;
   },
-  appId?: string,
 ) {
-  appId ??= (await profile(getLaunchInfoForBinaryAsync)(binaryPath)).bundleId;
-
   Log.log(chalk.gray`› Launching ${binaryPath}`);
   if (props.device.osType !== "macOS") {
     throw new Error("Unexpected non-macOS device while launching a macOS app.");
   }
 
-  const args = ["-b", appId, binaryPath];
+  // Pass the app bundle itself. `-b` would select an app to open the bundle as a document.
+  const args = ["-n", binaryPath];
   try {
     await spawnAsync("open", args);
   } catch (error: any) {
