@@ -19,6 +19,10 @@ export type Options = {
   binary?: string;
   /** Directory to copy the built app binary to after build completes. */
   output?: string;
+  /** Whether to launch the app in the background. */
+  background?: boolean;
+  /** Whether to terminate existing app instances before launching. */
+  singleInstance?: boolean;
 
   /** Re-bundle JS and assets, then embed in existing app, and install again. */
   rebundle?: boolean;

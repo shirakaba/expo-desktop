@@ -139,6 +139,14 @@ const main = defineCommand({
               type: "boolean",
               description: "Skip starting the Metro bundler",
             },
+            "no-background": {
+              type: "boolean",
+              description: "Launch the macOS app in the foreground",
+            },
+            "no-single-instance": {
+              type: "boolean",
+              description: "Launch the macOS app as a new instance",
+            },
             scheme: {
               type: "string",
               valueHint: "scheme",
@@ -171,6 +179,8 @@ const main = defineCommand({
             parseNoArg(args, "no-build-cache");
             parseNoArg(args, "no-install");
             parseNoArg(args, "no-bundler");
+            parseNoArg(args, "no-background");
+            parseNoArg(args, "no-single-instance");
 
             const { port, ...rest } = args;
             const parsedPort = parseInt(port);

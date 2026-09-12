@@ -22,6 +22,9 @@ export async function launchAppAsync(
     isSimulator: false;
     device: MacosDevice;
     shouldStartBundler: boolean;
+    background: boolean;
+    singleInstance: boolean;
+    bundleId: string;
   },
 ) {
   Log.log(chalk.gray`› Launching ${binaryPath}`);
@@ -29,8 +32,15 @@ export async function launchAppAsync(
     throw new Error("Unexpected non-macOS device while launching a macOS app.");
   }
 
-  // Pass the app bundle itself. `-b` would select an app to open the bundle as a document.
-  const args = ["-n", binaryPath];
+  if (props.singleInstance) {
+    await terminateExistingInstancesAsync(props.bundleId);
+  }
+
+  const args = [
+    ...(props.background ? ["--background"] : []),
+    ...(!props.singleInstance ? ["--new"] : []),
+    binaryPath,
+  ];
   try {
     await spawnAsync("open", args);
   } catch (error: any) {
@@ -45,6 +55,22 @@ export async function launchAppAsync(
     }
     throw error;
   }
+}
+
+async function terminateExistingInstancesAsync(bundleId: string) {
+  const escapedBundleId = bundleId.replaceAll("\\", "\\\\").replaceAll('"', '\\"');
+  const script = `set bundleIdentifier to "${escapedBundleId}"
+try
+  tell application id bundleIdentifier
+    if running then quit
+  end tell
+on error errorMessage number errorNumber
+  if errorNumber is not -600 and errorNumber is not -1728 then
+    error errorMessage number errorNumber
+  end if
+end try`;
+
+  await spawnAsync("osascript", ["-e", script]);
 }
 
 export async function getLaunchInfoForBinaryAsync(binaryPath: string): Promise<BinaryLaunchInfo> {

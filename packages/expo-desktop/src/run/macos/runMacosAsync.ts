@@ -128,6 +128,9 @@ export async function runMacosAsync(projectRoot: string, options: Options) {
     isSimulator: false,
     device: props.device,
     shouldStartBundler: props.shouldStartBundler,
+    background: options.background ?? true,
+    singleInstance: options.singleInstance ?? true,
+    bundleId: launchInfo.bundleId,
   });
 
   // Log the location of the JS logs for the host device.
