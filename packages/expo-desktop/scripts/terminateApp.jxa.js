@@ -21,21 +21,32 @@ function run(argv) {
     $.CFRunLoopStop($.CFRunLoopGetCurrent());
   };
 
+  const updateTerminatedProcessIds = (workspace) => {
+    const runningProcessIds = new Set();
+    const runningApplications = workspace.runningApplications;
+    for (let index = 0; index < runningApplications.count; index++) {
+      runningProcessIds.add(Number(runningApplications.objectAtIndex(index).processIdentifier));
+    }
+
+    for (const processId of processIds) {
+      if (!runningProcessIds.has(processId)) {
+        terminatedProcessIds.add(processId);
+      }
+    }
+
+    if (terminatedProcessIds.size === processIds.size) {
+      stopRunLoop();
+    }
+  };
+
   ObjC.registerSubclass({
     name: "ExpoDesktopTerminationObserver",
     superclass: "NSObject",
     methods: {
-      "applicationTerminated:": {
-        types: ["void", ["id"]],
-        implementation: function (notification) {
-          const application = notification.userInfo.objectForKey($.NSWorkspaceApplicationKey);
-          const processId = Number(application.processIdentifier);
-          if (processIds.has(processId)) {
-            terminatedProcessIds.add(processId);
-            if (terminatedProcessIds.size === processIds.size) {
-              stopRunLoop();
-            }
-          }
+      "observeValueForKeyPath:ofObject:change:context:": {
+        types: ["void", ["id", "id", "id", "void*"]],
+        implementation: function (_keyPath, workspace) {
+          updateTerminatedProcessIds(workspace);
         },
       },
     },
@@ -43,13 +54,10 @@ function run(argv) {
 
   const observer = $.ExpoDesktopTerminationObserver.alloc.init;
   const workspace = $.NSWorkspace.sharedWorkspace;
-  const notificationCenter = workspace.notificationCenter;
-  const applicationTerminatedSelector = $.NSSelectorFromString("applicationTerminated:");
-
-  notificationCenter.addObserverSelectorNameObject(
+  workspace.addObserverForKeyPathOptionsContext(
     observer,
-    applicationTerminatedSelector,
-    $.NSWorkspaceDidTerminateApplicationNotification,
+    "runningApplications",
+    $.NSKeyValueObservingOptionNew,
     null,
   );
 
@@ -63,7 +71,7 @@ function run(argv) {
   }
 
   if (applications.length === 0) {
-    notificationCenter.removeObserver(observer);
+    workspace.removeObserverForKeyPath(observer, "runningApplications");
     return;
   }
 
@@ -71,11 +79,12 @@ function run(argv) {
     application.terminate;
   }
 
+  updateTerminatedProcessIds(workspace);
   if (terminatedProcessIds.size < processIds.size) {
     $.CFRunLoopRunInMode($.kCFRunLoopDefaultMode, terminationTimeoutSeconds, false);
   }
 
-  notificationCenter.removeObserver(observer);
+  workspace.removeObserverForKeyPath(observer, "runningApplications");
 
   if (terminatedProcessIds.size < processIds.size) {
     throw new Error(
