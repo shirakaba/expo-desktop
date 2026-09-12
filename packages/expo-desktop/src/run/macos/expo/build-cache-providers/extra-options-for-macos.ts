@@ -147,7 +147,6 @@ export async function getExtraOptionsForMacos(
     ],
   };
 }
-exports.getExtraOptionsForMacos = getExtraOptionsForMacos;
 
 async function getExpoAutolinkingAppleSourcesAsync(
   projectRoot: string,
