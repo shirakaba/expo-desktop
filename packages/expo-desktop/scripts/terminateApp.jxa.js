@@ -68,7 +68,7 @@ function run(argv) {
   }
 
   for (const application of applications) {
-    application.terminate();
+    application.terminate;
   }
 
   if (terminatedProcessIds.size < processIds.size) {
