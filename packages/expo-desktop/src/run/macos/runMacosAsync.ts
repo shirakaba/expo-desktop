@@ -17,6 +17,7 @@ import {
   resolveBuildCache,
   uploadBuildCache,
 } from "./expo/build-cache-providers/build-cache-providers.ts";
+import { exportEagerAsync } from "./expo/exportEager.ts";
 import { getSchemesForMacosAsync } from "./expo/scheme.ts";
 import { getLaunchInfoForBinaryAsync, launchAppAsync } from "./launchApp.ts";
 import { resolveOptionsAsync } from "./options/resolveOptions.ts";
@@ -64,25 +65,24 @@ export async function runMacosAsync(projectRoot: string, options: Options) {
     binaryPath = await getValidBinaryPathAsync(options.binary);
     Log.log("Using custom binary path:", binaryPath);
   } else {
-    // let eagerBundleOptions: string | undefined;
+    let eagerBundleOptions: string | undefined;
 
-    // if (mode === "production") {
-    //   eagerBundleOptions = JSON.stringify(
-    //     await exportEagerAsync(projectRoot, {
-    //       dev: false,
-    //       platform: "ios",
-    //     }),
-    //   );
-    // }
+    if (mode === "production") {
+      eagerBundleOptions = JSON.stringify(
+        await exportEagerAsync(projectRoot, {
+          dev: false,
+          platform: "macos",
+        }),
+      );
+    }
 
     // Spawn the `xcodebuild` process to create the app binary.
     let buildOutput: string;
     try {
-      // buildOutput = await XcodeBuild.buildAsync({
-      //   ...props,
-      //   eagerBundleOptions,
-      // });
-      buildOutput = await XcodeBuild.buildAsync(props);
+      buildOutput = await XcodeBuild.buildAsync({
+        ...props,
+        ...(eagerBundleOptions !== undefined ? { eagerBundleOptions } : {}),
+      });
     } catch (error) {
       throw error;
     }

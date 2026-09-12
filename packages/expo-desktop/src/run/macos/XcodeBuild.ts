@@ -113,10 +113,12 @@ export function getProcessOptions({
   packager,
   shouldSkipInitialBundling,
   port,
+  eagerBundleOptions,
 }: {
   packager: boolean;
   shouldSkipInitialBundling?: boolean;
   port: number;
+  eagerBundleOptions?: string | undefined;
 }): SpawnOptionsWithoutStdio {
   const SKIP_BUNDLING = shouldSkipInitialBundling ? "1" : undefined;
   if (packager) {
@@ -125,6 +127,7 @@ export function getProcessOptions({
         ...process.env,
         SKIP_BUNDLING,
         RCT_METRO_PORT: port.toString(),
+        __EXPO_EAGER_BUNDLE_OPTIONS: eagerBundleOptions,
       },
     };
   }
@@ -133,6 +136,7 @@ export function getProcessOptions({
     env: {
       ...process.env,
       SKIP_BUNDLING,
+      __EXPO_EAGER_BUNDLE_OPTIONS: eagerBundleOptions,
       // Always skip launching the packager from a build script.
       // The script is used for people building their project directly from Xcode.
       // This essentially means "› Running script 'Start Packager'" does nothing.
@@ -282,7 +286,7 @@ async function spawnXcodeBuildWithFormat(
 export async function buildAsync(props: BuildProps): Promise<string> {
   const args = await getXcodeBuildArgsAsync(props);
 
-  const { projectRoot, xcodeProject, shouldSkipInitialBundling, port } = props;
+  const { projectRoot, xcodeProject, shouldSkipInitialBundling, port, eagerBundleOptions } = props;
 
   // Remove extended attributes that can cause code signing failures before building.
   // These are added by Finder, cloud storage services, or when downloading files.
@@ -292,6 +296,7 @@ export async function buildAsync(props: BuildProps): Promise<string> {
     packager: false,
     shouldSkipInitialBundling,
     port,
+    eagerBundleOptions,
   });
 
   // Retry logic for concurrent build failures.
