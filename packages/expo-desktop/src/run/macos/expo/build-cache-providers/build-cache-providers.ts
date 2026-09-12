@@ -42,7 +42,7 @@ export async function resolveBuildCache({
   runOptions,
 }: {
   projectRoot: string;
-  platform: "android" | "ios";
+  platform: BuildCachePlatform;
   provider: BuildCacheProvider;
   runOptions: RunOptions;
 }): Promise<string | null> {
@@ -59,12 +59,24 @@ export async function resolveBuildCache({
   if ("resolveRemoteBuildCache" in provider.plugin) {
     Log.warn("The resolveRemoteBuildCache function is deprecated. Use resolveBuildCache instead.");
     return await provider.plugin.resolveRemoteBuildCache(
-      { fingerprintHash, platform, runOptions, projectRoot },
+      {
+        fingerprintHash,
+        // Our custom plugin supports "macos" as well
+        platform: platform as "ios" | "android",
+        runOptions,
+        projectRoot,
+      },
       provider.options,
     );
   }
   return await provider.plugin.resolveBuildCache(
-    { fingerprintHash, platform, runOptions, projectRoot },
+    {
+      fingerprintHash,
+      // Our custom plugin supports "macos" as well
+      platform: platform as "ios" | "android",
+      runOptions,
+      projectRoot,
+    },
     provider.options,
   );
 }
@@ -77,7 +89,7 @@ export async function uploadBuildCache({
   runOptions,
 }: {
   projectRoot: string;
-  platform: "android" | "ios";
+  platform: BuildCachePlatform;
   provider: BuildCacheProvider;
   buildPath: string;
   runOptions: RunOptions;
@@ -98,7 +110,8 @@ export async function uploadBuildCache({
     await provider.plugin.uploadRemoteBuildCache(
       {
         projectRoot,
-        platform,
+        // Our custom plugin supports "macos" as well
+        platform: platform as "ios" | "android",
         fingerprintHash,
         buildPath,
         runOptions,
@@ -109,7 +122,8 @@ export async function uploadBuildCache({
     await provider.plugin.uploadBuildCache(
       {
         projectRoot,
-        platform,
+        // Our custom plugin supports "macos" as well
+        platform: platform as "ios" | "android",
         fingerprintHash,
         buildPath,
         runOptions,
@@ -132,7 +146,7 @@ async function calculateFingerprintHashAsync({
   runOptions,
 }: {
   projectRoot: string;
-  platform: "android" | "ios" | "macos";
+  platform: BuildCachePlatform;
   provider: BuildCacheProvider;
   runOptions: RunOptions;
 }): Promise<string | null> {
@@ -140,7 +154,7 @@ async function calculateFingerprintHashAsync({
     return await provider.plugin.calculateFingerprintHash(
       {
         projectRoot,
-        // Did I stutter
+        // Our custom plugin supports "macos" as well
         platform: platform as "android" | "ios",
         runOptions,
       },
@@ -158,6 +172,8 @@ async function calculateFingerprintHashAsync({
   const fingerprint = await Fingerprint.createFingerprintAsync(projectRoot, options);
   return fingerprint.hash;
 }
+
+type BuildCachePlatform = "android" | "ios" | "macos";
 
 function importFingerprintForDev(projectRoot: string): null | typeof import("@expo/fingerprint") {
   try {
