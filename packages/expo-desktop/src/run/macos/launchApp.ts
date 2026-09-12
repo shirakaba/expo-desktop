@@ -1,6 +1,7 @@
 import spawnAsync from "@expo/spawn-async";
 import chalk from "chalk";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 import type { DevServerManager } from "../../common/expo/start-bundler.ts";
 import type { MacosDevice } from "./XcodeBuild.types.ts";
@@ -33,7 +34,7 @@ export async function launchAppAsync(
   }
 
   if (props.singleInstance) {
-    await terminateExistingInstancesAsync(props.bundleId);
+    await waitForExistingInstancesToTerminateAsync(props.bundleId);
   }
 
   const args = [
@@ -57,20 +58,11 @@ export async function launchAppAsync(
   }
 }
 
-async function terminateExistingInstancesAsync(bundleId: string) {
-  const escapedBundleId = bundleId.replaceAll("\\", "\\\\").replaceAll('"', '\\"');
-  const script = `set bundleIdentifier to "${escapedBundleId}"
-try
-  tell application id bundleIdentifier
-    if running then quit
-  end tell
-on error errorMessage number errorNumber
-  if errorNumber is not -600 and errorNumber is not -1728 then
-    error errorMessage number errorNumber
-  end if
-end try`;
-
-  await spawnAsync("osascript", ["-e", script]);
+async function waitForExistingInstancesToTerminateAsync(bundleId: string) {
+  const scriptPath = fileURLToPath(
+    new URL("../../../scripts/terminateApp.jxa.js", import.meta.url),
+  );
+  await spawnAsync("osascript", ["-l", "JavaScript", scriptPath, bundleId]);
 }
 
 export async function getLaunchInfoForBinaryAsync(binaryPath: string): Promise<BinaryLaunchInfo> {

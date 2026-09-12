@@ -26,7 +26,8 @@
     "expo-desktop": "build/cli.js"
   },
   "files": [
-    "build"
+    "build",
+    "scripts"
   ],
   "type": "module",
   "exports": {
