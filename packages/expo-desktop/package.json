@@ -48,6 +48,7 @@
     "@expo/env": "catalog:expo-latest",
     "@expo/fingerprint": "catalog:expo-latest",
     "@expo/json-file": "catalog:expo-latest",
+    "@expo/metro": "catalog:expo-latest",
     "@expo/package-manager": "catalog:expo-latest",
     "@expo/plist": "catalog:expo-latest",
     "@expo/spawn-async": "catalog:expo-latest",
