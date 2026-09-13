@@ -1,6 +1,7 @@
 import { log } from "@clack/prompts";
 import Debug from "debug";
 import { default as kleur } from "kleur";
+import path from "node:path";
 
 import type { Options } from "./XcodeBuild.types.ts";
 
@@ -12,6 +13,7 @@ const debug = Debug("expo-desktop:run:command") as typeof console.log;
  * @see https://github.com/expo/expo/blob/main/packages/%40expo/cli/src/run/ios/runIosAsync.ts
  */
 export async function run(args: {
+  "project-root": string | undefined;
   "no-build-cache": boolean | undefined;
   "no-install": boolean | undefined;
   "no-bundler": boolean | undefined;
@@ -21,7 +23,7 @@ export async function run(args: {
   binary: string | undefined;
   output: string | undefined;
   configuration: string | undefined;
-  port?: number;
+  port?: string | undefined;
 }) {
   const options: Options = {
     ...(args.port !== undefined ? { port: args.port } : {}),
@@ -38,5 +40,10 @@ export async function run(args: {
 
   log.info(`🏎️  Running ${kleur.yellow("expo-desktop run macos")}.`, { withGuide: false });
 
-  await (await import("./runMacosAsync.ts")).runMacosAsync(process.cwd(), options);
+  await (
+    await import("./runMacosAsync.ts")
+  ).runMacosAsync(
+    args["project-root"] ? path.resolve(args["project-root"]) : process.cwd(),
+    options,
+  );
 }

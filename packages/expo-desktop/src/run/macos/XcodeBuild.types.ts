@@ -4,7 +4,7 @@ export type XcodeConfiguration = "Debug" | "Release" | string;
 
 export type Options = {
   /** Dev server port to use, ignored if `bundler` is `false`. */
-  port?: number;
+  port?: string;
   /** Xcode scheme to build. */
   scheme?: string;
   /** Xcode configuration to build. Default `Debug`. */

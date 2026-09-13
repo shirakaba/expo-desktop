@@ -26,9 +26,12 @@ const execFileOptions: ExecFileSyncOptionsWithStringEncoding = {
   stdio: ["pipe", "pipe", "ignore"],
 };
 
-/** Whether the port is in the usable range. Port 0 means "pick any available port". */
+/**
+ * Whether the port is in the usable range. Port 0 is valid and means "pick any
+ * available port".
+ */
 export function isValidPort(port: number | undefined): port is number {
-  return port !== undefined && Number.isInteger(port) && port >= 0 && port <= MAX_PORT;
+  return port != null && Number.isInteger(port) && port >= 0 && port <= 65_535;
 }
 
 /** @returns `true` when the port is available for a new server. */
@@ -138,16 +141,63 @@ export async function choosePortAsync(
   return change ? nextPort : null;
 }
 
+// TODO(Bacon): Revisit after all start and run code is merged.
 /**
- * Resolve the Metro port and write it back to RCT_METRO_PORT for React Native's
- * native build scripts. A requested port of 0 is replaced with a concrete free
- * port before the native build starts.
+ * Picks a port without reading the environment. `resolveMetroPortAsync` is the
+ * entry point every command uses.
  */
-export async function resolvePortAsync(
+export async function _resolvePortAsync(
   projectRoot: string,
   {
-    reuseExistingPort = false,
+    /** Should opt to reuse a port that is running the same project in another window. */
+    reuseExistingPort,
+    /** Requested port, e.g. from `--port`. */
     defaultPort,
+    /** Port to use when no valid port is requested, and the port to scan from when `--port 0` is used. */
+    preferredPort,
+    /** Whether the preferred port was requested rather than defaulted, making it a hard requirement. */
+    isPreferredPortExplicit,
+  }: {
+    reuseExistingPort?: boolean;
+    defaultPort?: number;
+    preferredPort: number;
+    isPreferredPortExplicit?: boolean;
+  },
+): Promise<number | null> {
+  const isRequestedPortValid = isValidPort(defaultPort);
+  const port = isRequestedPortValid ? defaultPort : preferredPort;
+
+  // Port 0 means "pick any available port"
+  if (port === 0) {
+    return getFreePortAsync(preferredPort);
+  }
+
+  // Only check the port when the bundler is running.
+  const resolvedPort = await choosePortAsync(projectRoot, {
+    defaultPort: port,
+    ...(reuseExistingPort ? { reuseExistingPort } : {}),
+    explicitPort: isRequestedPortValid || !!isPreferredPortExplicit,
+  });
+  if (resolvedPort == null) {
+    Log.log("\u203A Skipping dev server");
+  }
+
+  return resolvedPort;
+}
+
+/**
+ * Resolve the Metro port, honoring `RCT_METRO_PORT` and writing the result back
+ * to it.
+ *
+ * The write-back matters: react-native's build scripts read `RCT_METRO_PORT`,
+ * and native builds started later in the command inherit it from this process.
+ */
+export async function resolveMetroPortAsync(
+  projectRoot: string,
+  {
+    reuseExistingPort,
+    defaultPort,
+    /** Backup port for when neither `--port` nor `RCT_METRO_PORT` gives a valid port. */
     fallbackPort,
   }: {
     reuseExistingPort?: boolean;
@@ -155,26 +205,18 @@ export async function resolvePortAsync(
     fallbackPort?: number;
   } = {},
 ): Promise<number | null> {
-  const requestedPort = isValidPort(defaultPort) ? defaultPort : undefined;
-  const environmentPort = isValidPort(env.RCT_METRO_PORT) ? env.RCT_METRO_PORT : undefined;
-  const preferredPort =
-    requestedPort ??
-    environmentPort ??
-    (isValidPort(fallbackPort) && fallbackPort > 0 ? fallbackPort : DEFAULT_PORT);
-
-  const port =
-    preferredPort === 0
-      ? await getFreePortAsync(environmentPort || fallbackPort || DEFAULT_PORT)
-      : preferredPort;
-  const resolvedPort = await choosePortAsync(projectRoot, {
-    defaultPort: port,
-    reuseExistingPort,
-    explicitPort: requestedPort !== undefined && requestedPort !== 0,
+  // NOTE(@kitten): We treat `--port` and `RCT_METRO_PORT` as the fixed preferred ports
+  const metroPort = env.RCT_METRO_PORT;
+  // `env.RCT_METRO_PORT` returns 0 when unset, so invalid values use the same fallback path.
+  const requestedMetroPort = isValidPort(metroPort) ? metroPort : 0;
+  const resolvedPort = await _resolvePortAsync(projectRoot, {
+    ...(reuseExistingPort ? { reuseExistingPort } : {}),
+    ...(defaultPort ? { defaultPort } : {}),
+    preferredPort: requestedMetroPort || fallbackPort || 8081,
+    isPreferredPortExplicit: !!requestedMetroPort,
   });
 
-  if (resolvedPort == null) {
-    Log.log("› Skipping dev server");
-  } else {
+  if (resolvedPort != null) {
     process.env.RCT_METRO_PORT = String(resolvedPort);
   }
 

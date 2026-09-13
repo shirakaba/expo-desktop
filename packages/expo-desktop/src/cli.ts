@@ -127,6 +127,11 @@ const main = defineCommand({
         macos: defineCommand({
           meta: { name: "macos", description: "Run the macOS app binary locally" },
           args: {
+            "project-root": {
+              type: "positional",
+              required: false,
+              description: `The ${kleur.bold("project root")} for the app in alphanumeric format ${grey("(Example: 'MyApp123')")}`,
+            },
             "no-build-cache": {
               type: "boolean",
               description: "Clear the native derived data before building",
@@ -181,17 +186,7 @@ const main = defineCommand({
             parseNoArg(args, "no-background");
             parseNoArg(args, "no-single-instance");
 
-            const { port, ...rest } = args;
-            const parsedPort = port === undefined ? undefined : parseInt(port, 10);
-            if (port !== undefined && (Number.isNaN(parsedPort) || String(parsedPort) !== port)) {
-              console.log(`Expected port to be a number, but got ${port}.`);
-              return process.exit(1);
-            }
-
-            (await import("./run/macos/command.ts")).run({
-              ...(parsedPort !== undefined ? { port: parsedPort } : {}),
-              ...rest,
-            });
+            (await import("./run/macos/command.ts")).run(args);
           },
         }),
 
