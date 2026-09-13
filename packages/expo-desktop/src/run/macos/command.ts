@@ -13,6 +13,7 @@ const debug = Debug("expo-desktop:run:command") as typeof console.log;
  * @see https://github.com/expo/expo/blob/main/packages/%40expo/cli/src/run/ios/runIosAsync.ts
  */
 export async function run(args: {
+  "unstable-rebundle": boolean;
   "project-root": string | undefined;
   "no-build-cache": boolean | undefined;
   "no-install": boolean | undefined;
@@ -36,6 +37,7 @@ export async function run(args: {
     ...(args.binary !== undefined ? { binary: args.binary } : {}),
     ...(args.output !== undefined ? { output: args.output } : {}),
     ...(args.configuration !== undefined ? { configuration: args.configuration } : {}),
+    rebundle: args["unstable-rebundle"],
   };
 
   log.info(`🏎️  Running ${kleur.yellow("expo-desktop run macos")}.`, { withGuide: false });

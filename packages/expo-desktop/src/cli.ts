@@ -132,6 +132,13 @@ const main = defineCommand({
               required: false,
               description: `The ${kleur.bold("project root")} for the app in alphanumeric format ${grey("(Example: 'MyApp123')")}`,
             },
+            "unstable-rebundle": {
+              type: "boolean",
+              description:
+                "An undocumented switch for re-bundling the app and assets for a build to try different JS code in release builds. Also updates the app.json.",
+              default: false,
+              hidden: true,
+            },
             "no-build-cache": {
               type: "boolean",
               description: "Clear the native derived data before building",

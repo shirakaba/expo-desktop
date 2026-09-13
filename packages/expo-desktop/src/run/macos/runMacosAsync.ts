@@ -1,5 +1,6 @@
 import type { RunOptions } from "@expo/config";
 
+import spawnAsync from "@expo/spawn-async";
 import chalk from "chalk";
 import fs from "node:fs";
 import path from "node:path";
@@ -59,7 +60,43 @@ export async function runMacosAsync(projectRoot: string, options: Options) {
   }
 
   if (options.rebundle) {
-    throw new Error("expo-desktop does not currently support the --unstable-rebundle option.");
+    Log.warn(`The --unstable-rebundle flag is experimental and may not work as expected.`);
+    // Get the existing binary path to re-bundle the app.
+
+    if (!options.binary) {
+      // TODO: Maybe try to fish this out of DerivedData.
+      throw new Error(
+        "Re-bundling on macOS requires the --binary flag. Please provide the path to your .app.",
+      );
+    }
+
+    Log.log("Rebundling the Expo config file");
+    // Re-bundle the config file the same way the app was originally bundled.
+    await spawnAsync("node", [
+      // TODO(@kitten): This isn't correct. The template installs expo-constants, but expo also depends on it
+      // This however means that the top-level module doesn't have to exist. With isolated dependencies this will then fail
+      // But we can't resolve via `expo` because that then may do something differently than autolinking if the root has a different version
+      path.join(require.resolve("expo-constants/package.json"), "../scripts/getAppConfig.js"),
+      projectRoot,
+      path.join(options.binary, "Contents/Resources/EXConstants.bundle"),
+    ]);
+    // Re-bundle the app.
+
+    const possibleBundleOutput = path.join(options.binary, "Contents/Resources/main.jsbundle");
+
+    if (fs.existsSync(possibleBundleOutput)) {
+      Log.log("Rebundling the app...");
+      await exportEagerAsync(projectRoot, {
+        resetCache: false,
+        dev: false,
+        platform: "macos",
+        // TODO: Confirm that "assets" is indeed under "Resources".
+        assetsDest: path.join(options.binary, "Contents/Resources/assets"),
+        bundleOutput: possibleBundleOutput,
+      });
+    } else {
+      Log.warn("Bundle output not found at expected location:", possibleBundleOutput);
+    }
   }
 
   let binaryPath: string;
