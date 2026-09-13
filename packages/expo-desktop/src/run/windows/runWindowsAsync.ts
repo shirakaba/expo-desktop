@@ -52,15 +52,11 @@ export async function runWindowsAsync(projectRoot: string, options: Options) {
 
   // Start the dev server which creates all of the required info for
   // launching the app on the host device.
-  const manager: DevServerManager = props.shouldStartBundler
-    ? await startBundlerAsync(projectRoot, {
-        port: props.port,
-        mode,
-        headless: false,
-      })
-    : {
-        async stopAsync() {},
-      };
+  const manager = await startBundlerAsync(projectRoot, {
+    port: props.port,
+    mode,
+    headless: !props.shouldStartBundler,
+  });
 
   try {
     // Install and launch the app binary on the host device.

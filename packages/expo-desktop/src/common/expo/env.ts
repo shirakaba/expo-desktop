@@ -25,9 +25,9 @@ class Env {
   get CI() {
     return boolish("CI", false);
   }
-  /** Is running under an end-to-end test harness. */
-  get EXPO_E2E_TEST() {
-    return boolish("EXPO_E2E_TEST", false);
+  /** Used internally to enable E2E utilities. This behavior is not stable to external users. */
+  get __EXPO_E2E_TEST(): boolean {
+    return boolish("__EXPO_E2E_TEST", false);
   }
   /** Disable all API caches. Does not disable bundler caches. */
   get EXPO_NO_CACHE() {

@@ -111,8 +111,8 @@ export async function runMacosAsync(projectRoot: string, options: Options) {
   const launchInfo = await getLaunchInfoForBinaryAsync(binaryPath);
   const isCustomBinary = !!options.binary;
 
-  // Start the dev server which creates all of the required info for
-  // launching the app on the host device.
+  // Start the dev server which creates all of the required info for launching
+  // the app on the host device.
   const manager = await startBundlerAsync(projectRoot, {
     port: props.port,
     mode,
