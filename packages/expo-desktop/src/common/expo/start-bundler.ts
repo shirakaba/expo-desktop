@@ -34,6 +34,15 @@ export async function startBundlerAsync(
     mode: "development" | "production";
   },
 ): Promise<DevServerManager> {
+  if (headless) {
+    // A headless manager represents an existing or intentionally skipped
+    // server. It must not spawn a second Metro process.
+    Log.log(chalk`Waiting on {underline http://localhost:${port}}`);
+    return {
+      async stopAsync() {},
+    };
+  }
+
   let expoCliPath: string;
   try {
     expoCliPath = require.resolve("expo/bin/cli", { paths: [projectRoot] });
@@ -67,9 +76,7 @@ export async function startBundlerAsync(
     throw error;
   }
 
-  if (!headless) {
-    Log.log(chalk`Waiting on {underline http://localhost:${port}}`);
-  }
+  Log.log(chalk`Waiting on {underline http://localhost:${port}}`);
 
   return {
     async stopAsync() {

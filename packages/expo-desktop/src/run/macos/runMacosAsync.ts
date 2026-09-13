@@ -124,14 +124,19 @@ export async function runMacosAsync(projectRoot: string, options: Options) {
   });
 
   // Install and launch the app binary on the host device.
-  await launchAppAsync(binaryPath, manager, {
-    isSimulator: false,
-    device: props.device,
-    shouldStartBundler: props.shouldStartBundler,
-    background: options.background ?? true,
-    singleInstance: options.singleInstance ?? true,
-    bundleId: launchInfo.bundleId,
-  });
+  try {
+    await launchAppAsync(binaryPath, manager, {
+      isSimulator: false,
+      device: props.device,
+      shouldStartBundler: props.shouldStartBundler,
+      background: options.background ?? true,
+      singleInstance: options.singleInstance ?? true,
+      bundleId: launchInfo.bundleId,
+    });
+  } catch (error) {
+    await manager.stopAsync();
+    throw error;
+  }
 
   // Log the location of the JS logs for the host device.
   if (props.shouldStartBundler) {

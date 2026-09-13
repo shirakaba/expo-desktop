@@ -172,7 +172,6 @@ const main = defineCommand({
               type: "string",
               valueHint: "port",
               description: "Port to start the Metro bundler on.",
-              default: "8081",
             },
           },
           async run({ args }) {
@@ -183,13 +182,16 @@ const main = defineCommand({
             parseNoArg(args, "no-single-instance");
 
             const { port, ...rest } = args;
-            const parsedPort = parseInt(port);
-            if (Number.isNaN(parsedPort) || String(parsedPort) !== port) {
+            const parsedPort = port === undefined ? undefined : parseInt(port, 10);
+            if (port !== undefined && (Number.isNaN(parsedPort) || String(parsedPort) !== port)) {
               console.log(`Expected port to be a number, but got ${port}.`);
               return process.exit(1);
             }
 
-            (await import("./run/macos/command.ts")).run({ port: parsedPort, ...rest });
+            (await import("./run/macos/command.ts")).run({
+              ...(parsedPort !== undefined ? { port: parsedPort } : {}),
+              ...rest,
+            });
           },
         }),
 

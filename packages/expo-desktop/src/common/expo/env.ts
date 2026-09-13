@@ -3,6 +3,17 @@ import GetEnv from "getenv";
 const { boolish } = GetEnv;
 
 class Env {
+  /** The React Native Metro port that's baked into React Native scripts and tools. */
+  get RCT_METRO_PORT() {
+    const value = process.env.RCT_METRO_PORT;
+    if (value === undefined || value.trim() === "") {
+      return 0;
+    }
+
+    const port = Number(value);
+    return Number.isInteger(port) ? port : 0;
+  }
+
   /** Enable profiling metrics */
   get EXPO_PROFILE() {
     return boolish("EXPO_PROFILE", false);

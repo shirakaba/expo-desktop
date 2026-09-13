@@ -21,10 +21,10 @@ export async function run(args: {
   binary: string | undefined;
   output: string | undefined;
   configuration: string | undefined;
-  port: number;
+  port?: number;
 }) {
   const options: Options = {
-    port: args.port,
+    ...(args.port !== undefined ? { port: args.port } : {}),
     install: !args["no-install"],
     buildCache: !args["no-build-cache"],
     bundler: !args["no-bundler"],
