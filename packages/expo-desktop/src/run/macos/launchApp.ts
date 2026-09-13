@@ -66,6 +66,12 @@ async function waitForExistingInstancesToTerminateAsync(bundleId: string) {
   const spinner = ora(`waiting for app ${bundleId} to terminate...`).start();
   try {
     await spawnAsync("osascript", ["-l", "JavaScript", scriptPath, bundleId, "0"]);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new CommandError(
+      "MACOS_TERMINATE",
+      `Failed to terminate existing instances of the macOS app ${bundleId}.\n\n${message}`,
+    );
   } finally {
     spinner.stop();
   }
