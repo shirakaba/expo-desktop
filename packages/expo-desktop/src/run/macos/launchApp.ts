@@ -8,6 +8,7 @@ import type { MacosDevice } from "./XcodeBuild.types.ts";
 
 import { CommandError } from "../../common/expo/error.ts";
 import * as Log from "../../common/expo/log.ts";
+import { ora } from "../../common/expo/ora.ts";
 import { parsePlistAsync } from "./expo/plist.ts";
 
 type BinaryLaunchInfo = {
@@ -62,14 +63,12 @@ async function waitForExistingInstancesToTerminateAsync(bundleId: string) {
   const scriptPath = fileURLToPath(
     new URL("../../../scripts/terminateApp.jxa.js", import.meta.url),
   );
-  const terminationTimeoutSeconds = 60;
-  await spawnAsync("osascript", [
-    "-l",
-    "JavaScript",
-    scriptPath,
-    bundleId,
-    terminationTimeoutSeconds.toString(),
-  ]);
+  const spinner = ora(`waiting for app ${bundleId} to terminate...`).start();
+  try {
+    await spawnAsync("osascript", ["-l", "JavaScript", scriptPath, bundleId, "0"]);
+  } finally {
+    spinner.stop();
+  }
 }
 
 export async function getLaunchInfoForBinaryAsync(binaryPath: string): Promise<BinaryLaunchInfo> {
