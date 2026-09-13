@@ -1,25 +1,51 @@
+import { getConfig } from "@expo/config";
 import chalk from "chalk";
-import { spawn, type ChildProcess } from "node:child_process";
 import { createRequire } from "node:module";
-import net from "node:net";
 import path from "node:path";
 
+import { env } from "./env.ts";
+import { isInteractive } from "./interactive.ts";
 import * as Log from "./log.ts";
 
 const require = createRequire(import.meta.url);
+
+type ExpoDevServer = {
+  getDevServerUrl(): string | null;
+};
 
 export type DevServerManager = {
   stopAsync(): Promise<void>;
 };
 
-/**
- * Start Metro through the app's installed Expo CLI.
- *
- * The Metro server is deliberately kept in a child process. This preserves the
- * same process boundary as `expo run ios` while keeping Expo CLI out of
- * expo-desktop's runtime dependencies; the command remains a vendored fork of
- * the orchestration around it.
- */
+type ManagedDevServerManager = DevServerManager & {
+  getDefaultDevServer(): ExpoDevServer | undefined;
+  watchEnvironmentVariables(): Promise<void>;
+  bootstrapTypeScriptAsync(): Promise<void>;
+};
+
+type ExpoCliModules = {
+  DevServerManager: {
+    startMetroAsync(
+      projectRoot: string,
+      options: {
+        port: number;
+        headless: boolean | undefined;
+        devClient: boolean;
+        minify: boolean;
+        mode: "development" | "production";
+        location: {
+          hostType: "localhost";
+          scheme?: string;
+        };
+      },
+    ): Promise<ManagedDevServerManager>;
+  };
+  startInterfaceAsync(
+    manager: ManagedDevServerManager,
+    options: { platforms: string[] },
+  ): Promise<void>;
+};
+
 export async function startBundlerAsync(
   projectRoot: string,
   {
@@ -27,17 +53,34 @@ export async function startBundlerAsync(
     headless,
     scheme,
     mode,
-  }: {
-    port: number;
-    headless?: boolean;
-    scheme?: string;
-    mode: "development" | "production";
-  },
+  }: { port: number; headless?: boolean; scheme?: string; mode: "development" | "production" },
 ): Promise<DevServerManager> {
+  const options = {
+    port,
+    headless,
+    devClient: true,
+    minify: false,
+    // The Expo CLI run implementation defaults to development mode. The
+    // desktop runner also passes production mode for `run macos` release
+    // builds so the server matches the native configuration.
+    mode,
+    location: {
+      // Desktop apps run on the host, so localhost is the address embedded in
+      // their development client configuration.
+      hostType: "localhost" as const,
+      ...(scheme !== undefined ? { scheme } : {}),
+    },
+  };
+
+  // A headless manager represents an existing or intentionally skipped server.
+  // Keep this path independent of the app's Expo installation.
   if (headless) {
-    // A headless manager represents an existing or intentionally skipped
-    // server. It must not spawn a second Metro process.
-    Log.log(chalk`Waiting on {underline http://localhost:${port}}`);
+    const url = `http://localhost:${port}`;
+    if (env.EXPO_E2E_TEST) {
+      console.info(`[__EXPO_E2E_TEST:server] ${JSON.stringify({ url })}`);
+    }
+    Log.log(chalk`Waiting on {underline ${url}}`);
+
     return {
       async stopAsync() {},
     };
@@ -52,75 +95,47 @@ export async function startBundlerAsync(
     );
   }
 
-  const args = [expoCliPath, "start", "--dev-client", "--localhost", "--port", String(port)];
-  if (scheme) {
-    args.push("--scheme", scheme);
-  }
-  if (mode === "production") {
-    args.push("--no-dev");
-  }
-  const child = spawn(process.execPath, args, {
-    cwd: projectRoot,
-    env: {
-      ...process.env,
-      NODE_ENV: "development",
-      RCT_METRO_PORT: String(port),
-    },
-    stdio: "inherit",
-  });
+  // Resolve the CLI modules relative to the app's Expo installation. This
+  // keeps the Metro version and its supporting CLI modules in sync with the
+  // app while still allowing expo-desktop to avoid a direct CLI dependency.
+  const expoRequire = createRequire(expoCliPath);
+  const { DevServerManager } = expoRequire(
+    "@expo/cli/build/src/start/server/DevServerManager",
+  ) as ExpoCliModules;
+  const { startInterfaceAsync } = expoRequire(
+    "@expo/cli/build/src/start/interface/startInterface",
+  ) as ExpoCliModules;
 
-  try {
-    await waitForPortAsync(port, child);
-  } catch (error) {
-    await stopProcessAsync(child);
-    throw error;
-  }
+  const manager = await DevServerManager.startMetroAsync(projectRoot, options);
 
-  Log.log(chalk`Waiting on {underline http://localhost:${port}}`);
-
-  return {
-    async stopAsync() {
-      await stopProcessAsync(child);
-    },
-  };
-}
-
-async function waitForPortAsync(port: number, child: ChildProcess): Promise<void> {
-  const startedAt = Date.now();
-  while (Date.now() - startedAt < 30_000) {
-    if (child.exitCode !== null) {
-      throw new Error(`Expo CLI exited before Metro started (exit code ${child.exitCode}).`);
-    }
-    if (await isPortOpenAsync(port)) {
-      return;
-    }
-    await new Promise((resolve) => setTimeout(resolve, 100));
-  }
-
-  throw new Error(`Metro did not start on port ${port} within 30 seconds.`);
-}
-
-function isPortOpenAsync(port: number): Promise<boolean> {
-  return new Promise((resolve) => {
-    const socket = net.createConnection({ host: "127.0.0.1", port });
-    socket.once("connect", () => {
-      socket.destroy();
-      resolve(true);
+  // Present the Terminal UI.
+  if (!headless && isInteractive()) {
+    // Only read the config if we are going to use the results.
+    const { exp } = getConfig(projectRoot, {
+      // We don't need very many fields here, just use the lightest possible read.
+      skipSDKVersionRequirement: true,
+      skipPlugins: true,
     });
-    socket.once("error", () => {
-      socket.destroy();
-      resolve(false);
+    await startInterfaceAsync(manager, {
+      platforms: exp.platforms ?? [],
     });
-  });
-}
+  } else {
+    // Display the server location in CI...
+    const url = manager.getDefaultDevServer()?.getDevServerUrl();
 
-async function stopProcessAsync(child: ChildProcess): Promise<void> {
-  if (child.exitCode !== null || child.killed) {
-    return;
+    if (url) {
+      if (env.EXPO_E2E_TEST) {
+        // Print the URL to stdout for tests
+        console.info(`[__EXPO_E2E_TEST:server] ${JSON.stringify({ url })}`);
+      }
+      Log.log(chalk`Waiting on {underline ${url}}`);
+    }
   }
 
-  await new Promise<void>((resolve) => {
-    child.once("close", () => resolve());
-    child.kill("SIGTERM");
-  });
+  if (!options.headless) {
+    await manager.watchEnvironmentVariables();
+    await manager.bootstrapTypeScriptAsync();
+  }
+
+  return manager;
 }
