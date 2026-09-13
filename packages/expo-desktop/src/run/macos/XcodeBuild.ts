@@ -10,7 +10,7 @@ import path from "node:path";
 
 import { ensureDirectory } from "../../common/expo/dir.ts";
 import { env } from "../../common/expo/env.ts";
-import { CommandError } from "../../common/expo/error.ts";
+import { AbortCommandError, CommandError } from "../../common/expo/error.ts";
 import * as Log from "../../common/expo/log.ts";
 import { type BuildProps, type ProjectInfo } from "./XcodeBuild.types.ts";
 
@@ -277,6 +277,15 @@ async function spawnXcodeBuildWithFormat(
   });
 
   Log.debug(`Exited with code: ${results.code}`);
+
+  if (
+    // User cancelled with ctrl-c
+    results.code === null ||
+    // Build interrupted
+    results.code === 75
+  ) {
+    throw new AbortCommandError();
+  }
 
   Log.log(formatter.getBuildSummary());
 
