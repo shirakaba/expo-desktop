@@ -9,7 +9,7 @@ import * as Log from "../../common/expo/log.ts";
 import { ensurePortAvailabilityAsync } from "../../common/expo/port.ts";
 import { profile } from "../../common/expo/profile.ts";
 import { logProjectLogsLocation } from "../../common/expo/run-hints.ts";
-import { startBundlerAsync, type DevServerManager } from "../../common/expo/start-bundler.ts";
+import { startBundlerAsync } from "../../common/expo/start-bundler.ts";
 import { loadEnvFiles, setNodeEnv } from "../../common/node-env.ts";
 import { ensureNativeProjectAsync } from "./ensureNativeProject.ts";
 import { launchAppAsync } from "./launchApp.ts";
