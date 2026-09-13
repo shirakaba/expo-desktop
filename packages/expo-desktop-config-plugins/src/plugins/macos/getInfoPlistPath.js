@@ -1,5 +1,5 @@
 const Xcodeproj = require("./Xcodeproj");
-const Target = require("@expo/config-plugins/build/ios/Target");
+const Target = require("./Target");
 
 /**
  * Find the Info.plist path linked to a specific build configuration.
