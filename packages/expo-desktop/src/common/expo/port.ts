@@ -1,151 +1,155 @@
 import chalk from "chalk";
-import {
-  execFileSync,
-  execSync,
-  type ExecFileSyncOptionsWithStringEncoding,
-  type ExecSyncOptionsWithStringEncoding,
-} from "node:child_process";
-import net from "node:net";
-import path from "node:path";
 
 import { env } from "./env.ts";
 import { CommandError } from "./error.ts";
+import { testPortAsync, freePortAsync } from "./freeport.ts";
 import { isInteractive } from "./interactive.ts";
 import * as Log from "./log.ts";
-import { confirmAsync } from "./prompts-cli.ts";
 
-const DEFAULT_PORT = 8081;
-const MAX_PORT = 65_535;
-
-const execOptions: ExecSyncOptionsWithStringEncoding = {
-  encoding: "utf8",
-  stdio: ["pipe", "pipe", "ignore"],
-};
-const execFileOptions: ExecFileSyncOptionsWithStringEncoding = {
-  encoding: "utf8",
-  stdio: ["pipe", "pipe", "ignore"],
-};
-
-/**
- * Whether the port is in the usable range. Port 0 is valid and means "pick any
- * available port".
- */
+/** Whether the port is in the usable range. Port 0 is valid and means "pick any available port". */
 export function isValidPort(port: number | undefined): port is number {
   return port != null && Number.isInteger(port) && port >= 0 && port <= 65_535;
 }
 
-/** @returns `true` when the port is available for a new server. */
-export async function isPortAvailableAsync(port: number): Promise<boolean> {
-  if (!isValidPort(port)) {
-    return false;
+/** Get a free port or assert a CLI command error. */
+async function getFreePortAsync(rangeStart: number): Promise<number> {
+  const port = await freePortAsync(rangeStart, [null, "localhost"]);
+  if (!port) {
+    throw new CommandError("NO_PORT_FOUND", "No available port found");
   }
 
-  const hosts = port === 0 ? [undefined] : ["127.0.0.1", "::1"];
-  for (const host of hosts) {
-    const available = await isPortAvailableOnHostAsync(port, host);
-    if (!available) {
+  return port;
+}
+
+/** @return `true` if the port can still be used to start the dev server, `false` if the dev server should be skipped, and asserts if the port is now taken. */
+export async function ensurePortAvailabilityAsync(
+  projectRoot: string,
+  { port }: { port: number },
+): Promise<boolean> {
+  const isFreePort = await testPortAsync(port, [null]);
+  // Check if port has become busy during the build.
+  if (isFreePort) {
+    return true;
+  }
+
+  const isBusy = await isBusyPortRunningSameProcessAsync(projectRoot, { port });
+  if (!isBusy) {
+    throw new CommandError(
+      `Port "${port}" became busy running another process while the app was compiling. Re-run command to use a new port.`,
+    );
+  }
+
+  // Log that the dev server will not be started and that the logs will appear in another window.
+  Log.log(
+    "› The dev server for this app is already running in another window. Logs will appear there.",
+  );
+  return false;
+}
+
+function isRestrictedPort(port: number) {
+  if (process.platform !== "win32" && port < 1024) {
+    const isRoot = process.getuid && process.getuid() === 0;
+    return !isRoot;
+  }
+  return false;
+}
+
+async function isBusyPortRunningSameProcessAsync(projectRoot: string, { port }: { port: number }) {
+  const { getRunningProcess } =
+    require("./get-running-process") as typeof import("./get-running-process.ts");
+  const runningProcess = isRestrictedPort(port) ? null : await getRunningProcess(port);
+  if (runningProcess) {
+    if (runningProcess.directory === projectRoot) {
+      return true;
+    } else {
       return false;
     }
   }
-  return true;
+
+  return null;
 }
 
-function isPortAvailableOnHostAsync(port: number, host: string | undefined): Promise<boolean> {
-  return new Promise((resolve) => {
-    const server = net.createServer();
-
-    server.once("error", () => {
-      resolve(false);
-    });
-    server.once("listening", () => {
-      server.close(() => resolve(true));
-    });
-    if (host) {
-      server.listen(port, host);
-    } else {
-      server.listen(port);
-    }
-  });
-}
-
-/** Get a free port at or after the requested port. */
-export async function getFreePortAsync(rangeStart: number = DEFAULT_PORT): Promise<number> {
-  const firstPort =
-    Number.isInteger(rangeStart) && rangeStart > 0 ? Math.min(rangeStart, MAX_PORT) : DEFAULT_PORT;
-  for (let port = firstPort; port <= MAX_PORT; port++) {
-    if (await isPortAvailableAsync(port)) {
-      return port;
-    }
-  }
-
-  throw new CommandError("NO_PORT_FOUND", "No available port found");
-}
-
-/**
- * Pick a usable Metro port, reusing a server for this project when requested.
- * This follows the port-selection flow used by Expo CLI's iOS runner.
- */
+// TODO(Bacon): Revisit after all start and run code is merged.
 export async function choosePortAsync(
   projectRoot: string,
   {
     defaultPort,
-    reuseExistingPort = false,
-    explicitPort = false,
+    host,
+    reuseExistingPort,
+    explicitPort,
   }: {
     defaultPort: number;
+    host?: string;
     reuseExistingPort?: boolean;
-    /** Whether the requested port was explicitly supplied by the user. */
+    /** Whether the port was explicitly requested (e.g. via `--port`) rather than a default. */
     explicitPort?: boolean;
   },
 ): Promise<number | null> {
-  if (defaultPort === 0) {
-    return getFreePortAsync();
-  }
-
-  if (await isPortAvailableAsync(defaultPort)) {
-    return defaultPort;
-  }
-
-  const runningProcess = getRunningProcess(defaultPort);
-  if (runningProcess?.directory === path.resolve(projectRoot) && reuseExistingPort) {
-    return null;
-  }
-
-  const nextPort = await getFreePortAsync(defaultPort + 1);
-  let message = `Port ${chalk.bold(defaultPort)} is`;
-  if (runningProcess) {
-    message += ` running ${chalk.cyan(runningProcess.command)} in another window`;
-    message += `\n${chalk.gray(`  ${runningProcess.directory} (pid ${runningProcess.pid})`)}`;
-  } else {
-    message += " being used by another process";
-  }
-
-  Log.log(`› ${message}`);
-
-  if (!isInteractive()) {
-    if (explicitPort) {
-      throw new CommandError(
-        "PORT_IN_USE",
-        `Port ${defaultPort} is unavailable and 'npx expo' is running in non-interactive mode, so it can't prompt to use another port. Free port ${defaultPort} by stopping the process using it, or re-run with an available '--port'.`,
-      );
+  try {
+    const port = await freePortAsync(defaultPort, [host ?? null]);
+    if (port === defaultPort || defaultPort === 0) {
+      return port;
     }
 
-    Log.log(`› Using port ${nextPort} instead`);
-    return nextPort;
-  }
+    const isRestricted = port && isRestrictedPort(port);
 
-  const change = await confirmAsync({
-    message: `Use port ${nextPort} instead?`,
-    initial: true,
-  });
-  return change ? nextPort : null;
+    let message = isRestricted
+      ? `Admin permissions are required to run a server on a port below 1024`
+      : `Port ${chalk.bold(defaultPort)} is`;
+
+    const { getRunningProcess } =
+      require("./get-running-process") as typeof import("./get-running-process.ts");
+    const runningProcess = isRestricted ? null : await getRunningProcess(defaultPort);
+
+    if (runningProcess) {
+      const pidTag = chalk.gray(`(pid ${runningProcess.pid})`);
+      if (runningProcess.directory === projectRoot) {
+        message += ` running this app in another window`;
+        if (reuseExistingPort) {
+          return null;
+        }
+      } else {
+        message += ` running ${chalk.cyan(runningProcess.command)} in another window`;
+      }
+      message += "\n" + chalk.gray(`  ${runningProcess.directory} ${pidTag}`);
+    } else {
+      message += " being used by another process";
+    }
+
+    Log.log(`\u203A ${message}`);
+
+    if (!isInteractive()) {
+      // An explicitly requested port is a hard requirement
+      if (explicitPort) {
+        throw new CommandError(
+          "PORT_IN_USE",
+          `Port ${defaultPort} is unavailable and 'npx expo' is running in non-interactive mode, so it can't prompt to use another port. Free port ${defaultPort} by stopping the process using it, or re-run with an available '--port'.`,
+        );
+      } else {
+        Log.log(`\u203A Using port ${port} instead`);
+        return port;
+      }
+    }
+
+    const { confirmAsync } = require("./prompts-cli") as typeof import("./prompts-cli.ts");
+    const change = await confirmAsync({
+      message: `Use port ${port} instead?`,
+      initial: true,
+    });
+    return change ? port : null;
+  } catch (error: any) {
+    if (error.code === "ABORTED") {
+      throw error;
+    } else if (error.code === "NON_INTERACTIVE") {
+      Log.warn(chalk.yellow(error.message));
+      return null;
+    }
+    throw error;
+  }
 }
 
 // TODO(Bacon): Revisit after all start and run code is merged.
-/**
- * Picks a port without reading the environment. `resolveMetroPortAsync` is the
- * entry point every command uses.
- */
+/** Picks a port without reading the environment. `resolveMetroPortAsync` is the entry point every command uses. */
 export async function _resolvePortAsync(
   projectRoot: string,
   {
@@ -186,11 +190,9 @@ export async function _resolvePortAsync(
 }
 
 /**
- * Resolve the Metro port, honoring `RCT_METRO_PORT` and writing the result back
- * to it.
- *
- * The write-back matters: react-native's build scripts read `RCT_METRO_PORT`,
- * and native builds started later in the command inherit it from this process.
+ * Resolve the Metro port, honoring `RCT_METRO_PORT` and writing the result back to it.
+ * The write-back matters: react-native's build scripts read `RCT_METRO_PORT`, and native
+ * builds started later in the command inherit it from this process.
  */
 export async function resolveMetroPortAsync(
   projectRoot: string,
@@ -221,88 +223,4 @@ export async function resolveMetroPortAsync(
   }
 
   return resolvedPort;
-}
-
-type RunningProcess = {
-  pid: number;
-  directory: string;
-  command: string;
-};
-
-function getRunningProcess(port: number): RunningProcess | null {
-  // lsof is available on macOS, which is the platform this runner targets.
-  // Windows keeps the previous best-effort behavior for the shared helper.
-  if (process.platform !== "darwin") {
-    return null;
-  }
-
-  const pid = getPID(port);
-  if (!pid) {
-    return null;
-  }
-
-  try {
-    const directory = execSync(
-      `lsof -p ${pid} | awk '$4=="cwd" {for (i=9; i<=NF; i++) printf "%s ", $i}'`,
-      execOptions,
-    ).trim();
-    const command = execFileSync(
-      "ps",
-      ["-o", "command=", "-p", String(pid)],
-      execFileOptions,
-    ).trim();
-    if (!directory) {
-      return null;
-    }
-    return { pid, directory: path.resolve(directory), command: command || "another process" };
-  } catch {
-    return null;
-  }
-}
-
-function getPID(port: number): number | null {
-  try {
-    const result = execFileSync("lsof", [`-i:${port}`, "-P", "-t", "-sTCP:LISTEN"], execFileOptions)
-      .split("\n")[0]
-      ?.trim();
-    const pid = Number(result);
-    return Number.isInteger(pid) && pid > 0 ? pid : null;
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Ensure that the port has not become busy during the native build.
- *
- * If the port was taken by this project's Metro server while the native build
- * was running, reuse that server. A port taken by another process is an error so
- * the app cannot be pointed at an unrelated bundler.
- */
-export async function ensurePortAvailabilityAsync(
-  projectRoot: string,
-  { port }: { port: number },
-): Promise<boolean> {
-  if (await isPortAvailableAsync(port)) {
-    return true;
-  }
-
-  const runningProcess = getRunningProcess(port);
-  if (!runningProcess && process.platform !== "darwin") {
-    Log.log(
-      "› The dev server for this app is already running in another window. Logs will appear there.",
-    );
-    return false;
-  }
-  if (runningProcess?.directory !== path.resolve(projectRoot)) {
-    throw new CommandError(
-      "PORT_IN_USE",
-      `Port "${port}" became busy running another process while the app was compiling. Re-run command to use a new port.`,
-    );
-  }
-
-  Log.log(
-    "› The dev server for this app is already running in another window. Logs will appear there.",
-  );
-  return false;
 }
