@@ -33,11 +33,15 @@ export async function resolveOptionsAsync(
     osType: "Windows" as const,
   };
 
-  // Debug Windows builds should load JavaScript from Metro when the bundler is enabled.
-  const shouldSkipInitialBundling = configuration === "Debug" && bundlerProps.shouldStartBundler;
+  // This optimization skips resetting the Metro cache needlessly.
+  // The cache is reset in `../node_modules/react-native/scripts/react-native-xcode.sh` when the
+  // project is running in Debug and built onto a physical device. It seems that this is done because
+  // the script is run from Xcode and unaware of the CLI instance.
+  const shouldSkipInitialBundling = configuration === "Debug";
 
   return {
     ...bundlerProps,
+    shouldStartBundler: options.configuration === "Debug" || bundlerProps.shouldStartBundler,
     projectRoot,
     isSimulator: false,
     windowsProject,
@@ -47,7 +51,6 @@ export async function resolveOptionsAsync(
     shouldSkipInitialBundling,
     buildCache: options.buildCache !== false,
     scheme,
-    shouldStartBundler: bundlerProps.shouldStartBundler,
   };
 }
 

@@ -2,7 +2,7 @@ export type WindowsConfiguration = "Debug" | "Release" | string;
 
 export type Options = {
   /** Dev server port to use, ignored if `bundler` is `false`. */
-  port?: number;
+  port?: string;
   /** Windows project to build, corresponding to RNW's `--proj` option. */
   scheme?: string;
   /** MSBuild configuration to build. Default `Debug`. */

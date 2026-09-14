@@ -200,6 +200,11 @@ const main = defineCommand({
         windows: defineCommand({
           meta: { name: "windows", description: "Run the Windows app binary locally" },
           args: {
+            "project-root": {
+              type: "positional",
+              required: false,
+              description: `The ${kleur.bold("project root")} for the app in alphanumeric format ${grey("(Example: 'MyApp123')")}`,
+            },
             "no-build-cache": {
               type: "boolean",
               description: "Clear the native build output before building",
@@ -232,7 +237,6 @@ const main = defineCommand({
               type: "string",
               valueHint: "port",
               description: "Port to start the Metro bundler on.",
-              default: "8081",
             },
           },
           async run({ args }) {
@@ -240,15 +244,7 @@ const main = defineCommand({
             parseNoArg(args, "no-install");
             parseNoArg(args, "no-bundler");
 
-            const { port, ...rest } = args;
-
-            const parsedPort = parseInt(port);
-            if (Number.isNaN(parsedPort) || String(parsedPort) !== port) {
-              console.log(`Expected port to be a number, but got ${port}.`);
-              return process.exit(1);
-            }
-
-            (await import("./run/windows/command.ts")).run({ port: parsedPort, ...rest });
+            (await import("./run/windows/command.ts")).run(args);
           },
         }),
       },

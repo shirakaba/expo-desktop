@@ -1,4 +1,3 @@
-import { env } from "./env.ts";
 import { CommandError } from "./error.ts";
 import * as Log from "./log.ts";
 import { isValidPort, resolveMetroPortAsync } from "./port.ts";

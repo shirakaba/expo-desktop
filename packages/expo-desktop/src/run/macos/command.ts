@@ -5,7 +5,7 @@ import path from "node:path";
 
 import type { Options } from "./XcodeBuild.types.ts";
 
-const debug = Debug("expo-desktop:run:command") as typeof console.log;
+const debug = Debug("expo-desktop:run:macos") as typeof console.log;
 
 /**
  * The entrypoint for `npx expo run ios` is here:

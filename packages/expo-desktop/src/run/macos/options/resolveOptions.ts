@@ -44,6 +44,7 @@ export async function resolveOptionsAsync(
 
   return {
     ...bundlerProps,
+    shouldStartBundler: options.configuration === "Debug" || bundlerProps.shouldStartBundler,
     projectRoot,
     isSimulator: false,
     xcodeProject,
