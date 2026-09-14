@@ -19,15 +19,15 @@ export async function resolveBundlerPropsAsync(
     throw new CommandError("BAD_ARGS", "--port and --no-bundler are mutually exclusive arguments");
   }
 
-  const parsedPort = options.port === undefined ? undefined : parseInt(options.port, 10);
-  if (!isValidPort(parsedPort)) {
+  const parsedPort = options.port === undefined ? null : parseInt(options.port, 10);
+  if (typeof parsedPort === "number" && !isValidPort(parsedPort)) {
     throw new CommandError("BAD_ARGS", `Expected port to be a number, but got ${options.port}.`);
   }
 
   let port = shouldStartBundler
     ? await resolveMetroPortAsync(projectRoot, {
         reuseExistingPort: true,
-        ...(parsedPort !== undefined ? { defaultPort: parsedPort } : {}),
+        ...(parsedPort !== null ? { defaultPort: parsedPort } : {}),
       })
     : null;
 
@@ -36,7 +36,7 @@ export async function resolveBundlerPropsAsync(
   options.bundler = !!port;
   if (!port) {
     // Use a valid user-provided port, or the default port
-    port = parsedPort;
+    port = isValidPort(parsedPort) ? parsedPort : 8081;
   }
   Log.debug(`Resolved port: ${port}, start dev server: ${options.bundler}`);
 

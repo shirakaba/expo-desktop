@@ -7,7 +7,7 @@ import { isInteractive } from "./interactive.ts";
 import * as Log from "./log.ts";
 
 /** Whether the port is in the usable range. Port 0 is valid and means "pick any available port". */
-export function isValidPort(port: number | undefined): port is number {
+export function isValidPort(port: number | null | undefined): port is number {
   return port != null && Number.isInteger(port) && port >= 0 && port <= 65_535;
 }
 
