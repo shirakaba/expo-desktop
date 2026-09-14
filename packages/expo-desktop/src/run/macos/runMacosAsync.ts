@@ -15,6 +15,7 @@ import { profile } from "../../common/expo/profile.ts";
 import { logProjectLogsLocation } from "../../common/expo/run-hints.ts";
 import { startBundlerAsync } from "../../common/expo/start-bundler.ts";
 import { loadEnvFiles, setNodeEnv } from "../../common/node-env.ts";
+import { copyBinaryToOutputAsync } from "../copy-binary.ts";
 import { ensureNativeProjectAsync } from "./ensureNativeProject.ts";
 import {
   resolveBuildCache,
@@ -212,21 +213,4 @@ async function getValidBinaryPathAsync(input: string): Promise<string> {
     throw new CommandError("MACOS_BINARY", `The macOS binary must be an .app bundle: ${resolved}`);
   }
   return resolved;
-}
-
-/** Copy the built binary to the specified output directory. */
-async function copyBinaryToOutputAsync(binaryPath: string, outputDir: string): Promise<string> {
-  const absoluteOutputDir = path.resolve(outputDir);
-  const appName = path.basename(binaryPath);
-  const outputPath = path.join(absoluteOutputDir, appName);
-
-  // Create the output directory if it doesn't exist.
-  await fs.promises.mkdir(absoluteOutputDir, { recursive: true });
-
-  // Copy the .app bundle to the output directory.
-  await fs.promises.cp(binaryPath, outputPath, { recursive: true });
-
-  Log.log(chalk`{dim Copied to} ${outputPath}`);
-
-  return outputPath;
 }

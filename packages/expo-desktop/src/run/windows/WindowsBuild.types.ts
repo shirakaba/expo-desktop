@@ -13,8 +13,11 @@ export type Options = {
   install?: boolean;
   /** Should clean the native build output before building. */
   buildCache?: boolean;
+  // FIXME: This should be the path to the Package rather than the .exe
   /** Path to an existing Windows `.exe` to launch. */
   binary?: string;
+  /** Directory to copy the built app binary to after build completes. */
+  output?: string;
 };
 
 export type ProjectInfo = {

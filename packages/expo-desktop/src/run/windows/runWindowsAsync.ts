@@ -11,6 +11,7 @@ import { profile } from "../../common/expo/profile.ts";
 import { logProjectLogsLocation } from "../../common/expo/run-hints.ts";
 import { startBundlerAsync } from "../../common/expo/start-bundler.ts";
 import { loadEnvFiles, setNodeEnv } from "../../common/node-env.ts";
+import { copyBinaryToOutputAsync } from "../copy-binary.ts";
 import { ensureNativeProjectAsync } from "./ensureNativeProject.ts";
 import { launchAppAsync } from "./launchApp.ts";
 import { resolveOptionsAsync } from "./options/resolveOptions.ts";
@@ -38,12 +39,20 @@ export async function runWindowsAsync(projectRoot: string, options: Options) {
   if (options.binary) {
     binaryPath = await getValidBinaryPathAsync(options.binary);
     Log.log("Using custom binary path:", binaryPath);
-  }
-
-  if (!binaryPath) {
+  } else {
     // Spawn the `rnc-cli` process to create the app binary.
     await WindowsBuild.buildAsync(props);
+    // FIXME: Having built the binary, we must set the binaryPath.
+    //        This should be the path to the Package, not the .exe.
+    binaryPath = "TODO";
   }
+
+  // Copy the binary to the output directory if specified.
+  if (options.output) {
+    binaryPath = await copyBinaryToOutputAsync(binaryPath, options.output);
+  }
+
+  Log.debug(`windows:binary_path ${binaryPath}`);
 
   // Ensure the port hasn't become busy during the build.
   if (props.shouldStartBundler && !(await ensurePortAvailabilityAsync(projectRoot, props))) {
@@ -58,6 +67,10 @@ export async function runWindowsAsync(projectRoot: string, options: Options) {
     headless: !props.shouldStartBundler,
   });
 
+  // FIXME: Significant divergence here. For macOS, this was just launchAppAsync().
+  //        WindowsBuild.deployAsync() seems to be about launching an
+  //        already-built app via RNCLI (which may give you debug, I dunno),
+  //        while launchAppAsync() just opens the .exe.
   try {
     // Install and launch the app binary on the host device.
     if (binaryPath) {
