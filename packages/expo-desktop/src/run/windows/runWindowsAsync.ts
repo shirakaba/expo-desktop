@@ -14,7 +14,6 @@ import { loadEnvFiles, setNodeEnv } from "../../common/node-env.ts";
 import { copyBinaryToOutputAsync } from "../copy-binary.ts";
 import { loadConfigAsync } from "../load-config.ts";
 import { ensureNativeProjectAsync } from "./ensureNativeProject.ts";
-import { launchAppAsync } from "./launchApp.ts";
 import { resolveOptionsAsync } from "./options/resolveOptions.ts";
 import { cleanAsync, runWindows } from "./RNWCLI.ts";
 
@@ -39,10 +38,25 @@ export async function runWindowsAsync(projectRoot: string, options: Options) {
   // Calls the same underlying function as `rnc-cli config` does.
   const rncliConfig = await loadConfigAsync({ projectRoot, selectedPlatform: "windows" });
 
-  let binaryPath: string | undefined;
+  // C:\Users\jamie\Downloads\expod-beta\MyAppBeta2\windows\ARM64\Release
+  const expectedBinaryPath = path.resolve(
+    projectRoot,
+    "windows",
+    props.runWindowsOptions.arch,
+    props.configuration,
+  );
+
   if (options.binary) {
-    binaryPath = await getValidBinaryPathAsync(options.binary);
-    Log.log("Using custom binary path:", binaryPath);
+    const resolved = path.resolve(options.binary);
+    if (!(await fs.promises.stat(resolved)).isDirectory()) {
+      throw new CommandError("WINDOWS_BINARY", `The Windows binary must be a folder: ${resolved}`);
+    }
+    // TODO: check that there is a .exe in there and that it matches the
+    // expected architecture and build mode.
+
+    await copyBinaryToOutputAsync(resolved, expectedBinaryPath);
+
+    Log.log(`Copied existing binary into build cache: '${resolved}' > '${expectedBinaryPath}'`);
   } else {
     // TODO: eager bundling
 
@@ -66,18 +80,15 @@ export async function runWindowsAsync(projectRoot: string, options: Options) {
       launch: false,
     });
 
-    // FIXME: Having built the binary, we must set the binaryPath.
-    //        This should be the path to the Package, not the .exe.
-    binaryPath = "TODO";
     // TODO: build cache providers
   }
 
   // Copy the binary to the output directory if specified.
   if (options.output) {
-    binaryPath = await copyBinaryToOutputAsync(binaryPath, options.output);
+    await copyBinaryToOutputAsync(expectedBinaryPath, options.output);
   }
 
-  Log.debug(`windows:binary_path ${binaryPath}`);
+  Log.debug(`windows:binary_path ${expectedBinaryPath}`);
 
   // A build-only run has nothing that needs Metro or the developer interface.
   if (!props.runWindowsOptions.launch) {
@@ -97,28 +108,17 @@ export async function runWindowsAsync(projectRoot: string, options: Options) {
     headless: !props.shouldStartBundler,
   });
 
-  // A custom executable can be launched directly. Normal RNW builds must go
-  // through RNW so the app package is installed, granted loopback access, and
-  // launched by package identity.
-  if (binaryPath) {
-    await launchAppAsync(binaryPath, manager, {
-      isSimulator: false,
-      device: props.device,
-      shouldStartBundler: props.shouldStartBundler,
-    });
-  } else {
-    // Deploy and optionally launch the already-built package on the Windows
-    // host.
-    await runWindows(rncliConfig, {
-      ...props.runWindowsOptions,
-      // Expo owns Metro and the developer interface for the lifetime of this
-      // command.
-      packager: false,
-      // The first RNW invocation already performed these steps.
-      autolink: false,
-      build: false,
-    });
-  }
+  // Deploy and optionally launch the already-built package on the Windows
+  // host.
+  await runWindows(rncliConfig, {
+    ...props.runWindowsOptions,
+    // Expo owns Metro and the developer interface for the lifetime of this
+    // command.
+    packager: false,
+    // The first RNW invocation already performed these steps.
+    autolink: false,
+    build: false,
+  });
 
   // Log the location of the JS logs for the host device.
   if (props.shouldStartBundler) {
