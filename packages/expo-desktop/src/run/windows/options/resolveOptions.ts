@@ -45,21 +45,31 @@ export async function resolveOptionsAsync(
     windowsProject,
     device,
     osType: "Windows",
+    configuration,
     shouldSkipInitialBundling,
     buildCache: options.buildCache !== false,
 
     runWindowsOptions: {
-      release: options.configuration === "Release",
+      // This sets <UseBundle>true</UseBundle> in Bundle.props.
+      release: configuration === "Release",
       root: projectRoot,
       arch: parseArch(options.arch),
       singleproc: !!options.singleproc,
+
+      // TODO: support Windows Phone!
       emulator: false,
       device: false,
       // target: undefined,
+
       // remoteDebugging: undefined,
       ...(options.logging ? { logging: options.logging } : {}),
-      packager: !!options.bundler,
-      bundle: options.configuration === "Release",
+      // Expo starts Metro and its developer interface between RNW's build and
+      // deploy phases, so RNW must never spawn its own packager process.
+      packager: false,
+      // The RNW app template declares only "Debug" and "Release" configurations
+      // in the vcxproj. `--bundle` selects the legacy "DebugBundle" /
+      // "ReleaseBundle" configurations, so enabling it is pointless.
+      bundle: false,
       launch: options.launch,
       ...(options.autolink ? { autolink: options.autolink } : {}),
       build: !options.binary,
