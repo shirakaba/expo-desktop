@@ -9,17 +9,17 @@ export async function resolveWindowsProject(projectRoot: string) {
 
   let solution: string | undefined;
   let project: string | undefined;
-  for await (const { name, parentPath } of glob("*/*.{sln,vcxproj}", {
+  for await (const { name, parentPath } of glob("**/*.{sln,vcxproj}", {
     cwd: platformProjectRoot,
     withFileTypes: true,
     exclude: ["**/node_modules/**", "**/@(Debug|Release|Generated Files)/**"],
   })) {
     if (name.endsWith(".sln")) {
-      solution = path.join(parentPath, name);
+      solution = path.relative(projectRoot, path.join(parentPath, name));
       continue;
     }
     if (name.endsWith(".vcxproj")) {
-      project = path.join(parentPath, name);
+      project = path.relative(projectRoot, path.join(parentPath, name));
       continue;
     }
     if (solution && project) {

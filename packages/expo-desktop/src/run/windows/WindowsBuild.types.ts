@@ -82,9 +82,9 @@ export type Options = {
 >;
 
 export type ProjectInfo = {
-  /** Absolute path to the Windows solution. */
+  /** Path to the Windows solution relative to the app project root. */
   solution: string;
-  /** Absolute path to the Windows app project. */
+  /** Path to the Windows app project relative to the app project root. */
   project: string;
 };
 
