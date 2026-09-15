@@ -217,11 +217,6 @@ const main = defineCommand({
               type: "boolean",
               description: "Skip starting the Metro bundler",
             },
-            scheme: {
-              type: "string",
-              valueHint: "scheme",
-              description: "Windows project name or .vcxproj path to build.",
-            },
             binary: {
               type: "string",
               valueHint: "path",
@@ -230,7 +225,7 @@ const main = defineCommand({
             configuration: {
               type: "string",
               valueHint: "configuration",
-              description: "MSBuild configuration to use. Debug or Release.",
+              description: "Build configuration to use. Debug or Release.",
               default: "Debug",
             },
             port: {
@@ -238,11 +233,58 @@ const main = defineCommand({
               valueHint: "port",
               description: "Port to start the Metro bundler on.",
             },
+            arch: {
+              type: "string",
+              valueHint: "arch",
+              description: "The build architecture (ARM64, x86, x64)",
+            },
+            singleproc: {
+              type: "boolean",
+              description: "Opt out of multi-proc builds",
+            },
+            logging: {
+              type: "boolean",
+              description: "Enables logging",
+            },
+            "no-launch": {
+              type: "boolean",
+              description: "Skip launching the app after building it.",
+            },
+            "no-autolink": {
+              type: "boolean",
+              description: "Skip autolinking.",
+            },
+            sln: {
+              type: "string",
+              description: "Solution file to build",
+            },
+            proj: {
+              type: "string",
+              description: "Vcxproj to build",
+            },
+            msbuildprops: {
+              type: "string",
+              description:
+                "Comma separated props to pass to msbuild, eg: prop1=value1,prop2=value2",
+            },
+            "direct-debugging": {
+              type: "string",
+              valueHint: "port",
+              description: "Enable direct debugging on specified port",
+            },
+            "no-telemetry": {
+              type: "boolean",
+              description:
+                "Disables sending telemetry that allows analysis of usage and failures of the react-native-windows CLI",
+            },
           },
           async run({ args }) {
             parseNoArg(args, "no-build-cache");
             parseNoArg(args, "no-install");
             parseNoArg(args, "no-bundler");
+            parseNoArg(args, "no-launch");
+            parseNoArg(args, "no-autolink");
+            parseNoArg(args, "no-telemetry");
 
             (await import("./run/windows/command.ts")).run(args);
           },

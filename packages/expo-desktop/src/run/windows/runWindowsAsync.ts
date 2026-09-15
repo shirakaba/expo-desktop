@@ -1,5 +1,6 @@
 import chalk from "chalk";
 import fs from "node:fs";
+import { createRequire } from "node:module";
 import path from "node:path";
 
 import type { Options } from "./WindowsBuild.types.ts";
@@ -12,17 +13,21 @@ import { logProjectLogsLocation } from "../../common/expo/run-hints.ts";
 import { startBundlerAsync } from "../../common/expo/start-bundler.ts";
 import { loadEnvFiles, setNodeEnv } from "../../common/node-env.ts";
 import { copyBinaryToOutputAsync } from "../copy-binary.ts";
+import { loadConfigAsync } from "../load-config.ts";
 import { ensureNativeProjectAsync } from "./ensureNativeProject.ts";
 import { launchAppAsync } from "./launchApp.ts";
 import { resolveOptionsAsync } from "./options/resolveOptions.ts";
+import { runWindows } from "./RNWCLI.ts";
 import * as WindowsBuild from "./WindowsBuild.ts";
+
+const require = createRequire(import.meta.url);
 
 export async function runWindowsAsync(projectRoot: string, options: Options) {
   const mode = options.configuration === "Release" ? "production" : "development";
   setNodeEnv(mode);
   loadEnvFiles(projectRoot, { mode });
 
-  assertPlatform();
+  // assertPlatform();
 
   const install = !!options.install;
 
@@ -35,13 +40,58 @@ export async function runWindowsAsync(projectRoot: string, options: Options) {
     Log.log(`› Using ${props.device.name}`);
   }
 
+  // Calls the same underlying function as `rnc-cli config` does.
+  const rncliConfig = await loadConfigAsync({ projectRoot, selectedPlatform: "windows" });
+  console.log(rncliConfig);
+
+  // `expo-desktop run macos`:
+  // const options = {
+  //   install: true,
+  //   buildCache: true,
+  //   bundler: true,
+  //   background: true,
+  //   singleInstance: true,
+  //   configuration: "Debug",
+  //   rebundle: false,
+  // }
+  //
+  // const props = {
+  //   shouldStartBundler: true,
+  //   port: 8081,
+  //   projectRoot: "/Users/jamie/Documents/git/expo-desktop/packages/expo-desktop/MyApp4",
+  //   isSimulator: false,
+  //   xcodeProject: {
+  //     name: "/Users/jamie/Documents/git/expo-desktop/packages/expo-desktop/MyApp4/macos/MyApp4.xcworkspace",
+  //     isWorkspace: true,
+  //   },
+  //   device: {
+  //     name: "macOS host",
+  //     udid: "host",
+  //     osType: "macOS",
+  //   },
+  //   osType: "macOS",
+  //   configuration: "Debug",
+  //   shouldSkipInitialBundling: true,
+  //   buildCache: true,
+  //   scheme: "MyApp4-macOS",
+  //   buildCacheProvider: undefined,
+  // };
+
   let binaryPath: string | undefined;
   if (options.binary) {
     binaryPath = await getValidBinaryPathAsync(options.binary);
     Log.log("Using custom binary path:", binaryPath);
   } else {
     // Spawn the `rnc-cli` process to create the app binary.
-    await WindowsBuild.buildAsync(props);
+    // await WindowsBuild.buildAsync(props);
+    await runWindows(rncliConfig, {
+      ...props.runWindowsOptions,
+      // Run the packager ourselves upon startBundlerAsync().
+      packager: false,
+      // Launch as a separate call to the CLI.
+      launch: false,
+    });
+
     // FIXME: Having built the binary, we must set the binaryPath.
     //        This should be the path to the Package, not the .exe.
     binaryPath = "TODO";
@@ -74,12 +124,27 @@ export async function runWindowsAsync(projectRoot: string, options: Options) {
   try {
     // Install and launch the app binary on the host device.
     if (binaryPath) {
+      // Just build, but don't launch?
+      // cmd.exe /d /c start binaryPath
       await launchAppAsync(binaryPath, manager, {
         isSimulator: false,
         device: props.device,
         shouldStartBundler: props.shouldStartBundler,
       });
     } else {
+      // Build and launch?
+      // rnc-cli run-windows \
+      //   --no-packager \
+      //   --sln pathToSln \
+      //   --proj pathToProj \
+      //   [--release] \
+      //   --no-build \
+      //   --no-autolink
+      //
+      // The actual deploy
+      //
+      // RNW has both deployToDevice and deployToDesktop
+      // it can deploy to both devices and emulators..!
       await WindowsBuild.deployAsync(props);
     }
   } catch (error) {

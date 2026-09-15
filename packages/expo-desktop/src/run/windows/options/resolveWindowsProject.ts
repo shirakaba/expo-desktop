@@ -1,7 +1,7 @@
 import { glob } from "glob";
 import path from "node:path";
 
-import type { Options, ProjectInfo } from "../WindowsBuild.types.ts";
+import type { ProjectInfo } from "../WindowsBuild.types.ts";
 
 import { CommandError } from "../../../common/expo/error.ts";
 
@@ -10,7 +10,7 @@ const ignoredPaths = ["**/node_modules/**", "**/@(Debug|Release|Generated Files)
 /** Resolve the Windows solution and app project used by RNW's `run-windows`. */
 export async function resolveWindowsProject(
   projectRoot: string,
-  options: Pick<Options, "scheme">,
+  input: string,
 ): Promise<ProjectInfo> {
   const windowsRoot = path.join(projectRoot, "windows");
   const [solutionPaths, projectPaths] = await Promise.all([
@@ -35,14 +35,14 @@ export async function resolveWindowsProject(
 
   const solution = resolveSelectedPath({
     projectRoot,
-    input: options.scheme,
+    input,
     paths: solutionPaths,
     extension: ".sln",
     fallback: solutionPaths[0]!,
   });
   const project = resolveSelectedPath({
     projectRoot,
-    input: options.scheme,
+    input,
     paths: projectPaths,
     extension: ".vcxproj",
     fallback: projectPaths[0]!,

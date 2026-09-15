@@ -26,6 +26,7 @@ export async function launchAppAsync(
   // `start` returns after handing the executable off to Windows, just as macOS `open` does.
   const args = ["/d", "/c", "start", "", binaryPath];
   try {
+    // Should we resolve both ComSpec and COMSPEC?
     await spawnAsync(process.env.ComSpec ?? "cmd.exe", args, {
       cwd: path.dirname(binaryPath),
       stdio: "ignore",

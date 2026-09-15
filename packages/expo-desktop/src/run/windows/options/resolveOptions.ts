@@ -2,6 +2,7 @@ import type { Options, BuildProps } from "../WindowsBuild.types.ts";
 
 import { CommandError } from "../../../common/expo/error.ts";
 import { resolveBundlerPropsAsync } from "../../../common/expo/resolve-bundler-props.ts";
+import { parseArch, parseDirectDebuggingPort } from "../RNWCLI.ts";
 import { resolveWindowsProject } from "./resolveWindowsProject.ts";
 
 /** Resolve arguments for the `run windows` command. */
@@ -9,13 +10,10 @@ export async function resolveOptionsAsync(
   projectRoot: string,
   options: Options,
 ): Promise<BuildProps> {
-  const windowsProject = await resolveWindowsProject(projectRoot, options);
+  // FIXME: broken slop
+  const windowsProject = await resolveWindowsProject(projectRoot, "MyApp");
 
   const bundlerProps = await resolveBundlerPropsAsync(projectRoot, options);
-
-  // Resolve the project before the device. Windows has one device—the host—but
-  // the project still determines which native application target MSBuild builds.
-  const scheme = getProjectName(windowsProject);
 
   // Use the configuration or `Debug` if none is provided.
   const configuration = options.configuration || "Debug";
@@ -47,17 +45,37 @@ export async function resolveOptionsAsync(
     windowsProject,
     device,
     osType: "Windows",
-    configuration,
     shouldSkipInitialBundling,
     buildCache: options.buildCache !== false,
-    scheme,
-  };
-}
 
-function getProjectName(windowsProject: BuildProps["windowsProject"]): string {
-  return windowsProject.project
-    .replace(/\\/g, "/")
-    .split("/")
-    .pop()!
-    .replace(/\.vcxproj$/, "");
+    runWindowsOptions: {
+      release: options.configuration === "Release",
+      root: projectRoot,
+      arch: parseArch(options.arch),
+      singleproc: !!options.singleproc,
+      emulator: false,
+      device: false,
+      // target: undefined,
+      // remoteDebugging: undefined,
+      ...(options.logging ? { logging: options.logging } : {}),
+      packager: !!options.bundler,
+      bundle: options.configuration === "Release",
+      launch: options.launch,
+      ...(options.autolink ? { autolink: options.autolink } : {}),
+      build: !options.binary,
+      // You can't launch unless you deploy.
+      deploy: options.launch,
+      deployFromLayout: false,
+      ...(options.sln ? { sln: options.sln } : {}),
+      ...(options.proj ? { proj: options.proj } : {}),
+      ...(options.msbuildprops ? { msbuildprops: options.msbuildprops } : {}),
+      ...(options.buildLogDirectory ? { buildLogDirectory: options.buildLogDirectory } : {}),
+      ...(options.info ? { info: options.info } : {}),
+      // TODO: check if we ought to validate this port in advance
+      ...(options.directDebugging
+        ? { directDebugging: parseDirectDebuggingPort(options.directDebugging) }
+        : {}),
+      ...(options.telemetry ? { telemetry: options.telemetry } : {}),
+    },
+  };
 }

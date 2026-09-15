@@ -17,19 +17,39 @@ export async function run(args: {
   "no-build-cache": boolean | undefined;
   "no-install": boolean | undefined;
   "no-bundler": boolean | undefined;
-  scheme: string | undefined;
   binary: string | undefined;
   configuration: string | undefined;
   port?: string | undefined;
+  arch?: string | undefined;
+  singleproc: boolean | undefined;
+  logging: boolean | undefined;
+  "no-launch": boolean | undefined;
+  "no-autolink": boolean | undefined;
+  sln?: string | undefined;
+  proj?: string | undefined;
+  msbuildprops?: string | undefined;
+  "direct-debugging"?: string | undefined;
+  "no-telemetry": boolean | undefined;
 }) {
   const options: Options = {
     ...(args.port !== undefined ? { port: args.port } : {}),
     install: !args["no-install"],
     buildCache: !args["no-build-cache"],
     bundler: !args["no-bundler"],
-    ...(args.scheme !== undefined ? { scheme: args.scheme } : {}),
     ...(args.binary !== undefined ? { binary: args.binary } : {}),
     ...(args.configuration !== undefined ? { configuration: args.configuration } : {}),
+    ...(args.arch !== undefined ? { arch: args.arch } : {}),
+    ...(args.singleproc !== undefined ? { singleproc: args.singleproc } : {}),
+    ...(args.logging ? { logging: args.logging } : {}),
+    launch: !args["no-launch"],
+    autolink: !args["no-autolink"],
+    ...(args.sln ? { sln: args.sln } : {}),
+    ...(args.proj ? { proj: args.proj } : {}),
+    ...(args.msbuildprops ? { msbuildprops: args.msbuildprops } : {}),
+    ...(args["direct-debugging"] !== undefined
+      ? { directDebugging: args["direct-debugging"] }
+      : {}),
+    telemetry: !args["no-telemetry"],
   };
 
   log.info(`🏎️  Running ${kleur.yellow("expo-desktop run windows")}.`, { withGuide: false });
