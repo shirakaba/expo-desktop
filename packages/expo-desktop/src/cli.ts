@@ -221,7 +221,7 @@ const main = defineCommand({
               type: "string",
               valueHint: "path",
               description:
-                "Path to existing Windows build artifacts (a windows directory or --output directory).",
+                "Windows build-output directory to restore instead of building (or a --output directory).",
             },
             output: {
               type: "string",

@@ -29,7 +29,7 @@ export type Options = {
   install?: boolean;
   /** Should clean the native build output before building. */
   buildCache?: boolean;
-  /** Path to existing Windows build artifacts to deploy and launch without rebuilding. */
+  /** Windows build-output directory to restore and launch without rebuilding. */
   binary?: string;
   /** Directory to export the Windows build artifacts to after the build completes. */
   output?: string;

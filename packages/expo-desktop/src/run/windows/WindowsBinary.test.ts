@@ -13,49 +13,39 @@ const temporaryDirectories: string[] = [];
 
 afterEach(async () => {
   await Promise.all(
-    temporaryDirectories.splice(0).map((directory) =>
-      fs.promises.rm(directory, {
-        recursive: true,
-        force: true,
-      }),
-    ),
+    temporaryDirectories
+      .splice(0)
+      .map((directory) => fs.promises.rm(directory, { recursive: true, force: true })),
   );
 });
 
-test("resolves an ARM64 Release build from its loose-layout root", async () => {
+test("resolves artifacts from a Windows build-output root", async () => {
   const windowsRoot = await createWindowsArtifactsAsync("ARM64", "Release");
-  const layoutRoot = path.join(windowsRoot, "ARM64", "Release");
-
-  await expect(
-    resolveWindowsBuildArtifactsAsync(layoutRoot, "ARM64", "Release"),
-  ).resolves.toStrictEqual({
-    windowsRoot,
-    layoutRoot,
-    appPackagesRoot: path.join(windowsRoot, "MyApp.Package", "AppPackages"),
-    packageDirectories: [
-      path.join(windowsRoot, "MyApp.Package", "AppPackages", "Example_1.0.0.0_ARM64_Release_Test"),
-    ],
-  });
-});
-
-test("accepts RNW's Release package fallback without the configuration in its name", async () => {
-  const windowsRoot = await createWindowsArtifactsAsync(
-    "ARM64",
-    "Release",
-    "Example_1.0.0.0_ARM64_Test",
-  );
 
   await expect(
     resolveWindowsBuildArtifactsAsync(windowsRoot, "ARM64", "Release"),
-  ).resolves.toMatchObject({ windowsRoot });
+  ).resolves.toStrictEqual({
+    windowsRoot,
+    layoutRoot: path.join(windowsRoot, "ARM64", "Release"),
+    appPackagesRoot: path.join(windowsRoot, "MyApp.Package", "AppPackages"),
+  });
+});
+
+test("does not infer an artifact root from a nested layout path", async () => {
+  const windowsRoot = await createWindowsArtifactsAsync("ARM64", "Release");
+
+  await expect(
+    resolveWindowsBuildArtifactsAsync(
+      path.join(windowsRoot, "ARM64", "Release"),
+      "ARM64",
+      "Release",
+    ),
+  ).rejects.toThrow(/Pass the Windows directory/);
 });
 
 test("rejects an artifact that does not include AppPackages", async () => {
   const windowsRoot = await createTemporaryDirectoryAsync();
-  const layout = path.join(windowsRoot, "ARM64", "Debug", "Example");
-  await fs.promises.mkdir(layout, { recursive: true });
-  await fs.promises.writeFile(path.join(layout, "AppxManifest.xml"), "manifest");
-  await fs.promises.writeFile(path.join(layout, "Example.build.appxrecipe"), "recipe");
+  await fs.promises.mkdir(path.join(windowsRoot, "ARM64", "Debug"), { recursive: true });
 
   await expect(resolveWindowsBuildArtifactsAsync(windowsRoot, "ARM64", "Debug")).rejects.toThrow(
     /MyApp\.Package.*AppPackages/s,
@@ -65,47 +55,19 @@ test("rejects an artifact that does not include AppPackages", async () => {
 test("restores both artifact trees at the paths expected by RNW", async () => {
   const sourceRoot = await createWindowsArtifactsAsync("ARM64", "Debug");
   const destinationRoot = await createTemporaryDirectoryAsync();
-  const staleLayout = path.join(destinationRoot, "ARM64", "Debug", "Stale");
-  const stalePackage = path.join(
-    destinationRoot,
-    "MyApp.Package",
-    "AppPackages",
-    "Stale_1.0.0.0_ARM64_Debug_Test",
-  );
-  const unrelatedPackage = path.join(
-    destinationRoot,
-    "MyApp.Package",
-    "AppPackages",
-    "Other_1.0.0.0_x64_Debug_Test",
-  );
-  await fs.promises.mkdir(staleLayout, { recursive: true });
-  await fs.promises.mkdir(stalePackage, { recursive: true });
-  await fs.promises.mkdir(unrelatedPackage, { recursive: true });
+  const source = await resolveWindowsBuildArtifactsAsync(sourceRoot, "ARM64", "Debug");
 
-  const artifacts = await resolveWindowsBuildArtifactsAsync(sourceRoot, "ARM64", "Debug");
-  await restoreWindowsBuildArtifactsAsync(artifacts, destinationRoot, "ARM64", "Debug");
+  await restoreWindowsBuildArtifactsAsync(source, destinationRoot, "ARM64", "Debug");
 
   await expect(
-    fs.promises.readFile(
-      path.join(destinationRoot, "ARM64", "Debug", "Example", "AppxManifest.xml"),
-      "utf8",
-    ),
-  ).resolves.toBe("manifest");
+    fs.promises.readFile(path.join(destinationRoot, "ARM64", "Debug", "layout.txt"), "utf8"),
+  ).resolves.toBe("layout");
   await expect(
     fs.promises.readFile(
-      path.join(
-        destinationRoot,
-        "MyApp.Package",
-        "AppPackages",
-        "Example_1.0.0.0_ARM64_Debug_Test",
-        "Add-AppDevPackage.ps1",
-      ),
+      path.join(destinationRoot, "MyApp.Package", "AppPackages", "package.txt"),
       "utf8",
     ),
-  ).resolves.toBe("installer");
-  await expect(fs.promises.stat(staleLayout)).rejects.toThrow();
-  await expect(fs.promises.stat(stalePackage)).rejects.toThrow();
-  await expect(fs.promises.stat(unrelatedPackage)).resolves.toMatchObject({});
+  ).resolves.toBe("package");
 });
 
 test("exports an artifact that can be passed back to --binary", async () => {
@@ -117,7 +79,7 @@ test("exports an artifact that can be passed back to --binary", async () => {
 
   await expect(
     resolveWindowsBuildArtifactsAsync(outputRoot, "x86", "Debug"),
-  ).resolves.toMatchObject({
+  ).resolves.toStrictEqual({
     windowsRoot: outputRoot,
     layoutRoot: path.join(outputRoot, "Debug"),
     appPackagesRoot: path.join(outputRoot, "MyApp.Package", "AppPackages"),
@@ -127,21 +89,15 @@ test("exports an artifact that can be passed back to --binary", async () => {
 async function createWindowsArtifactsAsync(
   arch: "x86" | "x64" | "ARM64",
   configuration: "Debug" | "Release",
-  packageName = `Example_1.0.0.0_${arch}_${configuration}_Test`,
 ): Promise<string> {
   const windowsRoot = await createTemporaryDirectoryAsync();
-  const layoutRoot = path.join(
-    windowsRoot,
-    ...(arch === "x86" ? [configuration] : [arch, configuration]),
-    "Example",
-  );
-  const packageRoot = path.join(windowsRoot, "MyApp.Package", "AppPackages", packageName);
+  const layoutRoot = path.join(windowsRoot, arch === "x86" ? configuration : arch, configuration);
+  const packageRoot = path.join(windowsRoot, "MyApp.Package", "AppPackages");
 
   await fs.promises.mkdir(layoutRoot, { recursive: true });
   await fs.promises.mkdir(packageRoot, { recursive: true });
-  await fs.promises.writeFile(path.join(layoutRoot, "AppxManifest.xml"), "manifest");
-  await fs.promises.writeFile(path.join(layoutRoot, "Example.build.appxrecipe"), "recipe");
-  await fs.promises.writeFile(path.join(packageRoot, "Add-AppDevPackage.ps1"), "installer");
+  await fs.promises.writeFile(path.join(layoutRoot, "layout.txt"), "layout");
+  await fs.promises.writeFile(path.join(packageRoot, "package.txt"), "package");
 
   return windowsRoot;
 }
