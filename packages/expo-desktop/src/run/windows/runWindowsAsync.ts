@@ -44,39 +44,6 @@ export async function runWindowsAsync(projectRoot: string, options: Options) {
   const rncliConfig = await loadConfigAsync({ projectRoot, selectedPlatform: "windows" });
   console.log(rncliConfig);
 
-  // `expo-desktop run macos`:
-  // const options = {
-  //   install: true,
-  //   buildCache: true,
-  //   bundler: true,
-  //   background: true,
-  //   singleInstance: true,
-  //   configuration: "Debug",
-  //   rebundle: false,
-  // }
-  //
-  // const props = {
-  //   shouldStartBundler: true,
-  //   port: 8081,
-  //   projectRoot: "/Users/jamie/Documents/git/expo-desktop/packages/expo-desktop/MyApp4",
-  //   isSimulator: false,
-  //   xcodeProject: {
-  //     name: "/Users/jamie/Documents/git/expo-desktop/packages/expo-desktop/MyApp4/macos/MyApp4.xcworkspace",
-  //     isWorkspace: true,
-  //   },
-  //   device: {
-  //     name: "macOS host",
-  //     udid: "host",
-  //     osType: "macOS",
-  //   },
-  //   osType: "macOS",
-  //   configuration: "Debug",
-  //   shouldSkipInitialBundling: true,
-  //   buildCache: true,
-  //   scheme: "MyApp4-macOS",
-  //   buildCacheProvider: undefined,
-  // };
-
   let binaryPath: string | undefined;
   if (options.binary) {
     binaryPath = await getValidBinaryPathAsync(options.binary);
