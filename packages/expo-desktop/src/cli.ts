@@ -220,7 +220,13 @@ const main = defineCommand({
             binary: {
               type: "string",
               valueHint: "path",
-              description: "Path to existing .exe to launch.",
+              description:
+                "Path to existing Windows build artifacts (a windows directory or --output directory).",
+            },
+            output: {
+              type: "string",
+              valueHint: "path",
+              description: "Directory to export the Windows build artifacts to.",
             },
             configuration: {
               type: "string",

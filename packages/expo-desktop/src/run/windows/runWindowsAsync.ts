@@ -1,21 +1,23 @@
 import chalk from "chalk";
-import fs from "node:fs";
 import path from "node:path";
 
 import type { Options } from "./WindowsBuild.types.ts";
 
-import { CommandError } from "../../common/expo/error.ts";
 import * as Log from "../../common/expo/log.ts";
 import { ensurePortAvailabilityAsync } from "../../common/expo/port.ts";
 import { profile } from "../../common/expo/profile.ts";
 import { logProjectLogsLocation } from "../../common/expo/run-hints.ts";
 import { startBundlerAsync } from "../../common/expo/start-bundler.ts";
 import { loadEnvFiles, setNodeEnv } from "../../common/node-env.ts";
-import { copyBinaryToOutputAsync } from "../copy-binary.ts";
 import { loadConfigAsync } from "../load-config.ts";
 import { ensureNativeProjectAsync } from "./ensureNativeProject.ts";
 import { resolveOptionsAsync } from "./options/resolveOptions.ts";
 import { cleanAsync, runWindows } from "./RNWCLI.ts";
+import {
+  exportWindowsBuildArtifactsAsync,
+  resolveWindowsBuildArtifactsAsync,
+  restoreWindowsBuildArtifactsAsync,
+} from "./WindowsBinary.ts";
 
 export async function runWindowsAsync(projectRoot: string, options: Options) {
   const mode = options.configuration === "Release" ? "production" : "development";
@@ -38,25 +40,21 @@ export async function runWindowsAsync(projectRoot: string, options: Options) {
   // Calls the same underlying function as `rnc-cli config` does.
   const rncliConfig = await loadConfigAsync({ projectRoot, selectedPlatform: "windows" });
 
-  // C:\Users\jamie\Downloads\expod-beta\MyAppBeta2\windows\ARM64\Release
-  const expectedBinaryPath = path.resolve(
-    projectRoot,
-    "windows",
-    props.runWindowsOptions.arch,
-    props.configuration,
-  );
+  const windowsRoot = path.resolve(projectRoot, "windows");
 
   if (options.binary) {
-    const resolved = path.resolve(options.binary);
-    if (!(await fs.promises.stat(resolved)).isDirectory()) {
-      throw new CommandError("WINDOWS_BINARY", `The Windows binary must be a folder: ${resolved}`);
-    }
-    // TODO: check that there is a .exe in there and that it matches the
-    // expected architecture and build mode.
-
-    await copyBinaryToOutputAsync(resolved, expectedBinaryPath);
-
-    Log.log(`Copied existing binary into build cache: '${resolved}' > '${expectedBinaryPath}'`);
+    const artifacts = await resolveWindowsBuildArtifactsAsync(
+      options.binary,
+      props.runWindowsOptions.arch,
+      props.configuration,
+    );
+    await restoreWindowsBuildArtifactsAsync(
+      artifacts,
+      windowsRoot,
+      props.runWindowsOptions.arch,
+      props.configuration,
+    );
+    Log.log(`Using custom Windows build artifacts: ${path.resolve(options.binary)}`);
   } else {
     // TODO: eager bundling
 
@@ -85,10 +83,21 @@ export async function runWindowsAsync(projectRoot: string, options: Options) {
 
   // Copy the binary to the output directory if specified.
   if (options.output) {
-    await copyBinaryToOutputAsync(expectedBinaryPath, options.output);
+    const artifacts = await resolveWindowsBuildArtifactsAsync(
+      windowsRoot,
+      props.runWindowsOptions.arch,
+      props.configuration,
+    );
+    const exported = await exportWindowsBuildArtifactsAsync(
+      artifacts,
+      options.output,
+      props.runWindowsOptions.arch,
+      props.configuration,
+    );
+    Log.log(`Copied Windows build artifacts to: ${exported.windowsRoot}`);
   }
 
-  Log.debug(`windows:binary_path ${expectedBinaryPath}`);
+  Log.debug(`windows:binary_path ${windowsRoot}`);
 
   // A build-only run has nothing that needs Metro or the developer interface.
   if (!props.runWindowsOptions.launch) {
@@ -136,22 +145,4 @@ function assertPlatform() {
       chalk`Windows apps can only be built on Windows devices. Run this command on Windows with Visual Studio installed.`,
     );
   }
-}
-
-async function getValidBinaryPathAsync(input: string): Promise<string> {
-  const resolved = path.resolve(input);
-
-  if (!fs.existsSync(resolved)) {
-    throw new CommandError(
-      "WINDOWS_BINARY",
-      `The path to the Windows binary does not exist: ${resolved}`,
-    );
-  }
-  if (path.extname(resolved).toLowerCase() !== ".exe") {
-    throw new CommandError(
-      "WINDOWS_BINARY",
-      `The Windows binary must be an .exe file: ${resolved}`,
-    );
-  }
-  return resolved;
 }

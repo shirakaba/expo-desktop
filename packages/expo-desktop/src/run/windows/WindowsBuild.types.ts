@@ -29,10 +29,9 @@ export type Options = {
   install?: boolean;
   /** Should clean the native build output before building. */
   buildCache?: boolean;
-  // FIXME: This should be the path to the Package rather than the .exe
-  /** Path to an existing Windows `.exe` to launch. */
+  /** Path to existing Windows build artifacts to deploy and launch without rebuilding. */
   binary?: string;
-  /** Directory to copy the built app binary to after build completes. */
+  /** Directory to export the Windows build artifacts to after the build completes. */
   output?: string;
 
   /** The build architecture (ARM64, x86, x64) */

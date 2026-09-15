@@ -18,6 +18,7 @@ export async function run(args: {
   "no-install": boolean | undefined;
   "no-bundler": boolean | undefined;
   binary: string | undefined;
+  output: string | undefined;
   configuration: string | undefined;
   port?: string | undefined;
   arch?: string | undefined;
@@ -37,6 +38,7 @@ export async function run(args: {
     buildCache: !args["no-build-cache"],
     bundler: !args["no-bundler"],
     ...(args.binary !== undefined ? { binary: args.binary } : {}),
+    ...(args.output !== undefined ? { output: args.output } : {}),
     ...(args.configuration !== undefined ? { configuration: args.configuration } : {}),
     ...(args.arch !== undefined ? { arch: args.arch } : {}),
     ...(args.singleproc !== undefined ? { singleproc: args.singleproc } : {}),
