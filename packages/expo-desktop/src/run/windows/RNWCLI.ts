@@ -4,10 +4,14 @@ import type {
   RunWindowsOptions,
 } from "@react-native-windows/cli/lib-commonjs/commands/runWindows/runWindowsOptions.d.ts";
 
+import spawnAsync from "@expo/spawn-async";
 import { createRequire } from "node:module";
-import * as process from "node:process";
+import path from "node:path";
+
+import type { BuildProps } from "./WindowsBuild.types.ts";
 
 import { CommandError } from "../../common/expo/error.ts";
+import * as Log from "../../common/expo/log.ts";
 const require = createRequire(import.meta.url);
 
 /**
@@ -15,7 +19,26 @@ const require = createRequire(import.meta.url);
  */
 export async function runWindows(config: Config, options: RunWindowsOptions) {
   const { func } = getRunWindowsCommand();
-  await func([], config, options);
+  const previousExitCode = process.exitCode;
+  let exitCode: typeof process.exitCode;
+
+  // The RNW command catches its own errors and reports them through exitCode.
+  // Isolate each of our two invocations so a failed build cannot fall through
+  // into dev-server startup and deployment.
+  process.exitCode = undefined;
+  try {
+    await func([], config, options);
+    exitCode = process.exitCode;
+  } finally {
+    process.exitCode = previousExitCode;
+  }
+
+  if (exitCode !== undefined && exitCode !== 0) {
+    throw new CommandError(
+      "RNW_CLI",
+      `React Native Windows CLI failed with exit code ${exitCode}.`,
+    );
+  }
 }
 
 function getRunWindowsCommand() {
@@ -45,6 +68,50 @@ function requireRNWCLI(): typeof import("@react-native-windows/cli") {
       "Unable to find @react-native-windows/cli. Please make sure you have it (or react-native-windows) installed.",
     );
   }
+}
+
+export async function cleanAsync({
+  arch,
+  configuration,
+  projectRoot,
+  solution,
+}: {
+  arch: "x86" | "x64" | "ARM64";
+  configuration: "Debug" | "Release";
+  projectRoot: string;
+  solution: string;
+}): Promise<void> {
+  let rnwCliPath: string;
+  try {
+    rnwCliPath = require.resolve("@react-native-windows/cli", {
+      paths: [projectRoot],
+    });
+  } catch {
+    throw new CommandError(
+      "WINDOWS_CLI",
+      "Could not find the React Native Windows CLI in the project. Install `react-native-windows` before running the Windows app.",
+    );
+  }
+
+  const msbuildToolsPath = path.join(path.dirname(rnwCliPath), "utils", "msbuildtools.js");
+  const { default: MSBuildTools } = require(msbuildToolsPath) as {
+    default: {
+      findAvailableVersion(
+        architecture: "x86" | "x64" | "ARM64",
+        verbose: boolean,
+      ): {
+        msbuildPath(): string;
+      };
+    };
+  };
+
+  Log.log("› Cleaning the Windows native build output");
+  const buildTools = MSBuildTools.findAvailableVersion(arch, false);
+  await spawnAsync(
+    path.join(buildTools.msbuildPath(), "msbuild.exe"),
+    [solution, "/t:Clean", `/p:Configuration=${configuration}`, `/p:Platform=${arch}`],
+    { stdio: "inherit" },
+  );
 }
 
 export function parseArch(arch = deviceArchitecture()): BuildArch {

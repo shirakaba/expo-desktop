@@ -21,7 +21,7 @@ export type Options = {
    */
   configuration?: string;
   /**
-   * Should start the bundler dev server.
+   * Whether Expo should launch both Metro and its dev interface.
    * This maps to 'packager' in rnc-cli.
    */
   bundler?: boolean;
@@ -51,7 +51,7 @@ export type Options = {
   | "port"
   // projectRoot.
   | "root"
-  // Implicitly enabled when `options.bundler: true`.
+  // Always false. Expo owns the Metro process and developer interface.
   | "packager"
   // Optional.
   | "arch"
@@ -59,8 +59,8 @@ export type Options = {
   | "emulator"
   | "device"
   | "target"
-  // Implicitly enabled when `configuration: "Release"`.
-  // Enables Bundle configuration, i.e. ReleaseBundle/DebugBundle rather than Release/Debug
+  // Refers to the legacy DebugBundle and ReleaseBundle configurations -
+  // however, our app template only declares Debug and Release.
   | "bundle"
   // Supported, but we represent it as a defined boolean at this stage
   | "launch"
@@ -92,17 +92,19 @@ export type WindowsDevice = {
 };
 
 export type BuildProps = {
-  /** Root to the macOS native project. */
+  /** Root of the Windows native project. */
   projectRoot: string;
   /** The target is always the host Windows device. */
   isSimulator: false;
   windowsProject: ProjectInfo;
-  /** macOS has exactly one target device: the host. */
+  /** Windows currently has exactly one target device: the host. */
   device: WindowsDevice;
   osType: "Windows";
+  /** Native build configuration. */
+  configuration: "Debug" | "Release";
   /** Disable the initial bundling from the native script. */
   shouldSkipInitialBundling: boolean;
-  /** Should use derived data for builds. */
+  /** True: uses build cache for builds. False: clears the cache before building. */
   buildCache: boolean;
   buildCacheProvider?: BuildCacheProvider | undefined;
 

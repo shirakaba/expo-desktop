@@ -8,7 +8,7 @@ import type { WindowsDevice } from "./WindowsBuild.types.ts";
 import { CommandError } from "../../common/expo/error.ts";
 import * as Log from "../../common/expo/log.ts";
 
-/** Launch an existing Windows executable on the host Windows device. */
+/** Launch an existing unpackaged Windows executable on the host Windows device. */
 export async function launchAppAsync(
   binaryPath: string,
   _manager: DevServerManager,
@@ -18,7 +18,7 @@ export async function launchAppAsync(
     shouldStartBundler: boolean;
   },
 ) {
-  Log.log(chalk.gray`› Installing ${binaryPath}`);
+  Log.log(chalk.gray`› Launching ${binaryPath}`);
   if (props.device.osType !== "Windows") {
     throw new Error("Unexpected non-Windows device while launching a Windows app.");
   }
