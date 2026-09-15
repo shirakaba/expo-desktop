@@ -76,6 +76,10 @@ export type Options = {
   | "directDebugging"
   // Deprecated in the first place
   | "remoteDebugging"
+  // I don't want people deviating from the template, as it'd lead to problems
+  // with the prebuild.
+  | "sln"
+  | "proj"
 >;
 
 export type ProjectInfo = {

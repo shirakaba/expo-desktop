@@ -10,9 +10,7 @@ export async function resolveOptionsAsync(
   projectRoot: string,
   options: Options,
 ): Promise<BuildProps> {
-  // FIXME: broken slop
-  const windowsProject = await resolveWindowsProject(projectRoot, "MyApp");
-
+  const windowsProject = await resolveWindowsProject(projectRoot);
   const bundlerProps = await resolveBundlerPropsAsync(projectRoot, options);
 
   // Use the configuration or `Debug` if none is provided.
@@ -76,8 +74,10 @@ export async function resolveOptionsAsync(
       // You can't launch unless you deploy.
       deploy: options.launch,
       deployFromLayout: false,
-      ...(options.sln ? { sln: options.sln } : {}),
-      ...(options.proj ? { proj: options.proj } : {}),
+      // ...(options.sln ? { sln: options.sln } : {}),
+      // ...(options.proj ? { proj: options.proj } : {}),
+      sln: windowsProject.solution,
+      proj: windowsProject.project,
       ...(options.msbuildprops ? { msbuildprops: options.msbuildprops } : {}),
       ...(options.buildLogDirectory ? { buildLogDirectory: options.buildLogDirectory } : {}),
       ...(options.info ? { info: options.info } : {}),

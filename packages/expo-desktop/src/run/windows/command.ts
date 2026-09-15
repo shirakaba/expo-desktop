@@ -25,8 +25,8 @@ export async function run(args: {
   logging: boolean | undefined;
   "no-launch": boolean | undefined;
   "no-autolink": boolean | undefined;
-  sln?: string | undefined;
-  proj?: string | undefined;
+  // sln?: string | undefined;
+  // proj?: string | undefined;
   msbuildprops?: string | undefined;
   "direct-debugging"?: string | undefined;
   "no-telemetry": boolean | undefined;
@@ -43,8 +43,8 @@ export async function run(args: {
     ...(args.logging ? { logging: args.logging } : {}),
     launch: !args["no-launch"],
     autolink: !args["no-autolink"],
-    ...(args.sln ? { sln: args.sln } : {}),
-    ...(args.proj ? { proj: args.proj } : {}),
+    // ...(args.sln ? { sln: args.sln } : {}),
+    // ...(args.proj ? { proj: args.proj } : {}),
     ...(args.msbuildprops ? { msbuildprops: args.msbuildprops } : {}),
     ...(args["direct-debugging"] !== undefined
       ? { directDebugging: args["direct-debugging"] }

@@ -254,14 +254,14 @@ const main = defineCommand({
               type: "boolean",
               description: "Skip autolinking.",
             },
-            sln: {
-              type: "string",
-              description: "Solution file to build",
-            },
-            proj: {
-              type: "string",
-              description: "Vcxproj to build",
-            },
+            // sln: {
+            //   type: "string",
+            //   description: "Solution file to build",
+            // },
+            // proj: {
+            //   type: "string",
+            //   description: "Vcxproj to build",
+            // },
             msbuildprops: {
               type: "string",
               description:
