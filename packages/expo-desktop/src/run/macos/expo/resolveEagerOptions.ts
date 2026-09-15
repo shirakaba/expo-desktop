@@ -28,6 +28,7 @@ export type EagerOptions = {
   verbose: boolean;
 };
 
+// TODO: make an equivalent of this function for Windows
 export function resolveEagerOptionsAsync(
   projectRoot: string,
   {
@@ -46,10 +47,12 @@ export function resolveEagerOptionsAsync(
     resetCache?: boolean;
   },
 ): EagerOptions {
+  // TODO(windows): add isWindowsUsingHermes check
   minify ??= !isAppleUsingHermes(projectRoot, platform);
 
   let destination: string | undefined;
 
+  // TODO(windows): fix paths for windows
   if (!assetsDest) {
     destination ??= getTemporaryPath();
     assetsDest = path.join(destination, "assets");
@@ -59,6 +62,7 @@ export function resolveEagerOptionsAsync(
     destination ??= getTemporaryPath();
     // Apple platforms use main.jsbundle. This includes macOS, whose native
     // build script invokes the same export:embed command as iOS.
+    // TODO(windows): For Windows, it's index.windows.bundle.
     bundleOutput = path.join(destination, "main.jsbundle");
   }
 
@@ -68,6 +72,7 @@ export function resolveEagerOptionsAsync(
     bundleOutput,
     dev,
     eager: true,
+    // TODO(windows): more platform-specific stuff
     entryFile: resolveEntryPoint(projectRoot, { platform }),
     minify,
     platform,
