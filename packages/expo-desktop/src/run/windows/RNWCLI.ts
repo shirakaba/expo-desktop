@@ -1,4 +1,5 @@
 import type { Config, CommandOption } from "@react-native-community/cli-types";
+import type { AutoLinkOptions } from "@react-native-windows/cli/lib-commonjs/commands/autolinkWindows/autolinkWindowsOptions.d.ts";
 import type {
   BuildArch,
   RunWindowsOptions,
@@ -18,13 +19,24 @@ const require = createRequire(import.meta.url);
  *
  */
 export async function runWindows(config: Config, options: RunWindowsOptions) {
-  const { func } = getRunWindowsCommand();
+  await runRNWCommand("run-windows", config, options);
+}
+
+export async function autolinkWindows(config: Config, options: AutoLinkOptions) {
+  await runRNWCommand("autolink-windows", config, options);
+}
+
+async function runRNWCommand(
+  commandName: "autolink-windows" | "run-windows",
+  config: Config,
+  options: AutoLinkOptions | RunWindowsOptions,
+) {
+  const { func } = getRNWCommand(commandName);
   const previousExitCode = process.exitCode;
   let exitCode: typeof process.exitCode;
 
   // The RNW command catches its own errors and reports them through exitCode.
-  // Isolate each of our two invocations so a failed build cannot fall through
-  // into dev-server startup and deployment.
+  // Isolate each invocation so a failure cannot fall through to the next phase.
   process.exitCode = undefined;
   try {
     await func([], config, options);
@@ -36,23 +48,23 @@ export async function runWindows(config: Config, options: RunWindowsOptions) {
   if (exitCode !== undefined && exitCode !== 0) {
     throw new CommandError(
       "RNW_CLI",
-      `React Native Windows CLI failed with exit code ${exitCode}.`,
+      `React Native Windows CLI command '${commandName}' failed with exit code ${exitCode}.`,
     );
   }
 }
 
-function getRunWindowsCommand() {
+function getRNWCommand(commandName: "autolink-windows" | "run-windows") {
   const runWindowsModule = requireRNWCLI();
 
-  const runWindowsCommand = runWindowsModule.commands.find(({ name }) => name === "run-windows");
-  if (!runWindowsCommand) {
+  const command = runWindowsModule.commands.find(({ name }) => name === commandName);
+  if (!command) {
     throw new CommandError(
-      "NO_RNW_CLI_RUN_WINDOWS_COMMAND",
-      "Unable to find the 'run-windows' command inside @react-native-windows/cli.",
+      "NO_RNW_CLI_COMMAND",
+      `Unable to find the '${commandName}' command inside @react-native-windows/cli.`,
     );
   }
 
-  return runWindowsCommand;
+  return command;
 }
 
 function requireRNWCLI(): typeof import("@react-native-windows/cli") {
@@ -115,7 +127,7 @@ export async function cleanAsync({
 }
 
 export function parseArch(arch = deviceArchitecture()): BuildArch {
-  const { options } = getRunWindowsCommand();
+  const { options } = getRNWCommand("run-windows");
   const archOption = options?.find(({ name }) => name === "--arch [string]");
   if (!archOption) {
     throw new Error("Unable to find '--arch [string]' option");

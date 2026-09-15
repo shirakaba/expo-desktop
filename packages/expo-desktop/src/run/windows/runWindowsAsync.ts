@@ -12,7 +12,7 @@ import { loadEnvFiles, setNodeEnv } from "../../common/node-env.ts";
 import { loadConfigAsync } from "../load-config.ts";
 import { ensureNativeProjectAsync } from "./ensureNativeProject.ts";
 import { resolveOptionsAsync } from "./options/resolveOptions.ts";
-import { cleanAsync, runWindows } from "./RNWCLI.ts";
+import { autolinkWindows, cleanAsync, runWindows } from "./RNWCLI.ts";
 import {
   exportWindowsBuildArtifactsAsync,
   resolveWindowsBuildArtifactsAsync,
@@ -39,6 +39,20 @@ export async function runWindowsAsync(projectRoot: string, options: Options) {
 
   // Calls the same underlying function as `rnc-cli config` does.
   const rncliConfig = await loadConfigAsync({ projectRoot, selectedPlatform: "windows" });
+
+  // Autolinking prepares the native project independently of whether the app
+  // will be built now or restored from --binary.
+  if (props.runWindowsOptions.autolink) {
+    await autolinkWindows(rncliConfig, {
+      check: false,
+      ...(props.runWindowsOptions.logging !== undefined
+        ? { logging: props.runWindowsOptions.logging }
+        : {}),
+      ...(props.runWindowsOptions.telemetry !== undefined
+        ? { telemetry: props.runWindowsOptions.telemetry }
+        : {}),
+    });
+  }
 
   const windowsRoot = path.resolve(projectRoot, "windows");
 
@@ -73,6 +87,8 @@ export async function runWindowsAsync(projectRoot: string, options: Options) {
       ...props.runWindowsOptions,
       // Expo starts Metro after the native build completes.
       packager: false,
+      // Autolinking already ran on the common path above.
+      autolink: false,
       // Deployment and launch happen after Expo's dev server is ready.
       deploy: false,
       launch: false,
@@ -124,7 +140,8 @@ export async function runWindowsAsync(projectRoot: string, options: Options) {
     // Expo owns Metro and the developer interface for the lifetime of this
     // command.
     packager: false,
-    // The first RNW invocation already performed these steps.
+    // Autolinking ran before the build/restore branch, and any native build
+    // completed before the dev server started.
     autolink: false,
     build: false,
   });
