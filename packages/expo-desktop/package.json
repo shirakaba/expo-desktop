@@ -26,7 +26,8 @@
     "expo-desktop": "build/cli.js"
   },
   "files": [
-    "build"
+    "build",
+    "scripts"
   ],
   "type": "module",
   "exports": {
@@ -46,9 +47,15 @@
     "@expo/config": "catalog:expo-latest",
     "@expo/config-plugins": "catalog:expo-latest",
     "@expo/env": "catalog:expo-latest",
+    "@expo/fingerprint": "catalog:expo-latest",
     "@expo/json-file": "catalog:expo-latest",
+    "@expo/metro": "catalog:expo-latest",
     "@expo/package-manager": "catalog:expo-latest",
+    "@expo/plist": "catalog:expo-latest",
+    "@expo/spawn-async": "catalog:expo-latest",
+    "@expo/xcpretty": "catalog:expo-latest",
     "arktype": "^2.2.0",
+    "bplist-parser": "^0.5.0",
     "chalk": "^4.1.2",
     "citty": "^0.2.2",
     "debug": "^4.4.3",

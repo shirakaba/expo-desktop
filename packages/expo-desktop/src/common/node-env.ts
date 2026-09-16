@@ -6,9 +6,9 @@ import * as process from "node:process";
  * lots of tools use this to determine if they should run in a dev mode.
  */
 export function setNodeEnv(mode: "development" | "production") {
-  process.env.NODE_ENV = process.env.NODE_ENV || mode;
+  process.env.NODE_ENV = mode;
   process.env.BABEL_ENV = process.env.BABEL_ENV || process.env.NODE_ENV;
-  (globalThis as unknown as { __DEV__: boolean }).__DEV__ = process.env.NODE_ENV !== "production";
+  (globalThis as unknown as { __DEV__: boolean }).__DEV__ = mode === "development";
 }
 
 /**

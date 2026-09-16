@@ -36,6 +36,19 @@ target 'HelloWorld-macOS' do
   post_install do |installer|
     react_native_post_install(installer)
 
+    # react_native_post_install updates pod targets, but not the resource-bundle
+    # targets that CocoaPods creates for privacy manifests. Xcode 27 no longer
+    # supports building those targets with macOS 11 as their deployment target.
+    installer.pods_project.targets.each do |target|
+      target.build_configurations.each do |config|
+        current_deployment_target = config.build_settings['MACOSX_DEPLOYMENT_TARGET']
+        config.build_settings['MACOSX_DEPLOYMENT_TARGET'] = [
+          min_macos_version_supported.to_f,
+          current_deployment_target ? current_deployment_target.to_f : 0,
+        ].max.to_s
+      end
+    end
+
     # Fix for Xcode 26.4 build error
     # https://stackoverflow.com/a/79921410/5951226
     installer.pods_project.targets.each do |target|

@@ -1,8 +1,18 @@
 import GetEnv from "getenv";
 
-const { boolish } = GetEnv;
+const { boolish, int } = GetEnv;
 
 class Env {
+  /** The React Native Metro port that's baked into React Native scripts and tools. */
+  get RCT_METRO_PORT() {
+    return int("RCT_METRO_PORT", 0);
+  }
+
+  /** Enable profiling metrics */
+  get EXPO_PROFILE() {
+    return boolish("EXPO_PROFILE", false);
+  }
+
   /** Enable debug logging */
   get EXPO_DEBUG() {
     return boolish("EXPO_DEBUG", false);
@@ -14,6 +24,10 @@ class Env {
   /** Is running in non-interactive CI mode */
   get CI() {
     return boolish("CI", false);
+  }
+  /** Used internally to enable E2E utilities. This behavior is not stable to external users. */
+  get __EXPO_E2E_TEST(): boolean {
+    return boolish("__EXPO_E2E_TEST", false);
   }
   /** Disable all API caches. Does not disable bundler caches. */
   get EXPO_NO_CACHE() {

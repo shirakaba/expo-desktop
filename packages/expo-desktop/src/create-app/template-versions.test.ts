@@ -52,7 +52,7 @@ test("fetches template versions from npm", async () => {
   });
   vi.stubGlobal("fetch", fetch);
 
-  await expect(getTemplateVersions("expo-desktop-blank-typescript")).resolves.toStrictEqual(
+  await expect(getTemplateVersions("expo-desktop-template-bare-minimum")).resolves.toStrictEqual(
     expectedTemplateVersions,
   );
   expect(fetch).toHaveBeenCalledOnce();

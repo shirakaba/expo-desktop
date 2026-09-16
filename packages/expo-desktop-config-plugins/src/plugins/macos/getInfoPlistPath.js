@@ -1,11 +1,12 @@
 const Xcodeproj = require("./Xcodeproj");
-const Target = require("@expo/config-plugins/build/ios/Target");
+const Target = require("./Target");
 
 /**
  * Find the Info.plist path linked to a specific build configuration.
  *
  * @param {string} projectRoot
  * @param {'ios' | 'macos'} platform
+ * @param {{ targetName?: string; buildConfiguration?: string | 'Release' | 'Debug' }} [args]
  */
 function getInfoPlistPathFromPbxproj(
   projectRootOrProject,

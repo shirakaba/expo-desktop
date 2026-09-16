@@ -3,6 +3,7 @@
 import { type ArgsDef, defineCommand, type ParsedArgs, runMain } from "citty";
 import { default as kleur } from "kleur";
 import { dim, grey } from "kleur/colors";
+import process from "node:process";
 
 import packageJson from "../package.json" with { type: "json" };
 
@@ -118,6 +119,182 @@ const main = defineCommand({
         parseNoArg(args, "no-install");
 
         (await import("./prebuild/command.ts")).prebuild(args);
+      },
+    }),
+    run: defineCommand({
+      meta: { name: "run", description: "Run the macOS or Windows app binary locally" },
+      subCommands: {
+        macos: defineCommand({
+          meta: { name: "macos", description: "Run the macOS app binary locally" },
+          args: {
+            "project-root": {
+              type: "positional",
+              required: false,
+              description: `The ${kleur.bold("project root")} for the app in alphanumeric format ${grey("(Example: 'MyApp123')")}`,
+            },
+            "unstable-rebundle": {
+              type: "boolean",
+              description:
+                "An undocumented switch for re-bundling the app and assets for a build to try different JS code in release builds. Also updates the app.json.",
+              default: false,
+              hidden: true,
+            },
+            "no-build-cache": {
+              type: "boolean",
+              description: "Clear the native derived data before building",
+            },
+            "no-install": {
+              type: "boolean",
+              description: "Skip installing npm packages and CocoaPods",
+            },
+            "no-bundler": {
+              type: "boolean",
+              description: "Skip starting the Metro bundler",
+            },
+            "no-background": {
+              type: "boolean",
+              description: "Launch the macOS app in the foreground",
+            },
+            "no-single-instance": {
+              type: "boolean",
+              description: "Launch the macOS app as a new instance",
+            },
+            scheme: {
+              type: "string",
+              valueHint: "scheme",
+              description: "Scheme to build.",
+            },
+            binary: {
+              type: "string",
+              valueHint: "path",
+              description: "Path to existing .app to open.",
+            },
+            output: {
+              type: "string",
+              valueHint: "path",
+              description: "Directory to copy the built .app bundle to.",
+            },
+            configuration: {
+              type: "string",
+              valueHint: "configuration",
+              description: "Xcode configuration to use. Debug or Release.",
+              default: "Debug",
+            },
+            port: {
+              type: "string",
+              valueHint: "port",
+              description: "Port to start the Metro bundler on.",
+            },
+          },
+          async run({ args }) {
+            parseNoArg(args, "no-build-cache");
+            parseNoArg(args, "no-install");
+            parseNoArg(args, "no-bundler");
+            parseNoArg(args, "no-background");
+            parseNoArg(args, "no-single-instance");
+
+            (await import("./run/macos/command.ts")).run(args);
+          },
+        }),
+
+        windows: defineCommand({
+          meta: { name: "windows", description: "Run the Windows app binary locally" },
+          args: {
+            "project-root": {
+              type: "positional",
+              required: false,
+              description: `The ${kleur.bold("project root")} for the app in alphanumeric format ${grey("(Example: 'MyApp123')")}`,
+            },
+            "no-build-cache": {
+              type: "boolean",
+              description: "Clear the native build output before building",
+            },
+            "no-install": {
+              type: "boolean",
+              description: "Skip installing npm packages",
+            },
+            "no-bundler": {
+              type: "boolean",
+              description: "Skip starting the Metro bundler",
+            },
+            binary: {
+              type: "string",
+              valueHint: "path",
+              description:
+                "Windows build-output directory to restore instead of building (or a --output directory).",
+            },
+            output: {
+              type: "string",
+              valueHint: "path",
+              description: "Directory to export the Windows build artifacts to.",
+            },
+            configuration: {
+              type: "string",
+              valueHint: "configuration",
+              description: "Build configuration to use. Debug or Release.",
+              default: "Debug",
+            },
+            port: {
+              type: "string",
+              valueHint: "port",
+              description: "Port to start the Metro bundler on.",
+            },
+            arch: {
+              type: "string",
+              valueHint: "arch",
+              description: "The build architecture (ARM64, x86, x64)",
+            },
+            singleproc: {
+              type: "boolean",
+              description: "Opt out of multi-proc builds",
+            },
+            logging: {
+              type: "boolean",
+              description: "Enables logging",
+            },
+            "no-launch": {
+              type: "boolean",
+              description: "Skip launching the app after building it.",
+            },
+            "no-autolink": {
+              type: "boolean",
+              description: "Skip autolinking.",
+            },
+            // sln: {
+            //   type: "string",
+            //   description: "Solution file to build",
+            // },
+            // proj: {
+            //   type: "string",
+            //   description: "Vcxproj to build",
+            // },
+            msbuildprops: {
+              type: "string",
+              description:
+                "Comma separated props to pass to msbuild, eg: prop1=value1,prop2=value2",
+            },
+            "direct-debugging": {
+              type: "string",
+              valueHint: "port",
+              description: "Enable direct debugging on specified port",
+            },
+            "no-telemetry": {
+              type: "boolean",
+              description:
+                "Disables sending telemetry that allows analysis of usage and failures of the react-native-windows CLI",
+            },
+          },
+          async run({ args }) {
+            parseNoArg(args, "no-build-cache");
+            parseNoArg(args, "no-install");
+            parseNoArg(args, "no-bundler");
+            parseNoArg(args, "no-launch");
+            parseNoArg(args, "no-autolink");
+            parseNoArg(args, "no-telemetry");
+
+            (await import("./run/windows/command.ts")).run(args);
+          },
+        }),
       },
     }),
   },

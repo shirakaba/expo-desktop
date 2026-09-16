@@ -26,8 +26,10 @@ const withWindowSize = require("./plugins/macos/withWindowSize");
 
 const MacOSConfig = {
   Entitlements: require("./plugins/macos/Entitlements"),
+  getInfoPlistPath: require("./plugins/macos/getInfoPlistPath"),
   Name: require("./plugins/macos/Name"),
   Paths: require("./plugins/macos/Paths"),
+  Scheme: require("./plugins/macos/Scheme"),
   XcodeUtils: require("./plugins/macos/Xcodeproj"),
 };
 

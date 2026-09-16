@@ -1,0 +1,91 @@
+import type { Options, BuildProps } from "../WindowsBuild.types.ts";
+
+import { CommandError } from "../../../common/expo/error.ts";
+import { resolveBundlerPropsAsync } from "../../../common/expo/resolve-bundler-props.ts";
+import { parseArch, parseDirectDebuggingPort } from "../RNWCLI.ts";
+import { resolveWindowsProject } from "./resolveWindowsProject.ts";
+
+/** Resolve arguments for the `run windows` command. */
+export async function resolveOptionsAsync(
+  projectRoot: string,
+  options: Options,
+): Promise<BuildProps> {
+  const windowsProject = await resolveWindowsProject(projectRoot);
+  const bundlerProps = await resolveBundlerPropsAsync(projectRoot, options);
+
+  // Use the configuration or `Debug` if none is provided.
+  const configuration = options.configuration || "Debug";
+  if (configuration !== "Debug" && configuration !== "Release") {
+    throw new CommandError(
+      "WINDOWS_CONFIGURATION",
+      `Unsupported Windows configuration \`${configuration}\`. Use \`Debug\` or \`Release\`.`,
+    );
+  }
+
+  // Windows has no emulator or device picker. The host is the only possible target.
+  const device = {
+    name: "Windows host",
+    udid: "host",
+    osType: "Windows" as const,
+  };
+
+  // This optimization skips resetting the Metro cache needlessly.
+  // The cache is reset in `../node_modules/react-native/scripts/react-native-xcode.sh` when the
+  // project is running in Debug and built onto a physical device. It seems that this is done because
+  // the script is run from Xcode and unaware of the CLI instance.
+  const shouldSkipInitialBundling = configuration === "Debug";
+
+  return {
+    ...bundlerProps,
+    shouldStartBundler: options.configuration === "Debug" || bundlerProps.shouldStartBundler,
+    projectRoot,
+    isSimulator: false,
+    windowsProject,
+    device,
+    osType: "Windows",
+    configuration,
+    shouldSkipInitialBundling,
+    buildCache: options.buildCache !== false,
+
+    runWindowsOptions: {
+      // This sets <UseBundle>true</UseBundle> in Bundle.props.
+      release: configuration === "Release",
+      root: projectRoot,
+      arch: parseArch(projectRoot, options.arch),
+      singleproc: !!options.singleproc,
+
+      // TODO: support Windows Phone!
+      emulator: false,
+      device: false,
+      // target: undefined,
+
+      // remoteDebugging: undefined,
+      ...(options.logging ? { logging: options.logging } : {}),
+      // Expo starts Metro and its developer interface between RNW's build and
+      // deploy phases, so RNW must never spawn its own packager process.
+      packager: false,
+      // The RNW app template declares only "Debug" and "Release" configurations
+      // in the vcxproj. `--bundle` selects the legacy "DebugBundle" /
+      // "ReleaseBundle" configurations, so enabling it is pointless.
+      bundle: false,
+      launch: options.launch,
+      ...(options.autolink ? { autolink: options.autolink } : {}),
+      build: !options.binary,
+      // You can't launch unless you deploy.
+      deploy: options.launch,
+      deployFromLayout: false,
+      // ...(options.sln ? { sln: options.sln } : {}),
+      // ...(options.proj ? { proj: options.proj } : {}),
+      sln: windowsProject.solution,
+      proj: windowsProject.project,
+      ...(options.msbuildprops ? { msbuildprops: options.msbuildprops } : {}),
+      ...(options.buildLogDirectory ? { buildLogDirectory: options.buildLogDirectory } : {}),
+      ...(options.info ? { info: options.info } : {}),
+      // TODO: check if we ought to validate this port in advance
+      ...(options.directDebugging
+        ? { directDebugging: parseDirectDebuggingPort(options.directDebugging) }
+        : {}),
+      ...(options.telemetry ? { telemetry: options.telemetry } : {}),
+    },
+  };
+}
