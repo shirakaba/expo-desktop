@@ -1,5 +1,11 @@
 # expo-desktop-config-plugins
 
+## 1.2.0-beta.1
+
+### Patch Changes
+
+- Expose a couple of Xcode utilities for expo-desktop to use, and make `withExpoXcodeBuildPhase()` set the entry JS file correctly.
+
 ## 1.2.0-beta.0
 
 ### Minor Changes

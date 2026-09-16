@@ -1,5 +1,13 @@
 # expo-desktop
 
+## 1.0.0-beta.6
+
+### Patch Changes
+
+- Initial implementation of the `run macos` and `run windows` commands.
+- Updated dependencies
+  - expo-desktop-config-plugins@1.2.0-beta.1
+
 ## 1.0.0-beta.5
 
 ### Patch Changes

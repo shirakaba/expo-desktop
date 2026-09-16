@@ -1,5 +1,11 @@
 # expo-desktop-template-bare-minimum
 
+## 54.81.1-beta.6
+
+### Patch Changes
+
+- Update the Podfile to raise the the minimum deployment target to support Xcode 27 (required for macOS 27).
+
 ## 54.81.1-beta.5
 
 ### Patch Changes
