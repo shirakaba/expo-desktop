@@ -11,6 +11,7 @@ import { startBundlerAsync } from "../../common/expo/start-bundler.ts";
 import { loadEnvFiles, setNodeEnv } from "../../common/node-env.ts";
 import { loadConfigAsync } from "../load-config.ts";
 import { ensureNativeProjectAsync } from "./ensureNativeProject.ts";
+import { waitForExistingInstancesToTerminateAsync } from "./launchApp.ts";
 import { resolveOptionsAsync } from "./options/resolveOptions.ts";
 import { autolinkWindows, cleanAsync, runWindows } from "./RNWCLI.ts";
 import {
@@ -135,6 +136,10 @@ export async function runWindowsAsync(projectRoot: string, options: Options) {
 
   // Deploy and optionally launch the already-built package on the Windows
   // host.
+  if (props.runWindowsOptions.launch) {
+    await waitForExistingInstancesToTerminateAsync(path.parse(props.windowsProject.project).name);
+  }
+
   await runWindows(projectRoot, rncliConfig, {
     ...props.runWindowsOptions,
     // Expo owns Metro and the developer interface for the lifetime of this
