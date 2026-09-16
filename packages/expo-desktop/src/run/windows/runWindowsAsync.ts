@@ -121,18 +121,27 @@ export async function runWindowsAsync(projectRoot: string, options: Options) {
     return;
   }
 
+  // Release builds load the bundle embedded by RNW's Release configuration.
+  // They do not need a persistent Metro server after the native build.
+  let shouldStartBundler = mode === "development" && props.shouldStartBundler;
+
   // Ensure the port hasn't become busy during the build.
-  if (props.shouldStartBundler && !(await ensurePortAvailabilityAsync(projectRoot, props))) {
+  if (shouldStartBundler && !(await ensurePortAvailabilityAsync(projectRoot, props))) {
+    shouldStartBundler = false;
     props.shouldStartBundler = false;
   }
 
   // Start Expo's Metro server and, for interactive runs, its developer
-  // interface before RNW launches the app on the host device.
-  const manager = await startBundlerAsync(projectRoot, {
-    port: props.port,
-    mode,
-    headless: !props.shouldStartBundler,
-  });
+  // interface before RNW launches the app on the host device. Release builds
+  // use their embedded bundle, so there is no server to start in that mode.
+  const manager =
+    mode === "development"
+      ? await startBundlerAsync(projectRoot, {
+          port: props.port,
+          mode,
+          headless: !shouldStartBundler,
+        })
+      : null;
 
   // Deploy and optionally launch the already-built package on the Windows
   // host.
@@ -152,9 +161,9 @@ export async function runWindowsAsync(projectRoot: string, options: Options) {
   });
 
   // Log the location of the JS logs for the host device.
-  if (props.shouldStartBundler) {
+  if (shouldStartBundler) {
     logProjectLogsLocation();
-  } else {
+  } else if (manager) {
     await manager.stopAsync();
   }
 
