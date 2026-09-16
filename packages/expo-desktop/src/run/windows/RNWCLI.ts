@@ -1,19 +1,22 @@
-import type { Config, CommandOption } from "@react-native-community/cli-types";
+import type { Config } from "@react-native-community/cli-types";
 import type { AutoLinkOptions } from "@react-native-windows/cli/lib-commonjs/commands/autolinkWindows/autolinkWindowsOptions.d.ts";
 import type {
   BuildArch,
   RunWindowsOptions,
 } from "@react-native-windows/cli/lib-commonjs/commands/runWindows/runWindowsOptions.d.ts";
+import type MSBuildToolsModule from "@react-native-windows/cli/lib-commonjs/utils/msbuildtools.d.ts";
 
 import spawnAsync from "@expo/spawn-async";
+import { existsSync } from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
-
-import type { BuildProps } from "./WindowsBuild.types.ts";
+import process from "node:process";
 
 import { CommandError } from "../../common/expo/error.ts";
 import * as Log from "../../common/expo/log.ts";
+
 const require = createRequire(import.meta.url);
+const configuredMSBuildTools = new WeakSet<(typeof MSBuildToolsModule)["default"]>();
 
 /**
  *
@@ -77,6 +80,7 @@ function requireRNWCLI(projectRoot: string): typeof import("@react-native-window
 
   try {
     const rnwCli = projectRequire("@react-native-windows/cli");
+    configureRNWMSBuildTools(projectRoot, projectRequire);
     return rnwCli;
   } catch (error) {
     if (!(error instanceof Error) || !("code" in error) || error.code !== "MODULE_NOT_FOUND") {
@@ -88,6 +92,38 @@ function requireRNWCLI(projectRoot: string): typeof import("@react-native-window
       "Unable to find @react-native-windows/cli. Please make sure you have it (or react-native-windows) installed.",
     );
   }
+}
+
+/**
+ * RNW 0.81's MSBuild helper always returns the x64 MSBuild directory. On an
+ * ARM64 host that launches an emulated x64 MSBuild process, which makes the
+ * C++ targets select the 32-bit HostX86 compiler and can exhaust its PCH
+ * address space. Keep the RNW helper, but redirect its selected installation
+ * to the native ARM64 MSBuild directory when it exists.
+ */
+function configureRNWMSBuildTools(
+  projectRoot: string,
+  projectRequire = createRequire(path.join(projectRoot, "package.json")),
+) {
+  if (process.arch !== "arm64") {
+    return;
+  }
+
+  const rnwCliPath = projectRequire.resolve("@react-native-windows/cli");
+  const msbuildToolsPath = path.join(path.dirname(rnwCliPath), "utils", "msbuildtools.js");
+  const { default: MSBuildTools } = projectRequire(msbuildToolsPath) as typeof MSBuildToolsModule;
+  if (configuredMSBuildTools.has(MSBuildTools)) {
+    return;
+  }
+
+  configuredMSBuildTools.add(MSBuildTools);
+  const originalMSBuildPath = MSBuildTools.prototype.msbuildPath;
+
+  MSBuildTools.prototype.msbuildPath = function () {
+    const x64Path = originalMSBuildPath.call(this);
+    const arm64Path = path.join(path.dirname(x64Path), "arm64");
+    return existsSync(path.join(arm64Path, "MSBuild.exe")) ? arm64Path : x64Path;
+  };
 }
 
 export async function cleanAsync({
@@ -112,6 +148,8 @@ export async function cleanAsync({
       "Could not find the React Native Windows CLI in the project. Install `react-native-windows` before running the Windows app.",
     );
   }
+
+  configureRNWMSBuildTools(projectRoot);
 
   const msbuildToolsPath = path.join(path.dirname(rnwCliPath), "utils", "msbuildtools.js");
   const { default: MSBuildTools } = require(msbuildToolsPath) as {
