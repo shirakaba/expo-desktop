@@ -210,7 +210,7 @@ export async function resolveMetroPortAsync(
   const requestedMetroPort = isValidPort(metroPort) ? metroPort : 0;
   const resolvedPort = await _resolvePortAsync(projectRoot, {
     ...(reuseExistingPort ? { reuseExistingPort } : {}),
-    ...(defaultPort ? { defaultPort } : {}),
+    ...(defaultPort !== undefined ? { defaultPort } : {}),
     preferredPort: requestedMetroPort || fallbackPort || 8081,
     isPreferredPortExplicit: !!requestedMetroPort,
   });

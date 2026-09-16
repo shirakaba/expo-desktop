@@ -1,5 +1,7 @@
 import net from "node:net";
 
+import { getPID } from "./get-running-process.ts";
+
 async function testHostPortAsync(port: number, host: string | null): Promise<boolean> {
   return new Promise((resolve) => {
     const server = net.createServer();
@@ -24,6 +26,14 @@ export async function testPortAsync(port: number, hostnames?: (string | null)[])
       return false;
     }
   }
+
+  // On Windows, a wildcard IPv6 bind can succeed while an existing IPv4
+  // listener still owns the same port. Consult the OS listener table after
+  // the bind probe so loopback and wildcard listeners are both detected.
+  if (process.platform === "win32" && (await getPID(port)) !== null) {
+    return false;
+  }
+
   return true;
 }
 

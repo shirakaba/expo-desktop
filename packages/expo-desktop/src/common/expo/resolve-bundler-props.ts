@@ -37,6 +37,12 @@ export async function resolveBundlerPropsAsync(
   if (!port) {
     // Use a valid user-provided port, or the default port
     port = isValidPort(parsedPort) ? parsedPort : 8081;
+    if (shouldStartBundler) {
+      // resolveMetroPortAsync returns null when it finds this project's Metro server.
+      // Pass that server's port to the React Native Windows CLI through RCT_METRO_PORT.
+      // --no-bundler must leave RCT_METRO_PORT unchanged.
+      process.env.RCT_METRO_PORT = String(port);
+    }
   }
   Log.debug(`Resolved port: ${port}, start dev server: ${options.bundler}`);
 
