@@ -3,8 +3,10 @@ import chalk from "chalk";
 import { env } from "./env.ts";
 import { CommandError } from "./error.ts";
 import { testPortAsync, freePortAsync } from "./freeport.ts";
+import { getRunningProcess } from "./get-running-process.ts";
 import { isInteractive } from "./interactive.ts";
 import * as Log from "./log.ts";
+import { confirmAsync } from "./prompts-cli.ts";
 
 /** Whether the port is in the usable range. Port 0 is valid and means "pick any available port". */
 export function isValidPort(port: number | null | undefined): port is number {
@@ -55,8 +57,6 @@ function isRestrictedPort(port: number) {
 }
 
 async function isBusyPortRunningSameProcessAsync(projectRoot: string, { port }: { port: number }) {
-  const { getRunningProcess } =
-    require("./get-running-process") as typeof import("./get-running-process.ts");
   const runningProcess = isRestrictedPort(port) ? null : await getRunningProcess(port);
   if (runningProcess) {
     if (runningProcess.directory === projectRoot) {
@@ -97,8 +97,6 @@ export async function choosePortAsync(
       ? `Admin permissions are required to run a server on a port below 1024`
       : `Port ${chalk.bold(defaultPort)} is`;
 
-    const { getRunningProcess } =
-      require("./get-running-process") as typeof import("./get-running-process.ts");
     const runningProcess = isRestricted ? null : await getRunningProcess(defaultPort);
 
     if (runningProcess) {
@@ -131,7 +129,6 @@ export async function choosePortAsync(
       }
     }
 
-    const { confirmAsync } = require("./prompts-cli") as typeof import("./prompts-cli.ts");
     const change = await confirmAsync({
       message: `Use port ${port} instead?`,
       initial: true,
