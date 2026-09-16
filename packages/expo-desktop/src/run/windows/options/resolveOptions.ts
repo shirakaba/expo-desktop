@@ -51,7 +51,7 @@ export async function resolveOptionsAsync(
       // This sets <UseBundle>true</UseBundle> in Bundle.props.
       release: configuration === "Release",
       root: projectRoot,
-      arch: parseArch(options.arch),
+      arch: parseArch(projectRoot, options.arch),
       singleproc: !!options.singleproc,
 
       // TODO: support Windows Phone!

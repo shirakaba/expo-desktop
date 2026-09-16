@@ -43,7 +43,7 @@ export async function runWindowsAsync(projectRoot: string, options: Options) {
   // Autolinking prepares the native project independently of whether the app
   // will be built now or restored from --binary.
   if (props.runWindowsOptions.autolink) {
-    await autolinkWindows(rncliConfig, {
+    await autolinkWindows(projectRoot, rncliConfig, {
       check: false,
       ...(props.runWindowsOptions.logging !== undefined
         ? { logging: props.runWindowsOptions.logging }
@@ -83,7 +83,7 @@ export async function runWindowsAsync(projectRoot: string, options: Options) {
     }
 
     // Build the app package.
-    await runWindows(rncliConfig, {
+    await runWindows(projectRoot, rncliConfig, {
       ...props.runWindowsOptions,
       // Expo starts Metro after the native build completes.
       packager: false,
@@ -135,7 +135,7 @@ export async function runWindowsAsync(projectRoot: string, options: Options) {
 
   // Deploy and optionally launch the already-built package on the Windows
   // host.
-  await runWindows(rncliConfig, {
+  await runWindows(projectRoot, rncliConfig, {
     ...props.runWindowsOptions,
     // Expo owns Metro and the developer interface for the lifetime of this
     // command.

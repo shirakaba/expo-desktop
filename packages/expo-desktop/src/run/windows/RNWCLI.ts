@@ -18,20 +18,25 @@ const require = createRequire(import.meta.url);
 /**
  *
  */
-export async function runWindows(config: Config, options: RunWindowsOptions) {
-  await runRNWCommand("run-windows", config, options);
+export async function runWindows(projectRoot: string, config: Config, options: RunWindowsOptions) {
+  await runRNWCommand("run-windows", projectRoot, config, options);
 }
 
-export async function autolinkWindows(config: Config, options: AutoLinkOptions) {
-  await runRNWCommand("autolink-windows", config, options);
+export async function autolinkWindows(
+  projectRoot: string,
+  config: Config,
+  options: AutoLinkOptions,
+) {
+  await runRNWCommand("autolink-windows", projectRoot, config, options);
 }
 
 async function runRNWCommand(
   commandName: "autolink-windows" | "run-windows",
+  projectRoot: string,
   config: Config,
   options: AutoLinkOptions | RunWindowsOptions,
 ) {
-  const { func } = getRNWCommand(commandName);
+  const { func } = getRNWCommand(commandName, projectRoot);
   const previousExitCode = process.exitCode;
   let exitCode: typeof process.exitCode;
 
@@ -53,8 +58,8 @@ async function runRNWCommand(
   }
 }
 
-function getRNWCommand(commandName: "autolink-windows" | "run-windows") {
-  const runWindowsModule = requireRNWCLI();
+function getRNWCommand(commandName: "autolink-windows" | "run-windows", projectRoot: string) {
+  const runWindowsModule = requireRNWCLI(projectRoot);
 
   const command = runWindowsModule.commands.find(({ name }) => name === commandName);
   if (!command) {
@@ -67,9 +72,12 @@ function getRNWCommand(commandName: "autolink-windows" | "run-windows") {
   return command;
 }
 
-function requireRNWCLI(): typeof import("@react-native-windows/cli") {
+function requireRNWCLI(projectRoot: string): typeof import("@react-native-windows/cli") {
+  const projectRequire = createRequire(path.join(projectRoot, "package.json"));
+
   try {
-    return require("@react-native-windows/cli");
+    const rnwCli = projectRequire("@react-native-windows/cli");
+    return rnwCli;
   } catch (error) {
     if (!(error instanceof Error) || !("code" in error) || error.code !== "MODULE_NOT_FOUND") {
       throw error;
@@ -126,8 +134,8 @@ export async function cleanAsync({
   );
 }
 
-export function parseArch(arch = deviceArchitecture()): BuildArch {
-  const { options } = getRNWCommand("run-windows");
+export function parseArch(projectRoot: string, arch = deviceArchitecture()): BuildArch {
+  const { options } = getRNWCommand("run-windows", projectRoot);
   const archOption = options?.find(({ name }) => name === "--arch [string]");
   if (!archOption) {
     throw new Error("Unable to find '--arch [string]' option");
