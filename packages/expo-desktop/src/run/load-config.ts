@@ -18,7 +18,7 @@ export function loadConfigAsync(args: { projectRoot?: string; selectedPlatform?:
 
     throw new CommandError(
       "NO_RNCLI_CONFIG",
-      "Unable to find @react-native-community/cli-config. Please make sure you have it (or @react-native-community/cli) installed.",
+      "Unable to find @react-native-community/cli-config. Please make sure you have it installed.",
     );
   }
   return cliConfigModule.loadConfigAsync(args);

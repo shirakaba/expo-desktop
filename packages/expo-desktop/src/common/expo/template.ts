@@ -638,8 +638,8 @@ export async function sanitizeTemplateAsync({
         ...packageJson.scripts,
         android: "expo run:android",
         ios: "expo run:ios",
-        macos: "rnc-cli run-macos",
-        windows: "rnc-cli run-windows",
+        macos: "expo-desktop run macos",
+        windows: "expo-desktop run windows",
       };
     } else if (nativeFoldersIgnored) {
       // TODO: Figure out why this didn't run
@@ -648,9 +648,9 @@ export async function sanitizeTemplateAsync({
         android: "expo start --android",
         ios: "expo start --ios",
         macos:
-          "node -e \"console.log('Please run \\`npx expo-desktop prebuild\\` to set up the React Native macOS project.'); process.exit(1);\"",
+          "node -e \"console.log('Please run \\`node --run prebuild\\` to set up the React Native macOS project.'); process.exit(1);\"",
         windows:
-          "node -e \"console.log('Please run \\`npx expo-desktop prebuild\\` to set up the React Native Windows project.'); process.exit(1);\"",
+          "node -e \"console.log('Please run \\`node --run prebuild\\` to set up the React Native Windows project.'); process.exit(1);\"",
       };
     } else {
       // By default we don't do anything since we don't know if `start` or `run:*` are good defaults
