@@ -60,6 +60,7 @@
     "chalk": "^4.1.2",
     "citty": "^0.2.2",
     "debug": "^4.4.3",
+    "expo-desktop-config-plugins": "workspace:^",
     "expo-desktop-prebuild-config": "workspace:^",
     "getenv": "^2.0.0",
     "glob": "^10.5.0",
