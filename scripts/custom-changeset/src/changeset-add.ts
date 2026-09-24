@@ -28,13 +28,16 @@ import {
 } from "@clack/prompts";
 import { getPackages } from "@manypkg/get-packages";
 import launchEditor from "launch-editor";
+// FORK (start 3)
+import { execFile } from "node:child_process";
 import fs from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-// FORK (start 3)
+import { promisify } from "node:util";
 import picomatch from "picomatch";
 import semverLt from "semver/functions/lt.js";
+import semverParse from "semver/functions/parse.js";
 
 import { disambiguatePackages } from "./package-identities.ts";
 // FORK (end 3)
@@ -95,6 +98,86 @@ type QuestionOptions = {
 type MultiselectOptions<Value> = Record<string, Option<Value>[]>;
 
 // FORK (start 4)
+/**
+ * On main, comparing against the base branch misses committed changes. Use
+ * each package's latest reachable release tag (including prereleases) instead.
+ * Templates share npm names across SDK/RN lines, so only consider releases on
+ * their own major.minor line. Packages without a tag retain the base-branch
+ * comparison, and callers can still explicitly compare everything to a ref.
+ * Tags newer than the manifest are ignored when working on an older version.
+ */
+export async function getChangedPackages(
+  packages: ReadonlyArray<Package>,
+  {
+    cwd,
+    baseBranch,
+    since,
+    changedFilePatterns,
+    packageNamesByVirtualName = new Map<string, string>(),
+    patchOnlyPackageNames = new Set<string>(),
+  }: {
+    cwd: string;
+    baseBranch: string;
+    since?: string;
+    changedFilePatterns?: Config["changedFilePatterns"];
+    packageNamesByVirtualName?: ReadonlyMap<string, string>;
+    patchOnlyPackageNames?: ReadonlySet<string>;
+  },
+): Promise<Array<Package>> {
+  if (since != null) {
+    return getChangedPackagesSinceRef(packages, { cwd, ref: since, changedFilePatterns });
+  }
+
+  const { stdout } = await promisify(execFile)("git", ["tag", "--merged=HEAD"], { cwd });
+  const releases = stdout
+    .trim()
+    .split("\n")
+    .flatMap((tag) => {
+      // Splitting at the last @ also handles scoped npm package names.
+      const separator = tag.lastIndexOf("@");
+      const version = semverParse(tag.slice(separator + 1));
+      return separator > 0 && version != null
+        ? [{ tag, name: tag.slice(0, separator), version }]
+        : [];
+    })
+    .sort((a, b) => b.version.compare(a.version));
+  const refsByPackage = new Map<Package, string>();
+  for (const pkg of packages) {
+    const { name, version } = pkg.packageJson;
+    const actualName = packageNamesByVirtualName.get(name) ?? name;
+    const currentVersion = semverParse(version);
+    const sameVersionLine = patchOnlyPackageNames.has(name) || actualName !== name;
+    const release = releases.find(
+      (release) =>
+        release.name === actualName &&
+        currentVersion != null &&
+        release.version.compare(currentVersion) <= 0 &&
+        (!sameVersionLine ||
+          (release.version.major === currentVersion.major &&
+            release.version.minor === currentVersion.minor)),
+    );
+    refsByPackage.set(pkg, release == null ? baseBranch : `refs/tags/${release.tag}`);
+  }
+
+  const changedPackages = new Set(
+    (
+      await Promise.all(
+        [...new Set(refsByPackage.values())].map(async (ref) => {
+          // Always pass the full list so files in nested packages cannot be
+          // attributed to a parent that happens to have a different release.
+          const changed = await getChangedPackagesSinceRef(packages, {
+            cwd,
+            ref,
+            changedFilePatterns,
+          });
+          return changed.filter((pkg) => refsByPackage.get(pkg) === ref);
+        }),
+      )
+    ).flat(),
+  );
+  return packages.filter((pkg) => changedPackages.has(pkg));
+}
+
 /**
  * This is getChangedPackagesSinceRef() from @changesets/git, except that the
  * caller supplies the package list. Our templates are intentionally not
@@ -182,7 +265,7 @@ export async function add(options: {
   // Changesets uses package names as map keys everywhere, including while it
   // validates the dependency graph. Give duplicate template lines a virtual,
   // version-qualified name before any Changesets code sees them.
-  const { packages, patchOnlyPackageNames } = disambiguatePackages(
+  const { packages, patchOnlyPackageNames, packageNamesByVirtualName } = disambiguatePackages(
     discoveredPackages,
     new Set(options.extraPackages?.map(({ dir }) => path.resolve(dir))),
   );
@@ -220,25 +303,28 @@ export async function add(options: {
       summary: options?.message ?? "",
     };
   else {
+    // FORK (start 6)
     let changedPackagesNames = new Array<string>();
     try {
-      // FORK (start 6)
       changedPackagesNames = (
-        await getChangedPackagesSinceRef(versionablePackages, {
+        await getChangedPackages(versionablePackages, {
           cwd: packages.rootDir,
-          ref: options?.since ?? config.baseBranch,
+          baseBranch: config.baseBranch,
+          since: options?.since,
           changedFilePatterns: config.changedFilePatterns,
+          packageNamesByVirtualName,
+          patchOnlyPackageNames,
         })
       ).map((pkg) => pkg.packageJson.name);
-      // FORK (end 6)
     } catch (error) {
       log.warn(
         `
-  Failed to identify which packages have changed since the ${options?.since ? "ref" : "base branch"} due to an error:
+  Failed to identify which packages have changed since ${options?.since ? "the ref" : "their last release"} due to an error:
   ${(error as Error).toString()}
   `.trim(),
       );
     }
+    // FORK (end 6)
     newChangeset = await createChangeset(
       changedPackagesNames,
       versionablePackages,
@@ -598,7 +684,9 @@ async function getPackagesToRelease(
   return await askMultiselect(
     "Which packages were affected by the changes you made?",
     multiselectValues,
-    { required: true },
+    // FORK (start 15)
+    { required: true, initialValues: changedPackages },
+    // FORK (end 15)
   );
 }
 function getPkgJsonsByName(packages: Array<Package>) {
