@@ -1,5 +1,11 @@
 # expo-desktop-template-blank-typescript
 
+## 54.81.1-beta.7
+
+### Patch Changes
+
+- Stop using workspace references when publishing
+
 ## 54.81.1-beta.6
 
 ### Patch Changes

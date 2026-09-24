@@ -1,5 +1,11 @@
 # expo-desktop-template-bare-minimum
 
+## 54.81.1-beta.8
+
+### Patch Changes
+
+- Stop using workspace references when publishing
+
 ## 54.81.1-beta.7
 
 ### Patch Changes
