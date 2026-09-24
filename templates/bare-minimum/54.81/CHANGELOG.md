@@ -1,5 +1,13 @@
 # expo-desktop-template-bare-minimum
 
+## 54.81.1-beta.7
+
+### Patch Changes
+
+- Update templates to simplify dependency tree
+- Updated dependencies
+  - expo-desktop@1.0.0-beta.7
+
 ## 54.81.1-beta.6
 
 ### Patch Changes

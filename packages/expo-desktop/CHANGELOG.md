@@ -1,5 +1,13 @@
 # expo-desktop
 
+## 1.0.0-beta.7
+
+### Patch Changes
+
+- Update templates to simplify dependency tree
+- Updated dependencies
+  - expo-desktop-prebuild-config@1.1.0-beta.2
+
 ## 1.0.0-beta.6
 
 ### Patch Changes

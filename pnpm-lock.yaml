@@ -107,7 +107,7 @@ importers:
         specifier: workspace:^54.0.14-beta.0
         version: link:../../packages/expo-desktop-modules-core
       expo-desktop-prebuild-config:
-        specifier: workspace:^1.1.0-beta.1
+        specifier: workspace:^1.1.0-beta.2
         version: link:../../packages/expo-desktop-prebuild-config
       expo-desktop-stubs:
         specifier: workspace:^54.0.14-beta.0
@@ -136,7 +136,7 @@ importers:
         version: 0.81.6(@babel/core@7.29.0(supports-color@8.1.1))(supports-color@8.1.1)
       '@rnx-kit/metro-config':
         specifier: latest
-        version: 2.2.4(@react-native/metro-config@0.81.6(@babel/core@7.29.0(supports-color@8.1.1))(supports-color@8.1.1))(metro@0.84.6(supports-color@8.1.1))(react-native@0.81.6(@babel/core@7.29.0(supports-color@8.1.1))(@react-native-community/cli@20.1.3(supports-color@8.1.1))(@react-native/metro-config@0.81.6(@babel/core@7.29.0(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.1.17)(react@19.1.4)(supports-color@8.1.1))(react@19.1.4)
+        version: 2.2.5(@react-native/metro-config@0.81.6(@babel/core@7.29.0(supports-color@8.1.1))(supports-color@8.1.1))(metro@0.84.6(supports-color@8.1.1))(react-native@0.81.6(@babel/core@7.29.0(supports-color@8.1.1))(@react-native-community/cli@20.1.3(supports-color@8.1.1))(@react-native/metro-config@0.81.6(@babel/core@7.29.0(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.1.17)(react@19.1.4)(supports-color@8.1.1))(react@19.1.4)
       '@types/react':
         specifier: catalog:react-native-81
         version: 19.1.17
@@ -1802,6 +1802,17 @@ packages:
 
   '@rnx-kit/metro-config@2.2.4':
     resolution: {integrity: sha512-OPdGePL/RuzhbyM8hzUR3qcp1PVNju8G5D9f2evYfiowjorYRAP2lIey/zmbGDNezZSTbAzvHxN3BeEYWR4wKQ==}
+    engines: {node: '>=16.17'}
+    peerDependencies:
+      '@react-native/metro-config': '*'
+      react: '*'
+      react-native: '*'
+    peerDependenciesMeta:
+      '@react-native/metro-config':
+        optional: true
+
+  '@rnx-kit/metro-config@2.2.5':
+    resolution: {integrity: sha512-NjPoDiyBeWjb1eT7clvQhzwFgiQ+/5pIBueK0yBa2zZ1Z/3QOEvjW4rzrHqIpqGjPKkoXbpS6Zc+dGlQVsSQeQ==}
     engines: {node: '>=16.17'}
     peerDependencies:
       '@react-native/metro-config': '*'
@@ -6221,7 +6232,7 @@ snapshots:
       metro-resolver: 0.83.3
       metro-runtime: 0.83.3
       metro-source-map: 0.83.3(supports-color@8.1.1)
-      metro-symbolicate: 0.83.3(supports-color@8.1.1)
+      metro-symbolicate: 0.83.3
       metro-transform-plugins: 0.83.3(supports-color@8.1.1)
       metro-transform-worker: 0.83.3(supports-color@8.1.1)
     transitivePeerDependencies:
@@ -6242,7 +6253,7 @@ snapshots:
       metro-resolver: 0.84.6
       metro-runtime: 0.84.6
       metro-source-map: 0.84.6(supports-color@8.1.1)
-      metro-symbolicate: 0.84.6(supports-color@8.1.1)
+      metro-symbolicate: 0.84.6
       metro-transform-plugins: 0.84.6(supports-color@8.1.1)
       metro-transform-worker: 0.84.6(supports-color@8.1.1)
     transitivePeerDependencies:
@@ -7201,6 +7212,19 @@ snapshots:
       '@types/react': 19.1.17
 
   '@rnx-kit/metro-config@2.2.4(@react-native/metro-config@0.81.6(@babel/core@7.29.0(supports-color@8.1.1))(supports-color@8.1.1))(metro@0.84.6(supports-color@8.1.1))(react-native@0.81.6(@babel/core@7.29.0(supports-color@8.1.1))(@react-native-community/cli@20.1.3(supports-color@8.1.1))(@react-native/metro-config@0.81.6(@babel/core@7.29.0(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.1.17)(react@19.1.4)(supports-color@8.1.1))(react@19.1.4)':
+    dependencies:
+      '@rnx-kit/tools-node': 3.0.4(metro@0.84.6(supports-color@8.1.1))
+      '@rnx-kit/tools-react-native': 2.3.7(metro@0.84.6(supports-color@8.1.1))
+      '@rnx-kit/tools-workspaces': 0.2.3
+      react: 19.1.4
+      react-native: 0.81.6(@babel/core@7.29.0(supports-color@8.1.1))(@react-native-community/cli@20.1.3(supports-color@8.1.1))(@react-native/metro-config@0.81.6(@babel/core@7.29.0(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.1.17)(react@19.1.4)(supports-color@8.1.1)
+    optionalDependencies:
+      '@react-native/metro-config': 0.81.6(@babel/core@7.29.0(supports-color@8.1.1))(supports-color@8.1.1)
+    transitivePeerDependencies:
+      - memfs
+      - metro
+
+  '@rnx-kit/metro-config@2.2.5(@react-native/metro-config@0.81.6(@babel/core@7.29.0(supports-color@8.1.1))(supports-color@8.1.1))(metro@0.84.6(supports-color@8.1.1))(react-native@0.81.6(@babel/core@7.29.0(supports-color@8.1.1))(@react-native-community/cli@20.1.3(supports-color@8.1.1))(@react-native/metro-config@0.81.6(@babel/core@7.29.0(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.1.17)(react@19.1.4)(supports-color@8.1.1))(react@19.1.4)':
     dependencies:
       '@rnx-kit/tools-node': 3.0.4(metro@0.84.6(supports-color@8.1.1))
       '@rnx-kit/tools-react-native': 2.3.7(metro@0.84.6(supports-color@8.1.1))
@@ -9255,7 +9279,7 @@ snapshots:
       '@babel/types': 7.29.0
       flow-enums-runtime: 0.0.6
       invariant: 2.2.4
-      metro-symbolicate: 0.83.3(supports-color@8.1.1)
+      metro-symbolicate: 0.83.3
       nullthrows: 1.1.1
       ob1: 0.83.3
       source-map: 0.5.7
@@ -9269,7 +9293,7 @@ snapshots:
       '@babel/types': 7.29.0
       flow-enums-runtime: 0.0.6
       invariant: 2.2.4
-      metro-symbolicate: 0.83.7(supports-color@8.1.1)
+      metro-symbolicate: 0.83.7
       nullthrows: 1.1.1
       ob1: 0.83.7
       source-map: 0.5.7
@@ -9283,7 +9307,7 @@ snapshots:
       '@babel/types': 7.29.0
       flow-enums-runtime: 0.0.6
       invariant: 2.2.4
-      metro-symbolicate: 0.84.6(supports-color@8.1.1)
+      metro-symbolicate: 0.84.6
       nullthrows: 1.1.1
       ob1: 0.84.6
       source-map: 0.5.7
@@ -9291,7 +9315,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  metro-symbolicate@0.83.3(supports-color@8.1.1):
+  metro-symbolicate@0.83.3:
     dependencies:
       flow-enums-runtime: 0.0.6
       invariant: 2.2.4
@@ -9299,10 +9323,8 @@ snapshots:
       nullthrows: 1.1.1
       source-map: 0.5.7
       vlq: 1.0.1
-    transitivePeerDependencies:
-      - supports-color
 
-  metro-symbolicate@0.83.7(supports-color@8.1.1):
+  metro-symbolicate@0.83.7:
     dependencies:
       flow-enums-runtime: 0.0.6
       invariant: 2.2.4
@@ -9310,10 +9332,8 @@ snapshots:
       nullthrows: 1.1.1
       source-map: 0.5.7
       vlq: 1.0.1
-    transitivePeerDependencies:
-      - supports-color
 
-  metro-symbolicate@0.84.6(supports-color@8.1.1):
+  metro-symbolicate@0.84.6:
     dependencies:
       flow-enums-runtime: 0.0.6
       invariant: 2.2.4
@@ -9321,8 +9341,6 @@ snapshots:
       nullthrows: 1.1.1
       source-map: 0.5.7
       vlq: 1.0.1
-    transitivePeerDependencies:
-      - supports-color
 
   metro-transform-plugins@0.83.3(supports-color@8.1.1):
     dependencies:
@@ -9449,7 +9467,7 @@ snapshots:
       metro-resolver: 0.83.3
       metro-runtime: 0.83.3
       metro-source-map: 0.83.3(supports-color@8.1.1)
-      metro-symbolicate: 0.83.3(supports-color@8.1.1)
+      metro-symbolicate: 0.83.3
       metro-transform-plugins: 0.83.3(supports-color@8.1.1)
       metro-transform-worker: 0.83.3(supports-color@8.1.1)
       mime-types: 2.1.35
@@ -9495,7 +9513,7 @@ snapshots:
       metro-resolver: 0.83.7
       metro-runtime: 0.83.7
       metro-source-map: 0.83.7(supports-color@8.1.1)
-      metro-symbolicate: 0.83.7(supports-color@8.1.1)
+      metro-symbolicate: 0.83.7
       metro-transform-plugins: 0.83.7(supports-color@8.1.1)
       metro-transform-worker: 0.83.7(supports-color@8.1.1)
       mime-types: 3.0.2
@@ -9540,7 +9558,7 @@ snapshots:
       metro-resolver: 0.84.6
       metro-runtime: 0.84.6
       metro-source-map: 0.84.6(supports-color@8.1.1)
-      metro-symbolicate: 0.84.6(supports-color@8.1.1)
+      metro-symbolicate: 0.84.6
       metro-transform-plugins: 0.84.6(supports-color@8.1.1)
       metro-transform-worker: 0.84.6(supports-color@8.1.1)
       mime-types: 3.0.2
