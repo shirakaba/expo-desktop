@@ -1,5 +1,11 @@
 # expo-desktop
 
+## 1.0.0-beta.8
+
+### Patch Changes
+
+- Restore direct dependency (doesn't work as transitive)
+
 ## 1.0.0-beta.7
 
 ### Patch Changes
