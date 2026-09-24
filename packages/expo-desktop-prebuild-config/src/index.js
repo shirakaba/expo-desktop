@@ -12,6 +12,7 @@ const {
   withIosExpoPlugins,
   withLegacyExpoPlugins,
   withMacosExpoPlugins,
+  withWindowsExpoPlugins,
   withVersionedExpoSDKPlugins,
 } = require("./withDefaultPlugins");
 module.exports.getAutoPlugins = getAutoPlugins;
@@ -21,4 +22,5 @@ module.exports.withAndroidExpoPlugins = withAndroidExpoPlugins;
 module.exports.withIosExpoPlugins = withIosExpoPlugins;
 module.exports.withLegacyExpoPlugins = withLegacyExpoPlugins;
 module.exports.withMacosExpoPlugins = withMacosExpoPlugins;
+module.exports.withWindowsExpoPlugins = withWindowsExpoPlugins;
 module.exports.withVersionedExpoSDKPlugins = withVersionedExpoSDKPlugins;

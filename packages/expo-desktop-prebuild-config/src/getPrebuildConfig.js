@@ -5,10 +5,11 @@ const { getAutolinkedPackagesAsync } = require("./getAutolinkedPackages");
 const {
   withAndroidExpoPlugins,
   withIosExpoPlugins,
+  withMacosExpoPlugins,
+  withWindowsExpoPlugins,
   withLegacyExpoPlugins,
   withVersionedExpoSDKPlugins,
-} = require("@expo/prebuild-config/build/plugins/withDefaultPlugins");
-const { withMacosExpoPlugins, withWindowsExpoPlugins } = require("./withDefaultPlugins");
+} = require("./withDefaultPlugins");
 
 /**
  * @typedef {{ displayName?: string | undefined; filesafeName?: string | undefined; bundleIdentifier?: string | undefined; bundleIdentifierIos?: string | undefined; bundleIdentifierMacos?: string | undefined; packageName?: string | undefined; windowsNamespace?: string | undefined; windowsPackageGuid?: string | undefined; windowsProjectGuid?: string | undefined; platforms: Array<import('@expo/config-plugins').ModPlatform | "macos" | "windows">; bundleEntryFileCandidates?: Array<string> | undefined; }} PrebuildConfigProps
