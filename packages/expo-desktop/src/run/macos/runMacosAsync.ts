@@ -23,7 +23,11 @@ import {
 } from "./expo/build-cache-providers/build-cache-providers.ts";
 import { exportEagerAsync } from "./expo/exportEager.ts";
 import { getSchemesForMacosAsync } from "./expo/scheme.ts";
-import { getLaunchInfoForBinaryAsync, launchAppAsync } from "./launchApp.ts";
+import {
+  getLaunchInfoForBinaryAsync,
+  launchAppAsync,
+  waitForExistingInstancesToTerminateAsync,
+} from "./launchApp.ts";
 import { resolveOptionsAsync } from "./options/resolveOptions.ts";
 import * as XcodeBuild from "./XcodeBuild.ts";
 
@@ -148,6 +152,12 @@ export async function runMacosAsync(projectRoot: string, options: Options) {
 
   const launchInfo = await getLaunchInfoForBinaryAsync(binaryPath);
   const isCustomBinary = !!options.binary;
+  const singleInstance = options.singleInstance ?? true;
+
+  // Finish the termination spinner before Metro takes over terminal output.
+  if (singleInstance) {
+    await waitForExistingInstancesToTerminateAsync(launchInfo.bundleId);
+  }
 
   // Start the dev server which creates all of the required info for launching
   // the app on the host device.
@@ -170,8 +180,7 @@ export async function runMacosAsync(projectRoot: string, options: Options) {
     device: props.device,
     shouldStartBundler: props.shouldStartBundler,
     background: options.background ?? true,
-    singleInstance: options.singleInstance ?? true,
-    bundleId: launchInfo.bundleId,
+    singleInstance,
   });
 
   // Log the location of the JS logs for the host device.

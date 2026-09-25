@@ -26,16 +26,11 @@ export async function launchAppAsync(
     shouldStartBundler: boolean;
     background: boolean;
     singleInstance: boolean;
-    bundleId: string;
   },
 ) {
   Log.log(chalk.gray`› Launching ${binaryPath}`);
   if (props.device.osType !== "macOS") {
     throw new Error("Unexpected non-macOS device while launching a macOS app.");
-  }
-
-  if (props.singleInstance) {
-    await waitForExistingInstancesToTerminateAsync(props.bundleId);
   }
 
   const args = [
@@ -59,7 +54,7 @@ export async function launchAppAsync(
   }
 }
 
-async function waitForExistingInstancesToTerminateAsync(bundleId: string) {
+export async function waitForExistingInstancesToTerminateAsync(bundleId: string) {
   const scriptPath = fileURLToPath(
     new URL("../../../scripts/terminateApp.jxa.js", import.meta.url),
   );
