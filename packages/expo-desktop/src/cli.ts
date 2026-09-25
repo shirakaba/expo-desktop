@@ -151,9 +151,10 @@ const main = defineCommand({
               type: "boolean",
               description: "Skip starting the Metro bundler",
             },
-            "no-background": {
+            background: {
               type: "boolean",
-              description: "Launch the macOS app in the foreground",
+              description: "Launch the macOS app in the background instead of the foreground",
+              default: false,
             },
             "no-single-instance": {
               type: "boolean",
@@ -190,7 +191,6 @@ const main = defineCommand({
             parseNoArg(args, "no-build-cache");
             parseNoArg(args, "no-install");
             parseNoArg(args, "no-bundler");
-            parseNoArg(args, "no-background");
             parseNoArg(args, "no-single-instance");
 
             (await import("./run/macos/command.ts")).run(args);

@@ -18,7 +18,7 @@ export async function run(args: {
   "no-build-cache": boolean | undefined;
   "no-install": boolean | undefined;
   "no-bundler": boolean | undefined;
-  "no-background": boolean | undefined;
+  background: boolean | undefined;
   "no-single-instance": boolean | undefined;
   scheme: string | undefined;
   binary: string | undefined;
@@ -31,7 +31,7 @@ export async function run(args: {
     install: !args["no-install"],
     buildCache: !args["no-build-cache"],
     bundler: !args["no-bundler"],
-    background: !args["no-background"],
+    background: args.background ?? false,
     singleInstance: !args["no-single-instance"],
     ...(args.scheme !== undefined ? { scheme: args.scheme } : {}),
     ...(args.binary !== undefined ? { binary: args.binary } : {}),

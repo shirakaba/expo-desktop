@@ -179,7 +179,7 @@ export async function runMacosAsync(projectRoot: string, options: Options) {
     isSimulator: false,
     device: props.device,
     shouldStartBundler: props.shouldStartBundler,
-    background: options.background ?? true,
+    background: options.background ?? false,
     singleInstance,
   });
 
