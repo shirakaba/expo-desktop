@@ -1,4 +1,4 @@
-const { withDisplayName: withDisplayNameIos } = require("./ios/Name");
+const { withDisplayName: withDisplayNameIos } = require("../ios/Name");
 
 /**
  * @type {import("@expo/config-plugins").ConfigPlugin<{ displayName: string; }>}

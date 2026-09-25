@@ -1,1 +1,1 @@
-module.exports = require("./src/plugins/with-expo-desktop.js");
+module.exports = require("./src/plugins/with-expo/with-expo-desktop.js");

@@ -1,4 +1,4 @@
-const { withNameSettingsGradle } = require("./android/Name");
+const { withNameSettingsGradle } = require("../android/Name");
 
 /**
  * @type {import("@expo/config-plugins").ConfigPlugin<{ displayName: string; }>}

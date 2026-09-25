@@ -1,6 +1,6 @@
-const { withDisplayName: withDisplayNameMacos } = require("./macos/Name");
-const { withExpoAppDelegate } = require("./macos/withExpoAppDelegate");
-const { withExpoXcodeBuildPhase } = require("./macos/withExpoXcodeBuildPhase");
+const { withDisplayName: withDisplayNameMacos } = require("../macos/Name");
+const { withExpoAppDelegate } = require("../macos/withExpoAppDelegate");
+const { withExpoXcodeBuildPhase } = require("../macos/withExpoXcodeBuildPhase");
 
 /**
  * @type {import("@expo/config-plugins").ConfigPlugin<{ displayName: string; filesafeName?: string | undefined; }>}

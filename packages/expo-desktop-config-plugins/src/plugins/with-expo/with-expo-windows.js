@@ -1,6 +1,6 @@
-const { withExpoAppCpp } = require("./windows/withExpoAppCpp");
-const { withReactNativeDirs } = require("./windows/withReactNativeDirs");
-const { withTemplateVariables } = require("./windows/withTemplateVariables");
+const { withExpoAppCpp } = require("../windows/withExpoAppCpp");
+const { withReactNativeDirs } = require("../windows/withReactNativeDirs");
+const { withTemplateVariables } = require("../windows/withTemplateVariables");
 
 /**
  * @type {import("@expo/config-plugins").ConfigPlugin<{ displayName: string; filesafeName?: string | undefined; bundleEntryFileCandidates?: Array<string>; windowsNamespace?: string | undefined; windowsPackageGuid?: string | undefined; windowsProjectGuid?: string | undefined; }>}

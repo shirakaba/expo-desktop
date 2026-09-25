@@ -43,6 +43,7 @@
     "./plugins/ios/*": "./src/plugins/ios/*.js",
     "./plugins/macos": "./src/plugins/macos/index.js",
     "./plugins/macos/*": "./src/plugins/macos/*.js",
+    "./plugins/with-expo/*": "./src/plugins/with-expo/*.js",
     "./plugins/mod-compiler": {
       "types": "./types/src/plugins/mod-compiler.js",
       "require": "./src/plugins/mod-compiler.js"
