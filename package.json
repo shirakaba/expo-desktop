@@ -8,7 +8,7 @@
     "format": "oxfmt",
     "rp": "pnpm --filter custom-changeset run pre",
     "r1": "pnpm --filter custom-changeset run add",
-    "r2": "pnpm --filter custom-changeset run version && pnpm install --lockfile-only",
+    "r2": "pnpm --filter custom-changeset run version && pnpm install",
     "r3": "pnpm --filter custom-changeset run publish"
   },
   "devDependencies": {

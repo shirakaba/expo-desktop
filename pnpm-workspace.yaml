@@ -93,7 +93,6 @@ allowBuilds:
 
 nodeLinker: hoisted
 
-# Release version bumps leave pnpm's installed workspace state stale, even
-# after r2 updates the lockfile. Avoid an automatic install on the next script
-# (e.g. r1); install explicitly when dependencies change.
+# Keep installs explicit instead of automatically reinstalling before scripts.
+# r2 installs after versioning; otherwise, install when dependencies change.
 verifyDepsBeforeRun: warn
