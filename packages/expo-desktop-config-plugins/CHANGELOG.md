@@ -1,5 +1,11 @@
 # expo-desktop-config-plugins
 
+## 1.2.0-beta.4
+
+### Patch Changes
+
+- Fix package exports
+
 ## 1.2.0-beta.3
 
 ### Patch Changes

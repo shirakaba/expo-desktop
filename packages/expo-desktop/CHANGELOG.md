@@ -1,5 +1,14 @@
 # expo-desktop
 
+## 1.0.0-beta.10
+
+### Patch Changes
+
+- Fix log race between Metro and termination of existing instance
+- Launch macOS apps in the foreground by default
+- Updated dependencies
+  - expo-desktop-config-plugins@1.2.0-beta.4
+
 ## 1.0.0-beta.9
 
 ### Patch Changes
