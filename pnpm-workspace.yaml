@@ -92,3 +92,8 @@ allowBuilds:
   esbuild: false
 
 nodeLinker: hoisted
+
+# Release version bumps leave pnpm's installed workspace state stale, even
+# after r2 updates the lockfile. Avoid an automatic install on the next script
+# (e.g. r1); install explicitly when dependencies change.
+verifyDepsBeforeRun: warn
