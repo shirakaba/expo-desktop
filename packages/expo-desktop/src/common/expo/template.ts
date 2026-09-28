@@ -820,9 +820,7 @@ export function logProjectReady({
     console.log();
   }
 
-  console.log(
-    `${cdPath ? "- " : ""}${chalk.bold(`${formatSelfCommand(packageManager)} prebuild`)} `,
-  );
+  console.log(`${cdPath ? "- " : ""}${chalk.bold(`node --run prebuild`)} `);
 
   // console.log(`- ${chalk.bold(formatRunCommand(packageManager, "android"))}`);
   // const iOSComment = isMacOS
