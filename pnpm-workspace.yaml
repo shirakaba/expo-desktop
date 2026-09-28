@@ -96,3 +96,7 @@ nodeLinker: hoisted
 # Keep installs explicit instead of automatically reinstalling before scripts.
 # r2 installs after versioning; otherwise, install when dependencies change.
 verifyDepsBeforeRun: warn
+
+minimumReleaseAgeExclude:
+  - "@rnx-kit/metro-config@2.2.6"
+  - "@rnx-kit/tools-workspaces@0.2.6"

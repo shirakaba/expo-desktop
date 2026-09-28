@@ -6,9 +6,7 @@ const { makeMetroConfig: makeRnxKitMetroConfig } = require("@rnx-kit/metro-confi
  * @return {ReturnType<import("@rnx-kit/metro-config").makeMetroConfig>}
  */
 function makeMetroConfig(...args) {
-  const config = makeRnxKitMetroConfig(getDefaultConfig(...args));
-  config.resolver.platforms = ["ios", "android", "macos", "windows", "web"];
-  return config;
+  return makeRnxKitMetroConfig(getDefaultConfig(...args));
 }
 
 module.exports.makeMetroConfig = makeMetroConfig;
