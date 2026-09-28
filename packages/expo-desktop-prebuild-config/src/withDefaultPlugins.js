@@ -27,10 +27,10 @@ const {
 const {
   withMacosJsEnginePodfileProps,
 } = require("expo-desktop-config-plugins/plugins/macos/withMacosJsEnginePodfileProps");
-const withExpoAndroid = require("expo-desktop-config-plugins/plugins/with-expo-android");
-const withExpoIos = require("expo-desktop-config-plugins/plugins/with-expo-ios");
-const withExpoMacos = require("expo-desktop-config-plugins/plugins/with-expo-macos");
-const withExpoWindows = require("expo-desktop-config-plugins/plugins/with-expo-windows");
+const withExpoAndroid = require("expo-desktop-config-plugins/plugins/with-expo/with-expo-android");
+const withExpoIos = require("expo-desktop-config-plugins/plugins/with-expo/with-expo-ios");
+const withExpoMacos = require("expo-desktop-config-plugins/plugins/with-expo/with-expo-macos");
+const withExpoWindows = require("expo-desktop-config-plugins/plugins/with-expo/with-expo-windows");
 
 const {
   getAutoPlugins,
