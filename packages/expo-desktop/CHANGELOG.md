@@ -1,5 +1,11 @@
 # expo-desktop
 
+## 1.0.0-beta.12
+
+### Patch Changes
+
+- Change startup instructions
+
 ## 1.0.0-beta.11
 
 ### Patch Changes
