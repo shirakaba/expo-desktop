@@ -127,8 +127,29 @@ function getPrebuildConfig(
     if (!config.android) config.android = {};
     config.android.package = packageName ?? config.android.package ?? `com.placeholder.appid`;
 
+    /**
+     * There is no canonical config.android property to persist displayName
+     * into, so although we can fill it in on the initial app creation (while we
+     * still have the --display-name choice in memory), it'll be lost on the
+     * next clean prebuild.
+     *
+     * One option would be to populate the plugins array and persist it into the
+     * "expo-desktop" plugin's props, but I'd rather avoid that as far as
+     * possible, as it exposes yet another source of truth for these already
+     * complicated multi-truth config plugins.
+     *
+     * So instead, we'll just say that until upstream supports display name for
+     * Android, users will have to roll their own Android display name plugin
+     * as they always have, or use our withExpoAndroid plugin. So although we
+     * resolve a display name prop here, we don't actually use it.
+     *
+     * @type {string}
+     */
+    const resolvedDisplayNameAndroid = displayName ?? config.name;
+
     // Add all built-in plugins
     config = withAndroidExpoPlugins(config, {
+      displayName: resolvedDisplayNameAndroid,
       package: config.android.package,
       projectRoot,
     });

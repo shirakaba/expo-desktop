@@ -27,7 +27,7 @@ const {
 const {
   withMacosJsEnginePodfileProps,
 } = require("expo-desktop-config-plugins/plugins/macos/withMacosJsEnginePodfileProps");
-const withExpoAndroid = require("expo-desktop-config-plugins/plugins/with-expo/with-expo-android");
+// const withExpoAndroid = require("expo-desktop-config-plugins/plugins/with-expo/with-expo-android");
 const withExpoIos = require("expo-desktop-config-plugins/plugins/with-expo/with-expo-ios");
 const withExpoMacos = require("expo-desktop-config-plugins/plugins/with-expo/with-expo-macos");
 const withExpoWindows = require("expo-desktop-config-plugins/plugins/with-expo/with-expo-windows");
@@ -50,8 +50,13 @@ module.exports.getLegacyExpoPlugins = getLegacyExpoPlugins;
 module.exports.withAndroidExpoPlugins = function withAndroidExpoPluginsImproved(config, props) {
   config = withAndroidExpoPlugins(config, props);
 
-  // This sets the display name in settings.gradle from props.displayName
-  config = withExpoAndroid(config, props);
+  // // This sets the display name in settings.gradle from props.displayName.
+  // //
+  // // However, it's disabled for now, as although we *will* have
+  // // props.displayName at app creation time (when --display-name is passed
+  // // in), there is no canonical field in app.json to persist it into for next
+  // // clean prebuild. So it's more trouble than it's worth.
+  // config = withExpoAndroid(config, props);
 
   return config;
 };
