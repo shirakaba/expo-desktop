@@ -1,5 +1,11 @@
 # expo-desktop-metro-config
 
+## 54.81.0-beta.4
+
+### Patch Changes
+
+- Let rnx-kit define `resolver.platforms`
+
 ## 54.81.0-beta.3
 
 ### Patch Changes
