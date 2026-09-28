@@ -94,7 +94,7 @@ allowBuilds:
 nodeLinker: hoisted
 
 # Keep installs explicit instead of automatically reinstalling before scripts.
-# r2 installs after versioning; otherwise, install when dependencies change.
+# r2 only updates the lockfile; install explicitly when dependencies change.
 verifyDepsBeforeRun: warn
 
 minimumReleaseAgeExclude:

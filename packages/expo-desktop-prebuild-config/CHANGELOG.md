@@ -1,5 +1,11 @@
 # expo-desktop-prebuild-config
 
+## 1.1.0-beta.5
+
+### Minor Changes
+
+- Pass through filesafeName
+
 ## 1.1.0-beta.4
 
 ### Patch Changes

@@ -107,7 +107,7 @@ importers:
         specifier: workspace:^54.0.14-beta.0
         version: link:../../packages/expo-desktop-modules-core
       expo-desktop-prebuild-config:
-        specifier: workspace:^1.1.0-beta.4
+        specifier: workspace:^1.1.0-beta.5
         version: link:../../packages/expo-desktop-prebuild-config
       expo-desktop-stubs:
         specifier: workspace:^54.0.14-beta.0
