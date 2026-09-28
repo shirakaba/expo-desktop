@@ -119,6 +119,7 @@ function getPrebuildConfig(
     config = withMacosExpoPlugins(config, {
       bundleIdentifier: resolvedBundleIdentifierMacos,
       displayName: resolvedDisplayNameMacos,
+      filesafeName,
     });
   }
 

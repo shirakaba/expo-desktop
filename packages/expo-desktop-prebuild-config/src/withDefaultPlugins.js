@@ -83,9 +83,9 @@ module.exports.withVersionedExpoSDKPlugins = withVersionedExpoSDKPlugins;
  * withExpoDesktop() does, because it's the entrypoint of
  * expo-desktop-prebuild-config, and *that* does get run).
  *
- * @type {import("@expo/config-plugins").ConfigPlugin<{ displayName?: string; bundleIdentifier?: string }>}
+ * @type {import("@expo/config-plugins").ConfigPlugin<{ bundleIdentifier?: string; displayName?: string; filesafeName?: string; }>}
  */
-function withMacosExpoPlugins(config, { bundleIdentifier, displayName }) {
+function withMacosExpoPlugins(config, { bundleIdentifier, displayName, filesafeName }) {
   const projectRoot = config._internal?.projectRoot;
   if (typeof projectRoot === "string" && !projectHasMacosNativeTree(projectRoot)) {
     return config;
