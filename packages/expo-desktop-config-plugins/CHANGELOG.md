@@ -1,5 +1,11 @@
 # expo-desktop-config-plugins
 
+## 1.2.0-beta.6
+
+### Patch Changes
+
+- Get iOS Expo plugin working
+
 ## 1.2.0-beta.5
 
 ### Patch Changes

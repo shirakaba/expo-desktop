@@ -1,5 +1,13 @@
 # expo-desktop-prebuild-config
 
+## 1.1.0-beta.7
+
+### Patch Changes
+
+- Get iOS Expo plugin working
+- Updated dependencies
+  - expo-desktop-config-plugins@1.2.0-beta.6
+
 ## 1.1.0-beta.6
 
 ### Patch Changes
