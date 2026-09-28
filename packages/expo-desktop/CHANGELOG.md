@@ -1,5 +1,13 @@
 # expo-desktop
 
+## 1.0.0-beta.14
+
+### Patch Changes
+
+- Bump expo-desktop-prebuild-config version
+- Updated dependencies
+  - expo-desktop-prebuild-config@1.1.0-beta.6
+
 ## 1.0.0-beta.13
 
 ### Patch Changes
