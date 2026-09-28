@@ -161,7 +161,7 @@ export async function cloneTemplateAndCopyToProjectAsync({
     // On subsequent prebuilds, the same properties get updated via config
     // plugins (by modifying the XML trees of the wapproj, vcxproj,
     // appxManifest, sln, etc.) in withExpoDesktop().
-    // packages/expo-desktop-config-plugins/src/plugins/with-expo-desktop.js
+    // packages/expo-desktop-config-plugins/src/plugins/with-expo/with-expo-desktop.js
     const windowsTemplateStrings = getWindowsTemplateStrings({
       name,
       packageGuid,

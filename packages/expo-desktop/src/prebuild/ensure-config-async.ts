@@ -1,6 +1,6 @@
 import type { ExpoConfig, PackageJSONConfig } from "@expo/config";
 import type { ModPlatform } from "@expo/config-plugins";
-import type withExpoDesktop from "expo-desktop-config-plugins/plugins/with-expo-desktop";
+import type withExpoDesktop from "expo-desktop-config-plugins/plugins/with-expo/with-expo-desktop";
 
 import { isCancel, log, text } from "@clack/prompts";
 import { getConfig } from "@expo/config";
