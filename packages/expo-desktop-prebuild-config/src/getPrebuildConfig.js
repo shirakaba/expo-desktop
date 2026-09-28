@@ -79,9 +79,17 @@ function getPrebuildConfig(
       bundleIdentifierIos ?? config.ios.bundleIdentifier ?? `com.placeholder.appid`;
     config.ios.bundleIdentifier = resolvedBundleIdentifierIos;
 
+    /** @type {string} */
+    const resolvedDisplayNameIos =
+      displayName ??
+      config.ios.infoPlist?.CFBundleName ??
+      config.macos.infoPlist?.CFBundleName ??
+      config.name;
+
     // Add all built-in plugins
     config = withIosExpoPlugins(config, {
       bundleIdentifier: resolvedBundleIdentifierIos,
+      displayName: resolvedDisplayNameIos,
     });
   }
 

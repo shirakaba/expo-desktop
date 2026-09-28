@@ -16,6 +16,14 @@ const withDisplayName = createInfoPlistPluginWithPropertyGuard(
 module.exports.withDisplayName = withDisplayName;
 
 /**
+ * @param {Pick<ExpoConfig, 'name'> | string} config
+ */
+function getName(config) {
+  return typeof config.name === "string" ? config.name : null;
+}
+module.exports.getName = getName;
+
+/**
  * @typedef {Parameters<import("@expo/config-plugins").ConfigPlugin>[0]} ExpoConfig
  * @typedef {import("@expo/config-plugins").InfoPlist} InfoPlist
  * @typedef {( expo: ExpoConfig, infoPlist: InfoPlist ) => Promise<InfoPlist> | InfoPlist} MutateInfoPlistAction
