@@ -6,10 +6,10 @@
     "prepare": "husky",
     "lint-staged": "lint-staged",
     "format": "oxfmt",
-    "rp": "pnpm --filter custom-changeset run pre",
+    "rp": "node scripts/custom-changeset/src/pre.ts",
     "r1": "node scripts/custom-changeset/src/add.ts",
     "r2": "node scripts/custom-changeset/src/version.ts && pnpm install --lockfile-only --offline --ignore-scripts",
-    "r3": "pnpm --filter custom-changeset run publish"
+    "r3": "node scripts/custom-changeset/src/publish.ts"
   },
   "devDependencies": {
     "husky": "^9.1.7",
