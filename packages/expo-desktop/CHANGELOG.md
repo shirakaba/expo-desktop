@@ -1,5 +1,11 @@
 # expo-desktop
 
+## 1.0.0-beta.13
+
+### Patch Changes
+
+- Publish a new expo-desktop which specifies higher version of expo-desktop-prebuild-config
+
 ## 1.0.0-beta.12
 
 ### Patch Changes
