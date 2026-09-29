@@ -1,5 +1,29 @@
 # expo-desktop-prebuild-config
 
+## 1.1.0
+
+### Minor Changes
+
+- 31bfb49: Pass through filesafeName
+- 98a6c4a: Implemented all the necessary prebuild config and config plugins for (re)generating React Native Windows apps from `app.json`, so the project and package GUIDs are now stable. The project files in the `windows` folder are now all based on the name `MyApp` (rather than the `"name"` field in `app.json`). Required fields in `app.json` are now enforced.
+
+### Patch Changes
+
+- c51bb6e: Fix inconsistency between `expo-desktop prebuild` and the prebuild in `expo-desktop run macos` (actually the difference between prebuilding for all platforms vs. one) - the "HelloWorld" string in AppDelegate.mm wasn't getting renamed to "main", but is fixed by this change.
+- 1e7f940: Avoid out-of-tree platforms being filtered out at prebuild time
+- 87e2c95: Update templates to simplify dependency tree
+- 6117a5e: Get iOS Expo plugin working
+- 8357236: Fix package exports
+- c5ccb0e: Disable the Android displayName plugin for now.
+- Updated dependencies [c51bb6e]
+- Updated dependencies [3e1987a]
+- Updated dependencies [69347ea]
+- Updated dependencies [6117a5e]
+- Updated dependencies [69347ea]
+- Updated dependencies [69347ea]
+- Updated dependencies [98a6c4a]
+  - expo-desktop-config-plugins@1.2.0
+
 ## 1.1.0-beta.7
 
 ### Patch Changes

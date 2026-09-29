@@ -1,5 +1,38 @@
 # expo-desktop-template-blank-typescript
 
+## 54.81.1
+
+### Patch Changes
+
+- d7461ef: Use expo-desktop-metro-config instead of unmaintained metro.config.js
+- c50a351: Stop using workspace references when publishing
+- c50a351: Fixed failing Windows release-mode builds by correcting `config.resolver.platforms`.
+- 87e2c95: Update templates to simplify dependency tree
+- c50a351: Add provenance to templates, to enable Trusted Publishing
+- c50a351: Update to latest RNW patch to use VS 2026 without problem
+- 457c3b8: Move bare-minimum to devDependencies
+- Updated dependencies [c23aaeb]
+- Updated dependencies [9b46926]
+- Updated dependencies [74d18f7]
+- Updated dependencies [6a67a9e]
+- Updated dependencies [1e7f940]
+- Updated dependencies [9b46926]
+- Updated dependencies [69347ea]
+- Updated dependencies [c5ccb0e]
+- Updated dependencies [87e2c95]
+- Updated dependencies [98a6c4a]
+- Updated dependencies [a48ce60]
+- Updated dependencies [7e02260]
+- Updated dependencies [6117a5e]
+- Updated dependencies [7bf7f28]
+- Updated dependencies [457c3b8]
+- Updated dependencies [4a985b1]
+- Updated dependencies [74590b5]
+- Updated dependencies [3e1987a]
+  - expo-desktop@1.0.0
+  - expo-desktop-modules-core@54.0.14
+  - expo-desktop-stubs@54.0.14
+
 ## 54.81.1-beta.7
 
 ### Patch Changes

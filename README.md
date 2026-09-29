@@ -9,9 +9,9 @@ Best-effort support for using Expo with desktop platforms [react-native-macos](h
 To create a new Expo app that targets iOS, Android, macOS, and Windows, run the following command to use the latest v1 beta (please use that instead of v0):
 
 ```sh
-npx expo-desktop@beta create-app --template expo-desktop-template-blank-typescript@beta
+npx expo-desktop create-app
 cd MyApp
-npx expo-desktop@beta prebuild --template expo-desktop-template-bare-minimum@beta
+npx expo-desktop prebuild
 ```
 
 You can then run your app as follows:

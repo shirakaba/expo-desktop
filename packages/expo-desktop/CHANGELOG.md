@@ -1,5 +1,44 @@
 # expo-desktop
 
+## 1.0.0
+
+### Major Changes
+
+- 98a6c4a: Fully implement Expo Prebuild, including the template system, for Expo Desktop. The Expo Desktop CLI no longer relies on multiple CLIs (`create-expo-app`, `react-native-macos-init`, and `react-native init-windows`), nor multiple templates (for mobile, macOS, and Windows). Instead, we duplicate (where possible) and fork (where necessary) all the logic for creating apps from `create-expo-app`, and all the logic for prebuilding apps from `@expo/cli`.
+
+### Patch Changes
+
+- c23aaeb: Launch macOS apps in the foreground by default with `expo-desktop run macos`. Use `--background` to launch in the background.
+- 9b46926: Fix log race between Metro and termination of existing instance
+- 74d18f7: Handle output of `npm pack` on Windows
+- 6a67a9e: Restore direct dependency (doesn't work as transitive)
+- 1e7f940: Avoid out-of-tree platforms being filtered out at prebuild time
+- 9b46926: Launch macOS apps in the foreground by default
+- 69347ea: Fix package exports
+- c5ccb0e: Bump expo-desktop-prebuild-config version
+- 87e2c95: Update templates to simplify dependency tree
+- a48ce60: Improve onboarding instructions
+- 7e02260: Change startup instructions
+- 6117a5e: Bump expo-desktop to receive prebuild-config update
+- 7bf7f28: Fix logic for upgrading scripts upon prebuild
+- 4a985b1: Publish a new expo-desktop which specifies higher version of expo-desktop-prebuild-config
+- 74590b5: Remove unused "shescape" dependency
+- 3e1987a: Initial implementation of the `run macos` and `run windows` commands.
+- Updated dependencies [c51bb6e]
+- Updated dependencies [31bfb49]
+- Updated dependencies [3e1987a]
+- Updated dependencies [1e7f940]
+- Updated dependencies [69347ea]
+- Updated dependencies [87e2c95]
+- Updated dependencies [6117a5e]
+- Updated dependencies [69347ea]
+- Updated dependencies [8357236]
+- Updated dependencies [c5ccb0e]
+- Updated dependencies [69347ea]
+- Updated dependencies [98a6c4a]
+  - expo-desktop-config-plugins@1.2.0
+  - expo-desktop-prebuild-config@1.1.0
+
 ## 1.0.0-beta.15
 
 ### Patch Changes

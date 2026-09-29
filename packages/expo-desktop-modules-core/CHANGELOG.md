@@ -1,5 +1,11 @@
 # expo-desktop-modules-core
 
+## 54.0.14
+
+### Patch Changes
+
+- 457c3b8: Update native modules to build using Visual Studio 2026
+
 ## 54.0.14-beta.0
 
 ### Patch Changes
