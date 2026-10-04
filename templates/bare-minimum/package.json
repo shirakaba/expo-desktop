@@ -1,6 +1,6 @@
 {
   "name": "expo-desktop-template-bare-minimum",
-  "version": "54.81.2",
+  "version": "55.83.0",
   "description": "This bare project template includes a minimal setup for using unimodules with React Native.",
   "homepage": "https://github.com/shirakaba/expo-desktop/tree/main/templates/bare-minimum",
   "license": "0BSD",
@@ -21,24 +21,24 @@
     "web": "expo start --web"
   },
   "dependencies": {
-    "expo": "~54.0.35",
+    "expo": "~55.0.31",
     "expo-desktop": "workspace:^",
     "expo-desktop-modules-core": "workspace:~",
     "expo-desktop-stubs": "workspace:~",
-    "expo-status-bar": "~3.0.9",
-    "react": "19.1.4",
-    "react-native": "0.81.6",
-    "react-native-macos": "0.81.9",
-    "react-native-windows": "0.81.37"
+    "expo-status-bar": "~55.0.6",
+    "react": "19.2.0",
+    "react-native": "0.83.10",
+    "react-native-macos": "0.83.0",
+    "react-native-windows": "0.83.2"
   },
   "devDependencies": {
     "@types/react": "~19.2.17",
-    "expo-desktop-metro-config": "workspace:~",
+    "expo-desktop-metro-config": "~54.81.0",
     "typescript": "~5.9.2"
   },
   "overrides": {
-    "react": "19.1.4",
-    "react-native": "0.81.6"
+    "react": "19.2.0",
+    "react-native": "0.83.10"
   },
   "expo": {
     "install": {
