@@ -11,7 +11,7 @@
     "react native desktop",
     "windows"
   ],
-  "homepage": "https://github.com/shirakaba/expo-desktop/tree/main/packages/expo-desktop-metro-config/54.81",
+  "homepage": "https://github.com/shirakaba/expo-desktop/tree/main/packages/expo-desktop-metro-config",
   "bugs": {
     "url": "https://github.com/shirakaba/expo-desktop/issues"
   },
@@ -20,7 +20,7 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/shirakaba/expo-desktop.git",
-    "directory": "packages/expo-desktop-metro-config/54.81"
+    "directory": "packages/expo-desktop-metro-config"
   },
   "files": [
     "src"

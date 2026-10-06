@@ -6,7 +6,7 @@ import path from "node:path";
 export async function getTemplatePackages(monorepoRoot: string): Promise<Array<Package>> {
   const templates = new Array<Package>();
 
-  for await (const { name, parentPath } of fs.glob("templates/*/*/package.json", {
+  for await (const { name, parentPath } of fs.glob("templates/*/package.json", {
     cwd: monorepoRoot,
     withFileTypes: true,
   })) {

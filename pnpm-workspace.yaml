@@ -3,7 +3,7 @@ packages:
   - packages/expo-desktop
   - packages/expo-desktop/scripts
   - packages/expo-desktop-config-plugins
-  - packages/expo-desktop-metro-config/*
+  - packages/expo-desktop-metro-config
   - packages/expo-desktop-modules-core
   - packages/expo-desktop-prebuild-config
   - packages/expo-desktop-stubs

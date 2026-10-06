@@ -320,7 +320,7 @@ importers:
         specifier: catalog:base
         version: 7.0.0-dev.20260507.1
 
-  packages/expo-desktop-metro-config/54.81:
+  packages/expo-desktop-metro-config:
     dependencies:
       '@expo/metro-config':
         specifier: catalog:react-native-81

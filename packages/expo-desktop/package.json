@@ -39,7 +39,7 @@
     "generate-config": "node scripts/generate-config.ts",
     "schema": "node scripts/update-schema.ts",
     "start": "node src/cli.ts",
-    "demo": "npm_config_user_agent=bun node --run start -- create-app --template ../../templates/blank-typescript/54.81/expo-desktop-template-blank-typescript-54.81.0.tgz",
+    "demo": "npm_config_user_agent=bun node --run start -- create-app --template ../../templates/blank-typescript/expo-desktop-template-blank-typescript-54.81.0.tgz",
     "test": "vitest run"
   },
   "dependencies": {
