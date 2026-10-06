@@ -59,4 +59,3 @@ jobs:
         uses: changesets/action@v2
         with:
           version-script: node --run r2
-          publish-script: node --run r3
