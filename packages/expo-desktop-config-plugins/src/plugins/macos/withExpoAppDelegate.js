@@ -32,7 +32,7 @@ function withExpoAppDelegate(config, props) {
           addWarningMacOS(
             "[with-expo-app-delegate] Cannot customise the window title in the ${config.modRequest.platform} project's AppDelegate because the AppDelegate did not contain the expected text to match against. It's expected to contain a call to the superclass's applicationDidFinishLaunching method.",
           );
-          return;
+          return config;
         }
 
         throw error;
