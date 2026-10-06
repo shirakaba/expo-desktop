@@ -1,5 +1,11 @@
 # expo-desktop-stubs
 
+## 54.0.15
+
+### Patch Changes
+
+- Republish post-monorepo restructure
+
 ## 54.0.14
 
 ### Patch Changes

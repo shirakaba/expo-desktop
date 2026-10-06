@@ -113,7 +113,7 @@ importers:
         specifier: workspace:^1.1.0
         version: link:../../packages/expo-desktop-prebuild-config
       expo-desktop-stubs:
-        specifier: workspace:^54.0.14
+        specifier: workspace:^54.0.15
         version: link:../../packages/expo-desktop-stubs
       expo-status-bar:
         specifier: ~3.0.9

@@ -1,5 +1,11 @@
 # expo-desktop
 
+## 1.0.1
+
+### Patch Changes
+
+- Republish post-monorepo restructure
+
 ## 1.0.0
 
 ### Major Changes

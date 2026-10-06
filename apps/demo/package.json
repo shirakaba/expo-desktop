@@ -17,7 +17,7 @@
     "expo-desktop-config-plugins": "workspace:^1.2.0",
     "expo-desktop-modules-core": "workspace:^54.0.14",
     "expo-desktop-prebuild-config": "workspace:^1.1.0",
-    "expo-desktop-stubs": "workspace:^54.0.14",
+    "expo-desktop-stubs": "workspace:^54.0.15",
     "expo-status-bar": "~3.0.9",
     "react": "catalog:react-native-81",
     "react-native": "catalog:react-native-81",

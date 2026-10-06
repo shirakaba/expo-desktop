@@ -1,5 +1,14 @@
 # expo-desktop-template-blank-typescript
 
+## 54.81.2
+
+### Patch Changes
+
+- Republish post-monorepo restructure
+- Updated dependencies
+  - expo-desktop@1.0.1
+  - expo-desktop-stubs@54.0.15
+
 ## 54.81.1
 
 ### Patch Changes

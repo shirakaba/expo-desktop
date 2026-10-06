@@ -1,5 +1,11 @@
 # expo-desktop-metro-config
 
+## 54.81.1
+
+### Patch Changes
+
+- Republish post-monorepo restructure
+
 ## 54.81.0
 
 ### Patch Changes
