@@ -21,9 +21,9 @@
   },
   "dependencies": {
     "expo": "~54.0.35",
-    "expo-desktop": "^1.0.0",
-    "expo-desktop-modules-core": "~54.0.14",
-    "expo-desktop-stubs": "~54.0.14",
+    "expo-desktop": "workspace:^",
+    "expo-desktop-modules-core": "workspace:~",
+    "expo-desktop-stubs": "workspace:~",
     "expo-status-bar": "~3.0.9",
     "react": "19.1.4",
     "react-native": "0.81.6",
@@ -33,8 +33,8 @@
   "devDependencies": {
     "@react-native-community/cli": "^20.1.3",
     "@types/react": "~19.2.17",
-    "expo-desktop-metro-config": "~54.81.0",
-    "expo-desktop-template-bare-minimum": "~54.81.1",
+    "expo-desktop-metro-config": "workspace:~",
+    "expo-desktop-template-bare-minimum": "workspace:~",
     "typescript": "~5.9.2"
   },
   "overrides": {
