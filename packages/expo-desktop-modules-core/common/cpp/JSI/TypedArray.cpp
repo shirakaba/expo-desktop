@@ -1,8 +1,6 @@
 // Copyright 2022-present 650 Industries. All rights reserved.
 
 #include <unordered_map>
-// JB: Added for std::except on MSVC
-#include <stdexcept>
 #include "TypedArray.h"
 
 namespace expo {

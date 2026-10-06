@@ -4,10 +4,7 @@
 
 #pragma once
 
-// JB: Added for std::function on MSVC
-#include <functional>
-// JB: Changed from #import to #include
-#include <jsi/jsi.h>
+#import <jsi/jsi.h>
 
 namespace jsi = facebook::jsi;
 
