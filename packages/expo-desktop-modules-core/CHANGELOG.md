@@ -1,5 +1,11 @@
 # expo-desktop-modules-core
 
+## 55.0.0
+
+### Major Changes
+
+- Update to Expo SDK 54 expo-modules-core internals
+
 ## 54.0.14
 
 ### Patch Changes
