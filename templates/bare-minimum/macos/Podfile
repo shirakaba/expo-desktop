@@ -36,6 +36,22 @@ target 'HelloWorld-macOS' do
   post_install do |installer|
     react_native_post_install(installer)
 
+    # RN macOS 0.83 already declares this Objective-C alias, which Expo's
+    # preprocessor guard cannot detect. Remove Expo's duplicate declaration.
+    react_uikit_header = installer.sandbox.pod_dir('React-RCTUIKit').join('RCTUIKitCompat.h')
+    expo_platform_header = installer.sandbox.pod_dir('ExpoModulesCore').join('ios/Platform/Platform.h')
+    application_alias = '@compatibility_alias UIApplication NSApplication;'
+    if react_uikit_header.file? && expo_platform_header.file? &&
+        react_uikit_header.read.include?(application_alias)
+      contents = expo_platform_header.read
+      if contents.include?(application_alias)
+        patched_contents = contents.sub("#ifndef UIApplication\n#{application_alias}\n#endif", '')
+        raise "Unexpected UIApplication alias in #{expo_platform_header}" if patched_contents == contents
+
+        expo_platform_header.write(patched_contents)
+      end
+    end
+
     # react_native_post_install updates pod targets, but not the resource-bundle
     # targets that CocoaPods creates for privacy manifests. Xcode 27 no longer
     # supports building those targets with macOS 11 as their deployment target.
