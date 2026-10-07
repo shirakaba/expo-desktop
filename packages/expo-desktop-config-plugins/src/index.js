@@ -22,7 +22,7 @@ const {
   withMacosBaseMods,
 } = require("./plugins/macos/withMacosBaseMods");
 const { withMacosJsEnginePodfileProps } = require("./plugins/macos/withMacosJsEnginePodfileProps");
-const withWindowSize = require("./plugins/macos/withWindowSize");
+const { withWindowSize } = require("./plugins/macos/withWindowSize");
 
 const MacOSConfig = {
   Entitlements: require("./plugins/macos/Entitlements"),
