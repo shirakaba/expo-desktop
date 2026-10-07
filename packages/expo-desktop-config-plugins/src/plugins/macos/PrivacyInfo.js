@@ -5,7 +5,7 @@
 
 const fs = require("node:fs");
 const path = require("node:path");
-const plist = require("@expo/plist");
+const { default: plist } = require("@expo/plist");
 const Xcodeproj = require("./Xcodeproj");
 const macosPlugins = require("./macos-plugins");
 
