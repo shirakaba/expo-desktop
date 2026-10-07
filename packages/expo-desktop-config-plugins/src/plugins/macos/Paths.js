@@ -1,6 +1,6 @@
 const fs = require("node:fs");
 const path = require("node:path");
-const { sync: globSync } = require("glob");
+const { sync: globSync, glob: globAsync } = require("glob");
 const { withSortedGlobResult } = require("./_utils/glob");
 const { UnexpectedError } = require("./_utils/errors");
 const { addWarningMacOS } = require("./_utils/warnings");
@@ -334,6 +334,21 @@ function getAllEntitlementsPaths(projectRoot, platform) {
 }
 
 /**
+ * Get the filepaths to all .storyboard files.
+ * @param {string} projectRoot
+ * @param {'ios' | 'macos'} platform
+ */
+async function getStoryboardFilePaths(projectRoot, platform) {
+  const result = await globAsync(`${platform}/*/*.lproj/*.storyboard`, {
+    absolute: true,
+    cwd: projectRoot,
+    ignore: ignoredPaths,
+  });
+
+  return withSortedGlobResult(result);
+}
+
+/**
  * @param {string} projectRoot
  * @param {'ios' | 'macos'} platform
  * @deprecated: use Entitlements.getEntitlementsPath instead
@@ -387,6 +402,7 @@ exports.getAppDelegate = getAppDelegate;
 exports.getAppDelegateFilePath = getAppDelegateFilePath;
 exports.getAppDelegateHeaderFilePath = getAppDelegateHeaderFilePath;
 exports.getAppDelegateObjcHeaderFilePath = getAppDelegateObjcHeaderFilePath;
+exports.getStoryboardFilePaths = getStoryboardFilePaths;
 exports.getEntitlementsPath = getEntitlementsPath;
 exports.getExpoPlistPath = getExpoPlistPath;
 exports.getFileInfo = getFileInfo;
