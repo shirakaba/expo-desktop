@@ -4,20 +4,21 @@
   "private": true,
   "main": "index.ts",
   "scripts": {
-    "start": "cross-env EXPO_NO_TYPESCRIPT_SETUP=1 expo start",
+    "start": "expo start --dev-client",
     "android": "expo run:android",
     "ios": "expo run:ios",
-    "web": "expo start --web",
-    "macos": "rnc-cli run-macos",
+    "macos": "expo-desktop run macos",
+    "windows": "expo-desktop run windows",
+    "prebuild": "expo-desktop prebuild",
     "autolink-windows": "react-native autolink-windows",
-    "windows": "rnc-cli run-windows"
+    "web": "expo start --web"
   },
   "dependencies": {
     "expo": "catalog:react-native-81",
-    "expo-desktop-config-plugins": "workspace:^1.2.0",
-    "expo-desktop-modules-core": "workspace:^54.0.14",
-    "expo-desktop-prebuild-config": "workspace:^1.1.0",
-    "expo-desktop-stubs": "workspace:^54.0.15",
+    "expo-desktop-config-plugins": "workspace:^",
+    "expo-desktop-modules-core": "workspace:^",
+    "expo-desktop-prebuild-config": "workspace:^",
+    "expo-desktop-stubs": "workspace:^",
     "expo-status-bar": "~3.0.9",
     "react": "catalog:react-native-81",
     "react-native": "catalog:react-native-81",
@@ -25,12 +26,10 @@
     "react-native-windows": "catalog:react-native-81"
   },
   "devDependencies": {
-    "@react-native-community/cli": "20.1.3",
     "@react-native/metro-config": "catalog:react-native-81",
     "@rnx-kit/metro-config": "latest",
     "@types/react": "catalog:react-native-81",
-    "@typescript/native-preview": "catalog:base",
-    "cross-env": "^10.1.0"
+    "@typescript/native-preview": "catalog:base"
   },
   "overrides": {
     "react": "catalog:react-native-81",

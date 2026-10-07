@@ -8,8 +8,10 @@
     "format": "oxfmt",
     "rp": "changeset pre",
     "r1": "changeset add",
-    "r2": "changeset version && pnpm install --lockfile-only --offline --ignore-scripts",
-    "r3": "changeset publish"
+    "r2": "node scripts/release/src/cli.ts version",
+    "r3": "node scripts/release/src/cli.ts publish",
+    "release:check": "node scripts/release/src/cli.ts check",
+    "release:mode": "node scripts/release/src/cli.ts mode"
   },
   "devDependencies": {
     "@changesets/cli": "^3.0.3",

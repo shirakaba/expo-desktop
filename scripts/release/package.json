@@ -1,0 +1,21 @@
+{
+  "name": "expo-desktop-release",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "version": "node src/cli.ts version",
+    "publish": "node src/cli.ts publish",
+    "test": "node --test src/*.test.ts",
+    "typecheck": "tsgo -p tsconfig.json"
+  },
+  "dependencies": {
+    "@changesets/cli": "^3.0.3",
+    "@manypkg/get-packages": "3.1.0"
+  },
+  "devDependencies": {
+    "@tsconfig/node24": "catalog:base",
+    "@types/node": "catalog:base",
+    "@typescript/native-preview": "catalog:base"
+  }
+}

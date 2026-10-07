@@ -1,0 +1,8 @@
+{
+  "branches": {
+    "main": { "publish": "next", "allowMajor": true },
+    "sdk-55": { "publish": "latest", "allowMajor": false },
+    "sdk-54": { "publish": "sdk-54", "allowMajor": false }
+  },
+  "sdkBranchDefaults": { "publish": "{branch}", "allowMajor": false }
+}

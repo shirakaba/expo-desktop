@@ -9,7 +9,7 @@ packages:
   - packages/expo-desktop-stubs
   - templates/bare-minimum
   - templates/blank-typescript
-  - scripts/custom-changeset
+  - scripts/release
 
 catalogs:
   base:

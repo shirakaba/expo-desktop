@@ -1,61 +1,101 @@
-name: Publish to npm
+name: Release packages
 
 on:
   push:
-    branches:
-      - main
-    paths:
-      - "packages/*/CHANGELOG.md"
-      - "packages/expo-desktop-metro-config/*/CHANGELOG.md"
-      - "templates/*/*/CHANGELOG.md"
+    branches: [main, sdk-54, sdk-55]
   workflow_dispatch:
+    inputs:
+      dry-run:
+        description: Build and pack the release without publishing
+        type: boolean
+        default: true
 
-concurrency:
-  group: publish-npm
-  cancel-in-progress: false
+permissions: {}
 
+# Pushes perform real releases. Manual dispatch defaults to a dry run.
 jobs:
-  publish:
+  mode:
+    if: >-
+      github.repository == 'shirakaba/expo-desktop' &&
+      contains(fromJSON('["main", "sdk-54", "sdk-55"]'), github.ref_name) &&
+      github.ref_type == 'branch'
     runs-on: ubuntu-latest
-    # Matches the GitHub Environment name on each npm package’s "Trusted
-    # publisher" config.
-    environment: Stable Release
     permissions:
-      # To push git tags
-      contents: write
-      # To publish to npm via OIDC
-      id-token: write
+      contents: read
+    outputs:
+      mode: ${{ steps.mode.outputs.mode }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-
+      - uses: actions/checkout@v7
       - name: Install pnpm
-        uses: pnpm/setup@v2
+        uses: pnpm/setup@v3
         with:
           version: latest
           cache: true
-          install: false
+          require-lockfile: true
           runtime: node@lts
+      - id: mode
+        run: node --run release:mode
 
-      - name: Install dependencies
-        run: >-
-          pnpm install \
-            --frozen-lockfile \
-            --filter expo-desktop \
-            --filter expo-desktop-config-plugins \
-            --filter expo-desktop-metro-config \
-            --filter expo-desktop-modules-core \
-            --filter expo-desktop-prebuild-config \
-            --filter expo-desktop-stubs \
-            --filter custom-changeset
-
-      # Build in order of dependency graph:
-      # config-plugins → prebuild-config → expo-desktop.
-      - name: Build expo-desktop and all of its dependents
-        run: pnpm --filter expo-desktop... build
-
-      - name: Publish packages
-        id: changesets
-        uses: changesets/action@v2
+  version:
+    needs: mode
+    if: >-
+      needs.mode.outputs.mode == 'version' &&
+      (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && !inputs.dry-run))
+    runs-on: ubuntu-latest
+    concurrency:
+      group: release-version-${{ github.ref_name }}
+      cancel-in-progress: false
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v7
         with:
-          version-script: node --run r2
+          fetch-depth: 0
+      - name: Install pnpm
+        uses: pnpm/setup@v3
+        with:
+          version: latest
+          cache: true
+          require-lockfile: true
+          runtime: node@lts
+      - uses: changesets/action/version@v2
+        with:
+          script: node --run r2
+          commit-message: Version packages (${{ github.ref_name }})
+          pr-title: Version packages (${{ github.ref_name }})
+          pr-base-branch: ${{ github.ref_name }}
+
+  publish:
+    needs: mode
+    if: needs.mode.outputs.mode == 'publish'
+    runs-on: ubuntu-latest
+    # Keep this filename and environment aligned with npm trusted publishing.
+    environment: Stable Release
+    concurrency:
+      # Shared package names exist on every branch. Serialize registry mutations.
+      group: publish-npm
+      queue: max
+      cancel-in-progress: false
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Install pnpm
+        uses: pnpm/setup@v3
+        with:
+          version: latest
+          cache: true
+          require-lockfile: true
+          runtime: node@lts
+      - name: Validate the release without publishing
+        if: github.event_name == 'workflow_dispatch' && inputs.dry-run
+        run: node --run r3 -- --dry-run
+      - name: Publish packages and create GitHub releases
+        if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && !inputs.dry-run)
+        uses: changesets/action/publish@v2
+        with:
+          script: node --run r3
