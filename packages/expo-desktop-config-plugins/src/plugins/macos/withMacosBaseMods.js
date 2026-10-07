@@ -30,7 +30,10 @@ function getEntitlementsPlistTemplate() {
   return {};
 }
 
-function getInfoPlistTemplate() {
+/**
+ * @param {Record<string, unknown>} [extra]
+ */
+function getInfoPlistTemplate(extra = {}) {
   // TODO: Fetch the versioned template file if possible
   return {
     CFBundleDevelopmentRegion: "$(DEVELOPMENT_LANGUAGE)",
@@ -51,10 +54,10 @@ function getInfoPlistTemplate() {
         },
       },
     },
-    NSMainStoryboardFile: "Main",
     NSPrincipalClass: "NSApplication",
     NSSupportsAutomaticTermination: true,
     NSSupportsSuddenTermination: true,
+    ...extra,
   };
 }
 
@@ -194,7 +197,7 @@ const defaultProviders = {
       }
       try {
         // Fallback on glob...
-        return await Paths.getInfoPlistPath(config.modRequest.projectRoot, "macos");
+        return Paths.getInfoPlistPath(config.modRequest.projectRoot, "macos");
       } catch (error) {
         if (config.modRequest.introspect) {
           // fallback to an empty string in introspection mode.
@@ -218,8 +221,22 @@ const defaultProviders = {
         if (!config.modRequest.introspect) {
           throw error;
         }
+
+        // From SDK 55, expo-desktop-template-bare-minimum moves from
+        // Storyboards to SwiftUI. Rather than checking on the SDK version, we
+        // feature-detect based on the presence of a storyboard file, to make
+        // our config plugins fully backwards compatible.
+        const storyboards = await Paths.getStoryboardFilePaths(
+          config.modRequest.projectRoot,
+          "macos",
+        );
+        const storyboard = storyboards.at(0);
+        const NSMainStoryboardFile = storyboard ? path.parse(storyboard).name : undefined;
+
         // Fallback to using the infoPlist object from the Expo config.
-        modResults = getInfoPlistTemplate();
+        modResults = getInfoPlistTemplate({
+          ...(NSMainStoryboardFile ? { NSMainStoryboardFile } : {}),
+        });
       }
       config.macos.infoPlist = {
         ...(modResults || {}),
