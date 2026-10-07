@@ -1,6 +1,6 @@
 import SwiftUI
+internal import Expo
 import React
-import React_RCTAppDelegate
 import ReactAppDependencyProvider
 
 // Keep these constants on separate lines for config plugins.
@@ -22,27 +22,25 @@ struct HelloWorldApp: App {
 
 // MARK: - App Delegate
 
-class AppDelegate: NSObject, NSApplicationDelegate {
-  private let reactNativeDelegate: ReactNativeDelegate
-  let reactNativeFactory: RCTReactNativeFactory
-
-  override init() {
+class AppDelegate: ExpoAppDelegate {
+  private let reactNative: (delegate: ReactNativeDelegate, factory: RCTReactNativeFactory) = {
     let delegate = ReactNativeDelegate()
-    let factory = RCTReactNativeFactory(delegate: delegate)
     delegate.dependencyProvider = RCTAppDependencyProvider()
+    let factory = ExpoReactNativeFactory(delegate: delegate)
+    return (delegate, factory)
+  }()
 
-    reactNativeDelegate = delegate
-    reactNativeFactory = factory
-
-    super.init()
+  @objc var reactNativeFactory: RCTReactNativeFactory {
+    reactNative.factory
   }
 }
 
 // MARK: - React Native Delegate
 
-class ReactNativeDelegate: RCTDefaultReactNativeFactoryDelegate {
+class ReactNativeDelegate: ExpoReactNativeFactoryDelegate {
   override func sourceURL(for bridge: RCTBridge) -> URL? {
-    bundleURL()
+    // Needed to return the correct URL for expo-dev-client.
+    bridge.bundleURL ?? bundleURL()
   }
 
   override func bundleURL() -> URL? {
