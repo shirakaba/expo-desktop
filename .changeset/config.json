@@ -1,7 +1,7 @@
 {
   "$schema": "https://unpkg.com/@changesets/config@4.0.1/schema.json",
   "access": "public",
-  "baseBranch": "sdk-55",
+  "baseBranch": "main",
   "changelog": "@changesets/cli/changelog",
   "commit": false,
   "fixed": [],
