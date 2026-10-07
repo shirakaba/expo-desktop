@@ -3,12 +3,17 @@ import React
 import React_RCTAppDelegate
 import ReactAppDependencyProvider
 
+// Keep these constants on separate lines for config plugins.
+private let windowTitle = "HelloWorld"
+private let bundleRoot = "index"
+private let moduleName = "HelloWorld"
+
 @main
 struct HelloWorldApp: App {
   @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
   var body: some Scene {
-    Window("HelloWorld", id: "main") {
+    Window(windowTitle, id: "main") {
       ReactNativeView(factory: appDelegate.reactNativeFactory)
     }
     .defaultSize(width: 1280, height: 720)
@@ -42,7 +47,7 @@ class ReactNativeDelegate: RCTDefaultReactNativeFactoryDelegate {
 
   override func bundleURL() -> URL? {
 #if DEBUG
-    RCTBundleURLProvider.sharedSettings().jsBundleURL(forBundleRoot: "index")
+    RCTBundleURLProvider.sharedSettings().jsBundleURL(forBundleRoot: bundleRoot)
 #else
     Bundle.main.url(forResource: "main", withExtension: "jsbundle")
 #endif
@@ -55,7 +60,7 @@ struct ReactNativeView: NSViewRepresentable {
   let factory: RCTReactNativeFactory
 
   func makeNSView(context: Context) -> NSView {
-    factory.rootViewFactory.view(withModuleName: "HelloWorld")
+    factory.rootViewFactory.view(withModuleName: moduleName)
   }
 
   func updateNSView(_ nsView: NSView, context: Context) {}

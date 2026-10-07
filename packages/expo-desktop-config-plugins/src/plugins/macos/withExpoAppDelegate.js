@@ -66,10 +66,12 @@ function setBundleRoot({ modResults: { language, contents } }, { bundleRoot }) {
     throw error;
   }
 
-  const [fullMatch, prefix, _value, suffix] = match;
+  // There's a suffix (and capture group for it) only in the Obj-C pattern.
+  const [fullMatch, prefix, _value, suffix = ""] = match;
   const leading = `${contents.slice(0, match.index)}${prefix}`;
   const trailing = `${suffix}${contents.slice(match.index + fullMatch.length)}`;
-  const bundleRootString = language === "swift" ? `"${bundleRoot}"` : `@"${bundleRoot}"`;
+  const bundleRootString =
+    language === "swift" ? `"${escapeSwiftString(bundleRoot)}"` : `@"${bundleRoot}"`;
 
   const modified = `${leading}${bundleRootString}${trailing}`;
 
@@ -80,8 +82,7 @@ function setBundleRoot({ modResults: { language, contents } }, { bundleRoot }) {
   };
 }
 
-const bundleRootRegexSwift =
-  /(RCTBundleURLProvider\.sharedSettings\(\)\.jsBundleURL\(forBundleRoot:\s*)(.*)(\s*\))/;
+const bundleRootRegexSwift = /(private let bundleRoot =\s*)(".*")/;
 const bundleRootRegexObjc =
   /(\[\[RCTBundleURLProvider sharedSettings\] jsBundleURLForBundleRoot:\s*)(.*)(\s*\])/;
 
@@ -112,7 +113,8 @@ function setModuleName({ modResults: { language, contents } }, { moduleName }) {
   const [fullMatch, prefix, _value] = match;
   const leading = `${contents.slice(0, match.index)}${prefix}`;
   const trailing = `${contents.slice(match.index + fullMatch.length)}`;
-  const moduleNameString = language === "swift" ? `"${moduleName}"` : `@"${moduleName}"`;
+  const moduleNameString =
+    language === "swift" ? `"${escapeSwiftString(moduleName)}"` : `@"${moduleName}"`;
 
   const modified = `${leading}${moduleNameString}${trailing}`;
 
@@ -123,52 +125,12 @@ function setModuleName({ modResults: { language, contents } }, { moduleName }) {
   };
 }
 
-const moduleNameRegexSwift = /(withModuleName:\s*)(".*")/;
+const moduleNameRegexSwift = /(private let moduleName =\s*)(".*")/;
 const moduleNameRegexObjc = /(self.moduleName =\s*)(@".*")/;
 
 /**
- * Sets the title for the NSWindow (it is normally set to the moduleName, which
- * has to be "main").
- * @param {import("@expo/config-plugins").ExportedConfigWithProps<import("@expo/config-plugins/build/ios/Paths").AppDelegateProjectFile>} config
- * @param {{ moduleName: string }} props
- * @returns {import("@expo/config-plugins/build/utils/generateCode").MergeResults}
- */
-function setWindowTitle({ modResults: { language, contents } }, { moduleName }) {
-  if (language !== "swift" && language !== "objc" && language !== "objcpp") {
-    throw new Error(
-      `Expected AppDelegate to be in Swift or Obj-C(++), but unexpectedly got '${language}'.`,
-    );
-  }
-
-  const pattern =
-    language === "swift"
-      ? superApplicationDidFinishLaunchingRegexSwift
-      : superApplicationDidFinishLaunchingRegexObjc;
-  const match = pattern.exec(contents);
-  if (!match) {
-    const error = new Error(`Failed to match "${pattern}" in contents:\n${contents}`);
-    error.code = "ERR_NO_MATCH";
-    throw error;
-  }
-
-  // const [fullMatch, prefix, _value] = match;
-  const [fullMatch, maybeReturn, superApplicationDidFinishLaunching] = match;
-  const leading = `${contents.slice(0, match.index)}${prefix}`;
-  const trailing = `${contents.slice(match.index + fullMatch.length)}`;
-  const moduleNameString = language === "swift" ? `"${moduleName}"` : `@"${moduleName}"`;
-
-  const modified = `${leading}${moduleNameString}${trailing}`;
-
-  return {
-    contents: modified,
-    didClear: false,
-    didMerge: true,
-  };
-}
-
-/**
- * Adds a call into application(_:open:options:) to handle deeplinks that should
- * be handled by AppAuth.
+ * Sets the window title constant used by SwiftUI, or the NSWindow title in
+ * Obj-C(++).
  * @param {import("@expo/config-plugins").ExportedConfigWithProps<import("@expo/config-plugins/build/ios/Paths").AppDelegateProjectFile>} config
  * @param {{ windowTitle: string }} props
  */
@@ -179,32 +141,45 @@ function addWindowTitle({ modResults: { language, contents } }, { windowTitle })
     );
   }
 
-  // (1) Match on the call to the superclass's applicationDidFinishLaunching
-  //     method and set the window title after it.
+  // For Swift, there's no good pattern to anchor on, and mergeContents()
+  // doesn't support replacing the anchor itself, so we use a RegExp approach.
+  if (language === "swift") {
+    const pattern = windowTitleRegexSwift;
+    const match = pattern.exec(contents);
+    if (!match) {
+      const error = new Error(`Failed to match "${pattern}" in contents:\n${contents}`);
+      error.code = "ERR_NO_MATCH";
+      throw error;
+    }
+
+    const [fullMatch, prefix, _value] = match;
+    const leading = `${contents.slice(0, match.index)}${prefix}`;
+    const trailing = `${contents.slice(match.index + fullMatch.length)}`;
+    const moduleNameString = `"${escapeSwiftString(windowTitle)}"`;
+
+    contents = `${leading}${moduleNameString}${trailing}`;
+
+    return {
+      contents,
+      didClear: false,
+      didMerge: true,
+    };
+  }
+
   contents = mergeContents({
     tag: "expo-desktop-window-title",
     src: contents,
-    ...(language === "swift"
-      ? {
-          newSrc: [
-            // "    super.applicationDidFinishLaunching(notification)",
-            `    self.window.title = "${windowTitle}"`,
-          ].join("\n"),
-          anchor:
-            // Match this phrase:
-            // return super.applicationDidFinishLaunching(notification)
-            superApplicationDidFinishLaunchingRegexSwift,
-        }
-      : {
-          newSrc: [
-            // "  [super applicationDidFinishLaunching:notification];",
-            `  self.window.title = @"${windowTitle}";`,
-          ].join("\n"),
-          anchor:
-            // Match this phrase:
-            // return [super applicationDidFinishLaunching:notification];
-            superApplicationDidFinishLaunchingRegexObjc,
-        }),
+    // (1) Match on the call to the superclass's
+    //     applicationDidFinishLaunching method and set the window title
+    //     after it.
+    newSrc: [
+      // "  [super applicationDidFinishLaunching:notification];",
+      `  self.window.title = @"${windowTitle}";`,
+    ].join("\n"),
+    anchor:
+      // Match this phrase:
+      // return [super applicationDidFinishLaunching:notification];
+      superApplicationDidFinishLaunchingRegexObjc,
     offset: 1,
     comment: "//",
   }).contents;
@@ -213,10 +188,7 @@ function addWindowTitle({ modResults: { language, contents } }, { windowTitle })
   //     reachable. This is a destructive modification, as it can't be undone
   //     the next time we run the plugin. However, it's a void function in the
   //     first place, so there was never much sense in returning from it.
-  const pattern =
-    language === "swift"
-      ? superApplicationDidFinishLaunchingRegexSwift
-      : superApplicationDidFinishLaunchingRegexObjc;
+  const pattern = superApplicationDidFinishLaunchingRegexObjc;
   const match = pattern.exec(contents);
   if (!match) {
     const error = new Error(`Failed to match "${pattern}" in contents:\n${contents}`);
@@ -237,14 +209,27 @@ function addWindowTitle({ modResults: { language, contents } }, { windowTitle })
   };
 }
 
-const superApplicationDidFinishLaunchingRegexSwift =
-  /(return )?(super\.applicationDidFinishLaunching\(notification\))/;
+const windowTitleRegexSwift = /(private let windowTitle =\s*)(".*")/;
 const superApplicationDidFinishLaunchingRegexObjc =
   /(return )?(\[super applicationDidFinishLaunching:notification\];)/;
 
 /**
- * Removes the call into application(_:open:options:) to handle deeplinks that
- * should be handled by AppAuth.
+ * Escapes a JavaScript string for the contents of a Swift string literal.
+ * @param {string} value
+ * @returns {string}
+ */
+function escapeSwiftString(value) {
+  return value.replace(/["\\\u0000-\u001f\u007f-\u009f\u2028\u2029]/g, (character) => {
+    // Escaping backslashes also prevents Swift string interpolation.
+    if (character === '"' || character === "\\") {
+      return `\\${character}`;
+    }
+    return `\\u{${character.charCodeAt(0).toString(16)}}`;
+  });
+}
+
+/**
+ * Removes the window title.
  * @param {import("@expo/config-plugins").ExportedConfigWithProps<import("@expo/config-plugins/build/ios/Paths").AppDelegateProjectFile>} config
  * @param {Record<string, never>} props
  */
