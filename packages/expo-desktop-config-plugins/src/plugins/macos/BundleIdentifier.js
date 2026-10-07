@@ -5,7 +5,7 @@
 
 const assert = require("node:assert");
 const fs = require("node:fs");
-const plist = require("@expo/plist");
+const { default: plist } = require("@expo/plist");
 const { project } = require("xcode");
 const Xcodeproj = require("./Xcodeproj");
 const Paths = require("./Paths");
