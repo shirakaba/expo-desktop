@@ -392,6 +392,9 @@ importers:
       '@manypkg/get-packages':
         specifier: 3.1.0
         version: 3.1.0
+      semver:
+        specifier: ^7.6.0
+        version: 7.8.5
     devDependencies:
       '@tsconfig/node24':
         specifier: catalog:base
@@ -399,6 +402,9 @@ importers:
       '@types/node':
         specifier: catalog:base
         version: 24.13.1
+      '@types/semver':
+        specifier: ^7.5.8
+        version: 7.7.1
       '@typescript/native-preview':
         specifier: catalog:base
         version: 7.0.0-dev.20260507.1

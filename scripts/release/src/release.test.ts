@@ -75,7 +75,7 @@ function fixture(t: TestContext, branch = "sdk-55", realPack = false) {
     private: true,
     packageManager: "pnpm@12.9.1",
   });
-  write("pnpm-workspace.yaml", "packages:\n  - packages/*\n");
+  write("pnpm-workspace.yaml", "packages:\n  - packages/*\npmOnFail: ignore\n");
   write(".changeset/config.json", {
     baseBranch: branch,
     access: "public",
@@ -97,9 +97,12 @@ function fixture(t: TestContext, branch = "sdk-55", realPack = false) {
   commit();
   const calls: string[][] = [];
   let publishedVersions = ["1.0.0"];
+  const distTags: Record<string, string> = { [getPolicy(config, branch).publish!]: "1.0.0" };
   let registryError: Error | undefined;
   let extraPlan: object[] = [];
-  let packedPlan: { plan: { name: string; tag: string }[][] } | undefined;
+  let packedPlan:
+    | { plan: { kind: string; name: string; version: string; tag: string }[][] }
+    | undefined;
   let packFails = false;
   let packedManifest: Record<string, any> | undefined;
   const run: Runner = (command, args, capture = false) => {
@@ -107,7 +110,15 @@ function fixture(t: TestContext, branch = "sdk-55", realPack = false) {
     if (command === "git") return git(...args);
     if (command === "npm") {
       if (registryError) throw registryError;
+      if (args[0] === "dist-tag") {
+        assert.equal(args[1], "add");
+        distTags[args[3]!] = args[2]!.slice(args[2]!.lastIndexOf("@") + 1);
+        return "";
+      }
       assert.ok(args.includes("versions"));
+      if (args.includes("dist-tags")) {
+        return JSON.stringify({ versions: publishedVersions, "dist-tags": distTags });
+      }
       return JSON.stringify(publishedVersions);
     }
     if (command === "pnpm") {
@@ -147,7 +158,7 @@ function fixture(t: TestContext, branch = "sdk-55", realPack = false) {
       packedPlan = JSON.parse(readFileSync(args[args.indexOf("--from-publish-plan") + 1]!, "utf8"));
       if (packFails) throw new Error("Pack failed");
       if (realPack) {
-        execFileSync(command, args, { cwd, stdio: ["ignore", "pipe", "pipe"] });
+        execFileSync(command, args, { cwd, stdio: ["ignore", "pipe", "pipe"], timeout: 30_000 });
         const directory = args[args.indexOf("--out-dir") + 1]!;
         const packed = JSON.parse(readFileSync(path.join(directory, "publish-plan.json"), "utf8"));
         const library = packed.plan
@@ -163,7 +174,14 @@ function fixture(t: TestContext, branch = "sdk-55", realPack = false) {
       }
     } else {
       assert.equal(operation, "publish");
-      assert.deepEqual(args.slice(1), ["publish", "--tag", getPolicy(config, branch).publish]);
+      assert.equal(args[2], "--from-pack-dir");
+      assert.ok(args[3]!.endsWith("/packed"));
+      for (const entry of packedPlan!.plan.flat()) {
+        if (entry.kind === "publish" && entry.name === "library") {
+          publishedVersions.push(entry.version);
+          distTags[entry.tag] = entry.version;
+        }
+      }
       // Deliberately intercepted: tests never execute any registry writes.
     }
     return "";
@@ -187,6 +205,7 @@ function fixture(t: TestContext, branch = "sdk-55", realPack = false) {
     write,
     commit,
     calls,
+    distTags,
     invoke,
     changeset,
     versionCommit,
@@ -309,7 +328,7 @@ for (const [branch, tag] of [
   ["sdk-54", "sdk-54"],
   ["sdk-55", "latest"],
 ]) {
-  test(`publishing ${branch} builds then delegates to native Changesets with --tag ${tag}`, async (t) => {
+  test(`publishing ${branch} builds and packs the full native plan with tag ${tag}`, async (t) => {
     const f = fixture(t, branch);
     f.versionCommit();
     f.extraPlan([{ kind: "publish", name: "unrelated", version: "1.0.0", tag: "latest" }]);
@@ -318,9 +337,20 @@ for (const [branch, tag] of [
     const publish = f.calls.findIndex((call) => call[2] === "publish");
     assert.ok(build >= 0 && publish > build);
     assert.deepEqual(f.calls[build], ["pnpm", "--filter", "expo-desktop...", "build"]);
-    assert.deepEqual(f.calls[publish]!.slice(2), ["publish", "--tag", tag]);
+    const pack = f.calls.findIndex((call) => call[2] === "pack");
+    assert.ok(pack > build && publish > pack);
+    assert.ok(
+      f
+        .packedPlan()!
+        .plan.flat()
+        .every((entry) => entry.tag === tag),
+    );
+    assert.deepEqual(
+      f.packedPlan()!.plan.map((group) => group.map((entry) => entry.name)),
+      [["unrelated"], ["library"]],
+    );
     assert.equal(f.git("status", "--porcelain"), "");
-    assert.ok(!f.calls.some((call) => call[2] === "pack" || call[0] === "npm"));
+    assert.ok(!f.calls.some((call) => call[0] === "npm" && call[1] === "dist-tag"));
   });
 }
 
@@ -354,7 +384,7 @@ test("retries after later commits skip published versions without checking gitHe
   );
   await f.invoke("publish");
   assert.ok(f.calls.some((call) => call[2] === "publish"));
-  assert.ok(!f.calls.some((call) => call[0] === "npm" || call.includes("HEAD^")));
+  assert.ok(!f.calls.some((call) => call.includes("gitHead") || call.includes("HEAD^")));
   f.extraPlan([]);
   f.calls.length = 0;
   await f.invoke("publish");
@@ -385,7 +415,7 @@ test("tag-only plans reach Changesets without a build and dry runs never create 
   const f = fixture(t);
   f.extraPlan([{ kind: "tag-only", name: "private", version: "1.0.0" }]);
   await f.invoke("publish", true);
-  assert.ok(!f.calls.some((call) => call[2] === "publish" || call[2] === "pack"));
+  assert.ok(!f.calls.some((call) => call[2] === "publish" || call[1] === "dist-tag"));
   await f.invoke("publish");
   assert.ok(f.calls.some((call) => call[2] === "publish"));
   assert.ok(!f.calls.some((call) => call.includes("build")));
@@ -422,4 +452,89 @@ test("PR policy uses its base branch and refuses active prerelease mode", async 
   f.write(".changeset/pre.json", { mode: "pre", tag: "beta" });
   f.commit();
   await assert.rejects(f.invoke("version"), /Exit Changesets prerelease mode/);
+});
+
+test("an existing version missing the branch tag selects publish mode and is promoted without a build", async (t) => {
+  const f = fixture(t);
+  delete f.distTags.latest;
+  f.distTags.next = "1.0.0";
+  const output = path.join(f.cwd, ".git", "mode-output");
+  await f.invoke("mode", false, { GITHUB_OUTPUT: output });
+  assert.equal(readFileSync(output, "utf8"), "mode=publish\n");
+  await f.invoke("publish", true);
+  assert.deepEqual(f.distTags, { next: "1.0.0" });
+  assert.ok(!f.calls.some((call) => call[1] === "dist-tag"));
+  await f.invoke("publish");
+  assert.deepEqual(f.distTags, { next: "1.0.0", latest: "1.0.0" });
+  assert.ok(
+    !f.calls.some((call) => call.includes("build") || call[2] === "pack" || call[2] === "publish"),
+  );
+  f.calls.length = 0;
+  await f.invoke("publish");
+  assert.ok(!f.calls.some((call) => call[1] === "dist-tag"));
+});
+
+test("publication rechecks tags after mode selection, so a queued stale job cannot downgrade latest", async (t) => {
+  const f = fixture(t);
+  f.versionCommit();
+  await f.invoke("mode");
+  f.distTags.latest = "1.1.0";
+  await assert.rejects(f.invoke("publish"), /would move latest backwards/);
+  assert.ok(
+    !f.calls.some(
+      (call) => call.includes("build") || call[2] === "publish" || call[1] === "dist-tag",
+    ),
+  );
+});
+
+for (const branch of ["main", "sdk-54", "sdk-55"]) {
+  test(`shared packages use only latest alongside SDK packages on ${branch}`, async (t) => {
+    const f = fixture(t, branch, true);
+    f.write("packages/shared/package.json", { name: "expo-desktop", version: "1.0.1" });
+    f.versionCommit({ dependencies: { "expo-desktop": "workspace:^" } });
+    f.extraPlan([
+      { kind: "publish", name: "expo-desktop", version: "1.0.1", tag: "latest", access: "public" },
+    ]);
+    await f.invoke("publish", true);
+    const entries = f.packedPlan()!.plan.flat();
+    assert.equal(entries.find((entry) => entry.name === "expo-desktop")!.tag, "latest");
+    assert.equal(
+      entries.find((entry) => entry.name === "library")!.tag,
+      getPolicy(config, branch).publish,
+    );
+    assert.equal(f.packedManifest()!.dependencies["expo-desktop"], "^1.0.1");
+    assert.ok(!f.calls.some((call) => call[2] === "publish" || call[1] === "dist-tag"));
+  });
+}
+
+test("private workspaces are never queried or promoted", async (t) => {
+  const f = fixture(t);
+  f.write("packages/private/package.json", { name: "private", version: "9.0.0", private: true });
+  f.commit();
+  await f.invoke("publish");
+  assert.ok(!f.calls.some((call) => call[0] === "npm" && call.includes("private")));
+});
+
+test("dist-tag failures can be retried without republishing", async (t) => {
+  const f = fixture(t);
+  delete f.distTags.latest;
+  let fail = true;
+  const run: Runner = (command, args) => {
+    if (command === "git") return f.git(...args);
+    if (command === "npm" && args[0] === "view") {
+      return JSON.stringify({ versions: ["1.0.0"], "dist-tags": f.distTags });
+    }
+    if (command === "npm" && args[0] === "dist-tag") {
+      if (fail) throw new Error("Tag update failed");
+      f.distTags.latest = "1.0.0";
+      return "";
+    }
+    assert.equal(args[1], "publish-plan");
+    writeFileSync(args[args.indexOf("--output") + 1]!, JSON.stringify({ version: 1, plan: [] }));
+    return "";
+  };
+  await assert.rejects(runRelease("publish", { cwd: f.cwd, run, env: {} }), /Tag update failed/);
+  fail = false;
+  await runRelease("publish", { cwd: f.cwd, run, env: {} });
+  assert.equal(f.distTags.latest, "1.0.0");
 });

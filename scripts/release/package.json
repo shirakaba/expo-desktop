@@ -11,11 +11,13 @@
   },
   "dependencies": {
     "@changesets/cli": "^3.0.3",
-    "@manypkg/get-packages": "3.1.0"
+    "@manypkg/get-packages": "3.1.0",
+    "semver": "^7.6.0"
   },
   "devDependencies": {
     "@tsconfig/node24": "catalog:base",
     "@types/node": "catalog:base",
+    "@types/semver": "^7.5.8",
     "@typescript/native-preview": "catalog:base"
   }
 }

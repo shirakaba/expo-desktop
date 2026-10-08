@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       dry-run:
-        description: Build and pack the release without publishing
+        description: Build, pack, and preview npm tag updates without publishing
         type: boolean
         default: true
 
@@ -94,6 +94,9 @@ jobs:
       - name: Validate the release without publishing
         if: github.event_name == 'workflow_dispatch' && inputs.dry-run
         run: node --run r3 -- --dry-run
+      - name: Install npm with trusted dist-tag support
+        if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && !inputs.dry-run)
+        run: npm install --global npm@^11.21.0
       - name: Publish packages and create GitHub releases
         if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && !inputs.dry-run)
         uses: changesets/action/publish@v2

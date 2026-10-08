@@ -1,4 +1,9 @@
 {
+  "independentPackages": [
+    "expo-desktop",
+    "expo-desktop-config-plugins",
+    "expo-desktop-prebuild-config"
+  ],
   "branches": {
     "main": { "publish": "next", "allowMajor": true },
     "sdk-55": { "publish": "latest", "allowMajor": false },

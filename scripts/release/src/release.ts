@@ -1,18 +1,27 @@
 import { getPackages } from "@manypkg/get-packages";
 import { execFileSync } from "node:child_process";
-import { appendFile, mkdtemp, readFile, readdir, rm, stat } from "node:fs/promises";
+import { appendFile, mkdtemp, readFile, readdir, rm, stat, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { getPackageTag, getTagUpdates, syncTags } from "./tags.ts";
+
 type Policy = { publish: string | null; allowMajor: boolean };
-type Config = { branches: Record<string, Policy>; sdkBranchDefaults: Policy };
+type Config = {
+  branches: Record<string, Policy>;
+  sdkBranchDefaults: Policy;
+  independentPackages: string[];
+};
 type Release = { name: string; oldVersion: string; newVersion: string; type?: string };
 type Status = {
   changesets: { releases: { name: string; type: string }[] }[];
   releases: Release[];
 };
-type PublishPlan = { plan: { kind: "publish" | "tag-only" }[][] };
+type PublishPlan = {
+  version: number;
+  plan: { kind: "publish" | "tag-only"; name: string; version: string; tag?: string }[][];
+};
 export type Runner = (command: string, args: string[], capture?: boolean) => string;
 
 export function getPolicy(config: Config, branch: string): Policy {
@@ -75,7 +84,8 @@ export async function runRelease(
     run(process.execPath, [fileURLToPath(import.meta.resolve("@changesets/cli/bin.js")), ...args]);
   const json = async (file: string) => JSON.parse(await readFile(file, "utf8"));
   const branch = env.GITHUB_BASE_REF || env.GITHUB_REF_NAME || git("branch", "--show-current");
-  const policy = getPolicy(await json(path.join(cwd, ".changeset/expo-desktop.json")), branch);
+  const config: Config = await json(path.join(cwd, ".changeset/expo-desktop.json"));
+  const policy = getPolicy(config, branch);
   const pending = (await readdir(path.join(cwd, ".changeset"))).filter(
     (name) => name.endsWith(".md") && name !== "README.md",
   );
@@ -171,32 +181,49 @@ export async function runRelease(
 
     const planFile = path.join(directory, "publish-plan.json");
     changeset("publish-plan", "--output", planFile);
-    const plan = ((await json(planFile)) as PublishPlan).plan.flat();
+    const publishPlan: PublishPlan = await json(planFile);
+    const plan = publishPlan.plan.flat();
+    const tagFor = (name: string) =>
+      getPackageTag(name, policy.publish!, config.independentPackages);
+    const updates = getTagUpdates(
+      (await getPackages(cwd)).packages
+        .filter((pkg) => !pkg.packageJson.private)
+        .map((pkg) => pkg.packageJson),
+      new Set(plan.filter((entry) => entry.kind === "publish").map((entry) => entry.name)),
+      tagFor,
+      run,
+    );
     if (command === "mode") {
-      await setMode(plan.length ? "publish" : "none");
+      await setMode(plan.length || updates.length ? "publish" : "none");
       return;
     }
-    if (!plan.length) {
-      console.log("No unpublished packages or pending Git tags.");
+    if (!plan.length && !updates.length) {
+      console.log("No unpublished packages, pending Git tags, or npm tag updates.");
       return;
     }
-    console.log(`Release from ${branch} to ${policy.publish}.`);
-    const needsBuild = plan.some((entry) => entry.kind === "publish");
-    if (needsBuild) run("pnpm", ["--filter", "expo-desktop...", "build"]);
-    if (dryRun) {
-      if (needsBuild) {
-        changeset(
-          "pack",
-          "--from-publish-plan",
-          planFile,
-          "--out-dir",
-          path.join(directory, "packed"),
-        );
+    for (const { name, version, tag, previous, published } of updates) {
+      console.log(
+        `${published ? "Promote" : "Publish"} ${name}@${version}: ${tag} ${previous ?? "(unset)"} -> ${version}`,
+      );
+    }
+    if (plan.length) {
+      // Preserve Changesets' package selection and dependency order; override only npm tags.
+      for (const entry of plan) {
+        if (entry.kind === "publish") entry.tag = tagFor(entry.name);
       }
+      await writeFile(planFile, JSON.stringify(publishPlan));
+      if (plan.some((entry) => entry.kind === "publish")) {
+        run("pnpm", ["--filter", "expo-desktop...", "build"]);
+      }
+      const packedDirectory = path.join(directory, "packed");
+      changeset("pack", "--from-publish-plan", planFile, "--out-dir", packedDirectory);
+      if (!dryRun) changeset("publish", "--from-pack-dir", packedDirectory);
+    }
+    if (dryRun) {
       console.log("Dry run complete: nothing published or tagged.");
       return;
     }
-    changeset("publish", "--tag", policy.publish!);
+    syncTags(updates, run);
   } finally {
     await rm(directory, { recursive: true, force: true });
   }
