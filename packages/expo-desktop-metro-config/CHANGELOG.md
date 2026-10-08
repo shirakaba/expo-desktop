@@ -1,5 +1,11 @@
 # expo-desktop-metro-config
 
+## 55.0.0
+
+### Major Changes
+
+- Update metro config for SDK 55
+
 ## 54.81.1
 
 ### Patch Changes

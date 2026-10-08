@@ -35,6 +35,7 @@ catalogs:
     "@expo/config": ^55.0.15
     "@expo/config-plugins": ^55.0.8
     "@expo/config-types": ^55.0.5
+    "@expo/metro-config": ^55.0.27
     "@expo/prebuild-config": ^55.0.16
     "@react-native/metro-config": ~0.82.1
     "@types/react": ~19.1.0
