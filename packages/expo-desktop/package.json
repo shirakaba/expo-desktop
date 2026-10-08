@@ -27,7 +27,9 @@
   },
   "files": [
     "build",
-    "scripts"
+    "scripts/getProcessInfo.ps1",
+    "scripts/terminateApp.jxa.js",
+    "scripts/terminateApp.ps1"
   ],
   "type": "module",
   "exports": {
