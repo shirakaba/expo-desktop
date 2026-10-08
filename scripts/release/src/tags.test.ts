@@ -5,13 +5,16 @@ import type { Runner } from "./release.ts";
 
 import { getPackageTag, getTagUpdates, syncTags } from "./tags.ts";
 
-function registry(versions: string[], tags: Record<string, string>) {
+function registry(versions: string[], tags: Record<string, string>, npm12 = false) {
   const calls: string[][] = [];
   const run: Runner = (command, args) => {
     calls.push([command, ...args]);
     assert.equal(command, "npm");
     assert.ok(args.includes("--registry=https://registry.npmjs.org/"));
-    if (args[0] === "view") return JSON.stringify({ versions, "dist-tags": tags });
+    if (args[0] === "view") {
+      const info = { versions, "dist-tags": tags };
+      return JSON.stringify(npm12 ? [info] : info);
+    }
     assert.equal(args[0], "dist-tag");
     assert.equal(args[1], "add");
     tags[args[3]!] = args[2]!.split("@").at(-1)!;
@@ -54,6 +57,47 @@ test("older published versions leave newer tags untouched; comparison is semanti
     getTagUpdates([{ name: "shared", version: "1.10.0" }], new Set(), () => "latest", r.run).length,
     1,
   );
+});
+
+test("npm 12 array output still promotes existing SDK versions without republishing", () => {
+  const r = registry(["54.0.14"], { latest: "54.0.14" }, true);
+  const packages = [{ name: "expo-desktop-modules-core", version: "54.0.14" }];
+  const updates = getTagUpdates(packages, new Set(), () => "sdk-54", r.run);
+  assert.deepEqual(updates, [
+    { ...packages[0], tag: "sdk-54", published: true, previous: undefined },
+  ]);
+  syncTags(updates, r.run);
+  assert.deepEqual(r.tags, { latest: "54.0.14", "sdk-54": "54.0.14" });
+  assert.deepEqual(
+    getTagUpdates(packages, new Set(), () => "sdk-54", r.run),
+    [],
+  );
+});
+
+test("unexpected registry JSON shapes fail instead of silently skipping tag updates", () => {
+  const valid = { versions: ["1.0.0"], "dist-tags": { latest: "1.0.0" } };
+  for (const response of [
+    null,
+    {},
+    [],
+    [valid, valid],
+    { ...valid, versions: null },
+    { ...valid, versions: [1] },
+    { ...valid, "dist-tags": null },
+    { ...valid, "dist-tags": [] },
+    { ...valid, "dist-tags": { latest: 1 } },
+  ]) {
+    assert.throws(
+      () =>
+        getTagUpdates(
+          [{ name: "library", version: "1.0.0" }],
+          new Set(),
+          () => "sdk-54",
+          () => JSON.stringify(response),
+        ),
+      /Unexpected npm view response for library/,
+    );
+  }
 });
 
 test("an unpublished version cannot downgrade a tag through Changesets publishing", () => {

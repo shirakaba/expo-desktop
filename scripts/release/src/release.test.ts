@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { test, type TestContext } from "node:test";
@@ -99,6 +99,7 @@ function fixture(t: TestContext, branch = "sdk-55", realPack = false) {
   let publishedVersions = ["1.0.0"];
   const distTags: Record<string, string> = { [getPolicy(config, branch).publish!]: "1.0.0" };
   let registryError: Error | undefined;
+  let npm12 = false;
   let extraPlan: object[] = [];
   let packedPlan:
     | { plan: { kind: string; name: string; version: string; tag: string }[][] }
@@ -117,7 +118,8 @@ function fixture(t: TestContext, branch = "sdk-55", realPack = false) {
       }
       assert.ok(args.includes("versions"));
       if (args.includes("dist-tags")) {
-        return JSON.stringify({ versions: publishedVersions, "dist-tags": distTags });
+        const info = { versions: publishedVersions, "dist-tags": distTags };
+        return JSON.stringify(npm12 ? [info] : info);
       }
       return JSON.stringify(publishedVersions);
     }
@@ -215,6 +217,9 @@ function fixture(t: TestContext, branch = "sdk-55", realPack = false) {
     registryError: (error: Error) => {
       registryError = error;
     },
+    useNpm12: () => {
+      npm12 = true;
+    },
     extraPlan: (entries: object[]) => {
       extraPlan = entries;
     },
@@ -262,9 +267,17 @@ test("mode uses pending changesets or the registry plan, not the latest commit",
   assert.ok(!f.calls.some((call) => call.includes("HEAD^")));
 });
 
-test("an empty registry plan skips building and publishing", async (t) => {
+test("an empty registry plan skips building and publishing but initializes Changesets output", async (t) => {
   const f = fixture(t);
-  await f.invoke("publish");
+  const output = path.join(f.cwd, ".git", "changesets-output.ndjson");
+  await f.invoke("publish", true, { CHANGESETS_OUTPUT: output });
+  assert.equal(existsSync(output), false);
+  await f.invoke("publish", false, { CHANGESETS_OUTPUT: output });
+  assert.equal(readFileSync(output, "utf8"), "");
+  const event = JSON.stringify({ type: "git-tag", name: "library", version: "1.0.0" }) + "\n";
+  writeFileSync(output, event);
+  await f.invoke("publish", false, { CHANGESETS_OUTPUT: output });
+  assert.equal(readFileSync(output, "utf8"), event);
   assert.ok(!f.calls.some((call) => call.includes("build") || call[2] === "publish"));
 });
 
@@ -454,18 +467,24 @@ test("PR policy uses its base branch and refuses active prerelease mode", async 
   await assert.rejects(f.invoke("version"), /Exit Changesets prerelease mode/);
 });
 
-test("an existing version missing the branch tag selects publish mode and is promoted without a build", async (t) => {
-  const f = fixture(t);
-  delete f.distTags.latest;
-  f.distTags.next = "1.0.0";
+test("upgrading to npm 12 after mode selection still promotes the branch tag without a build", async (t) => {
+  const f = fixture(t, "sdk-54");
+  delete f.distTags["sdk-54"];
+  f.distTags.latest = "1.0.0";
   const output = path.join(f.cwd, ".git", "mode-output");
-  await f.invoke("mode", false, { GITHUB_OUTPUT: output });
+  const changesetsOutput = path.join(f.cwd, ".git", "changesets-output.ndjson");
+  const env = { CHANGESETS_OUTPUT: changesetsOutput };
+  await f.invoke("mode", false, { ...env, GITHUB_OUTPUT: output });
   assert.equal(readFileSync(output, "utf8"), "mode=publish\n");
-  await f.invoke("publish", true);
-  assert.deepEqual(f.distTags, { next: "1.0.0" });
+  assert.equal(existsSync(changesetsOutput), false);
+  f.useNpm12();
+  await f.invoke("publish", true, env);
+  assert.deepEqual(f.distTags, { latest: "1.0.0" });
+  assert.equal(existsSync(changesetsOutput), false);
   assert.ok(!f.calls.some((call) => call[1] === "dist-tag"));
-  await f.invoke("publish");
-  assert.deepEqual(f.distTags, { next: "1.0.0", latest: "1.0.0" });
+  await f.invoke("publish", false, env);
+  assert.deepEqual(f.distTags, { latest: "1.0.0", "sdk-54": "1.0.0" });
+  assert.equal(readFileSync(changesetsOutput, "utf8"), "");
   assert.ok(
     !f.calls.some((call) => call.includes("build") || call[2] === "pack" || call[2] === "publish"),
   );

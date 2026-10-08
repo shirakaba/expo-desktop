@@ -30,13 +30,27 @@ export function getTagUpdates(
     }
     let info: { versions?: string | string[]; "dist-tags"?: Record<string, string> };
     try {
-      info = JSON.parse(
+      const result = JSON.parse(
         run(
           "npm",
           ["view", name, "versions", "dist-tags", "--json", "--prefer-online", registry],
           true,
         ),
       );
+      // npm 12 wraps multi-field results in an array; older npm returns the object directly.
+      info = Array.isArray(result) && result.length === 1 ? result[0] : result;
+      if (
+        !info ||
+        (typeof info.versions !== "string" &&
+          (!Array.isArray(info.versions) ||
+            info.versions.some((value) => typeof value !== "string"))) ||
+        !info["dist-tags"] ||
+        typeof info["dist-tags"] !== "object" ||
+        Array.isArray(info["dist-tags"]) ||
+        Object.values(info["dist-tags"]).some((value) => typeof value !== "string")
+      ) {
+        throw new Error(`Unexpected npm view response for ${name}.`);
+      }
     } catch (error) {
       let code: string | undefined;
       try {

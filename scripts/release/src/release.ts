@@ -179,6 +179,10 @@ export async function runRelease(
       return;
     }
 
+    // The action reads this even when no native publish runs (no-op or npm-tag-only).
+    if (command === "publish" && !dryRun && env.CHANGESETS_OUTPUT) {
+      await appendFile(env.CHANGESETS_OUTPUT, "");
+    }
     const planFile = path.join(directory, "publish-plan.json");
     changeset("publish-plan", "--output", planFile);
     const publishPlan: PublishPlan = await json(planFile);
