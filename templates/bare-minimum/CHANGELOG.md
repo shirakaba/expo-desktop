@@ -1,5 +1,11 @@
 # expo-desktop-template-bare-minimum
 
+## 55.83.2
+
+### Patch Changes
+
+- Update Metro config to SDK 55
+
 ## 55.83.1
 
 ### Patch Changes
