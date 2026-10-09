@@ -1,4 +1,5 @@
 const { withXcodeProject } = require("./macos-plugins");
+const { findFirstNativeTarget } = require("./Target");
 
 /**
  * @param {Parameters<import("@expo/config-plugins").ConfigPlugin>[0]} config
@@ -27,10 +28,11 @@ function withExpoXcodeBuildPhase(config, props) {
 
     /** @type {{ buildActionMask: number; files: Array<string>; inputPaths: Array<unknown>; isa: "PBXShellScriptBuildPhase"; name: string; outputPaths: Array<unknown>; runOnlyForDeploymentPostprocessing: number; shellPath: string; shellScript: string; }} */
     let reactNativeBuildPhase;
-    for (const [key, value] of Object.entries(PBXShellScriptBuildPhase)) {
-      if (key.endsWith("_comment")) {
-        continue;
-      }
+    // The template also contains an iOS target with an identically named phase.
+    // Only update the phase belonging to the macOS application target.
+    const [, nativeTarget] = findFirstNativeTarget(project);
+    for (const { value: key } of nativeTarget.buildPhases) {
+      const value = PBXShellScriptBuildPhase[key];
       if (
         !value ||
         typeof value !== "object" ||
@@ -68,7 +70,7 @@ if [[ -f "$PODS_ROOT/../.xcode.env.local" ]]; then
   source "$PODS_ROOT/../.xcode.env.local"
 fi
 
-# The project root by default is one level up from the ios directory
+# The project root by default is one level up from the macos directory
 export PROJECT_ROOT="$PROJECT_DIR"/..
 
 if [[ "$CONFIGURATION" = *Debug* ]]; then
@@ -88,7 +90,7 @@ if [[ -z "$BUNDLE_COMMAND" ]]; then
   export BUNDLE_COMMAND="export:embed"
 fi
 
-\`"$NODE_BINARY" --print "require('path').dirname(require.resolve('react-native/package.json')) + '/scripts/react-native-xcode.sh'"\`
+\`"$NODE_BINARY" --print "require('path').dirname(require.resolve('react-native-macos/package.json')) + '/scripts/react-native-xcode.sh'"\`
     `.trim() + "\n";
 
     // Turn literal linebreaks into symbolic ones up-front to avoid Xcode
