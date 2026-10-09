@@ -1,5 +1,11 @@
 # expo-desktop-template-bare-minimum
 
+## 55.83.4
+
+### Patch Changes
+
+- Update Metro config from React Native v0.82 to v0.83
+
 ## 55.83.3
 
 ### Patch Changes
