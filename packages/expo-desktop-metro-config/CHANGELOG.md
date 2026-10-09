@@ -1,6 +1,6 @@
 # expo-desktop-metro-config
 
-## 55.0.0
+## 55.83.0
 
 ### Major Changes
 
