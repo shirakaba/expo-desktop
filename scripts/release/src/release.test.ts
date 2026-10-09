@@ -1,6 +1,14 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  realpathSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { test, type TestContext } from "node:test";
@@ -203,6 +211,7 @@ function fixture(t: TestContext, branch = "sdk-55", realPack = false) {
   };
   return {
     cwd,
+    run,
     git,
     write,
     commit,
@@ -248,6 +257,120 @@ test("real Changesets versioning consumes committed intent and updates the lockf
     ),
   );
   assert.ok(!f.calls.some((call) => call[2] === "publish"));
+});
+
+test("versioning accepts uncommitted changesets and preserves staged and unstaged source changes", async (t) => {
+  const f = fixture(t);
+  const head = f.git("rev-parse", "HEAD");
+  f.write("packages/library/package.json", {
+    name: "library",
+    version: "1.0.0",
+    description: "An uncommitted fix",
+  });
+  f.git("add", "packages/library/package.json");
+  f.write("packages/library/index.js", "export const fixed = true;\n");
+  f.write(".changeset/fix.md", '---\n"library": patch\n---\n\nFix the library.\n');
+  await f.invoke("version");
+  assert.deepEqual(
+    JSON.parse(readFileSync(path.join(f.cwd, "packages/library/package.json"), "utf8")),
+    {
+      name: "library",
+      version: "1.0.1",
+      description: "An uncommitted fix",
+    },
+  );
+  assert.equal(
+    readFileSync(path.join(f.cwd, "packages/library/index.js"), "utf8"),
+    "export const fixed = true;\n",
+  );
+  assert.equal(existsSync(path.join(f.cwd, ".changeset/fix.md")), false);
+  assert.match(f.git("diff", "--cached"), /An uncommitted fix/);
+  assert.equal(f.git("rev-parse", "HEAD"), head);
+  assert.ok(!f.calls.some((call) => call.includes("--porcelain")));
+  assert.ok(f.calls.some((call) => call.includes("--lockfile-only")));
+});
+
+for (const branch of ["sdk-54", "sdk-55"]) {
+  test(`major versioning on ${branch} requires the explicit override`, async (t) => {
+    const f = fixture(t, branch);
+    f.write(".changeset/major.md", '---\n"library": major\n---\n\nA new major.\n');
+    await assert.rejects(f.invoke("version"), {
+      message:
+        "Major bumps belong on main, not on an SDK release branch. Pass --allow-major to override.",
+    });
+    assert.ok(!f.calls.some((call) => call[2] === "version"));
+    await runRelease("version", { cwd: f.cwd, run: f.run, env: {}, allowMajor: true });
+    assert.equal(
+      JSON.parse(readFileSync(path.join(f.cwd, "packages/library/package.json"), "utf8")).version,
+      "2.0.0",
+    );
+    assert.equal(getPolicy(config, branch).allowMajor, false);
+  });
+}
+
+test("the major override does not bypass registry collisions, other version guards, or CI checks", async (t) => {
+  const f = fixture(t);
+  const options = { cwd: f.cwd, run: f.run, env: {}, allowMajor: true };
+  f.write(".changeset/bump.md", '---\n"library": major\n---\n\nA new major.\n');
+  await assert.rejects(runRelease("check", options), /Pass --allow-major to override/);
+  f.versions(["1.0.0", "2.0.0"]);
+  await assert.rejects(runRelease("version", options), /already published/);
+  f.write("packages/library/package.json", {
+    name: "expo-desktop-metro-config",
+    version: "54.81.1",
+  });
+  f.write(".changeset/bump.md", '---\n"expo-desktop-metro-config": minor\n---\n\nA minor bump.\n');
+  await assert.rejects(runRelease("version", options), /encodes React Native/);
+  assert.ok(!f.calls.some((call) => call[2] === "version"));
+});
+
+test("the CLI forwards --allow-major only for versioning", (t) => {
+  const f = fixture(t);
+  f.write("scripts/release/package.json", { type: "module" });
+  f.write("scripts/release/src/cli.ts", readFileSync(new URL("./cli.ts", import.meta.url), "utf8"));
+  f.write(
+    "scripts/release/src/release.ts",
+    "export async function runRelease(command, options) { console.log(JSON.stringify({ command, options })); }\n",
+  );
+  const invoke = (...args: string[]) =>
+    execFileSync(process.execPath, [path.join(f.cwd, "scripts/release/src/cli.ts"), ...args], {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+  const result = JSON.parse(invoke("version", "--allow-major"));
+  assert.equal(result.command, "version");
+  assert.equal(result.options.allowMajor, true);
+  assert.equal(result.options.cwd, realpathSync(f.cwd));
+  assert.equal(JSON.parse(invoke("version")).options.allowMajor, undefined);
+  for (const command of ["check", "mode", "publish"]) {
+    assert.throws(() => invoke(command, "--allow-major"), /Usage:.*version \[--allow-major\]/);
+  }
+});
+
+for (const dependencyType of ["dependencies", "devDependencies"]) {
+  test(`Changesets uses ${dependencyType === "dependencies" ? "patch" : "none"} for a dependent's ${dependencyType} update`, async (t) => {
+    const f = fixture(t);
+    f.write("packages/dependent/package.json", {
+      name: "dependent",
+      version: "55.83.1",
+      [dependencyType]: { library: "workspace:~" },
+    });
+    f.write(".changeset/bump.md", '---\n"library": major\n---\n\nA new major.\n');
+    await runRelease("version", { cwd: f.cwd, run: f.run, env: {}, allowMajor: true });
+    const dependent = JSON.parse(
+      readFileSync(path.join(f.cwd, "packages/dependent/package.json"), "utf8"),
+    );
+    assert.equal(dependent.version, dependencyType === "dependencies" ? "55.83.2" : "55.83.1");
+  });
+}
+
+test("Changesets rejects an exact version in changeset frontmatter", async (t) => {
+  const f = fixture(t);
+  f.write(".changeset/exact.md", '---\n"library": "55.83.0"\n---\n\nAn exact version.\n');
+  await assert.rejects(f.invoke("check"), (error: { stdout: string }) => {
+    assert.match(error.stdout, /invalid version type "55.83.0"/);
+    return true;
+  });
 });
 
 test("mode uses pending changesets or the registry plan, not the latest commit", async (t) => {
