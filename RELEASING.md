@@ -4,6 +4,10 @@ We follow Expo's Changesets workflow: develop on `main`, cut SDK branches, and
 cherry-pick fixes and their changesets into supported SDK branches. All branches
 retain the complete monorepo, including independently versioned tooling.
 
+The published `sdk-54` and `sdk-55` branches keep their existing history. Add
+fixes as new commits at their tips, using cherry-picks for backports; do not
+routinely rebase these branches or rewrite released commits.
+
 Reference: Expo's [Changesets branch policy](https://github.com/expo/expo/blob/0ce12a8e8fcde395a1c02c5ba10bcf4f22fd7aac/.changeset/expo.json)
 and [release workflow](https://github.com/expo/expo/blob/0ce12a8e8fcde395a1c02c5ba10bcf4f22fd7aac/.github/workflows/publish-packages.yml),
 after its Changesets migration. We omit Expo-specific canaries, native
