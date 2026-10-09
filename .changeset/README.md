@@ -2,7 +2,8 @@
 
 Add release intent for public package changes with `pnpm -w r1`. Select every
 affected package and describe the change for package users. Use patch for fixes
-and minor for compatible features. Major changes belong on `main`.
+and minor for compatible features. Major changes normally belong on `main`;
+use `pnpm -w r2 --allow-major` for an intentional major bump on an SDK branch.
 
 The templates and Metro config encode the React Native minor in their versions
 (for example, `54.81.x`), so use patch changesets for their ordinary releases.
@@ -10,7 +11,8 @@ Change their SDK/React Native line explicitly when preparing a new SDK.
 
 Pushes to a release branch create or update a `Version packages (<branch>)` PR
 when changesets are pending. Merge it when ready to release, or run `pnpm -w r2`
-locally and commit and push the generated changes directly. With no pending
+locally and commit and push the generated changes directly. `r1` and `r2` may run
+before the same commit; only publishing requires a clean working tree. With no pending
 changesets, pushes publish current package versions that are missing from npm
 and synchronize tags on existing versions. SDK-versioned packages use the branch's
 tag in [`expo-desktop.json`](./expo-desktop.json); `independentPackages` use only
