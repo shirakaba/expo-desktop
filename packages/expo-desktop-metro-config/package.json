@@ -1,6 +1,6 @@
 {
   "name": "expo-desktop-metro-config",
-  "version": "55.83.0",
+  "version": "55.83.1",
   "description": "Desktop-friendly Expo Metro config",
   "keywords": [
     "android",
@@ -33,8 +33,8 @@
     "./package.json": "./package.json"
   },
   "dependencies": {
-    "@expo/metro-config": "catalog:react-native-82",
-    "@react-native/metro-config": "catalog:react-native-82",
+    "@expo/metro-config": "catalog:react-native-83",
+    "@react-native/metro-config": "catalog:react-native-83",
     "@rnx-kit/metro-config": "^2.2.6"
   }
 }

@@ -1,5 +1,11 @@
 # expo-desktop-metro-config
 
+## 55.83.1
+
+### Patch Changes
+
+- Update Metro config from React Native v0.82 to v0.83
+
 ## 55.83.0
 
 ### Major Changes
