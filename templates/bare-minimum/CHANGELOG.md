@@ -1,5 +1,11 @@
 # expo-desktop-template-bare-minimum
 
+## 55.83.3
+
+### Patch Changes
+
+- expo-desktop@1.0.2
+
 ## 55.83.2
 
 ### Patch Changes

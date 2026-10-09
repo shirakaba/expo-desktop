@@ -1,5 +1,11 @@
 # expo-desktop-config-plugins
 
+## 1.3.0
+
+### Minor Changes
+
+- Support SDK 55 macOS templates with SwiftUI AppDelegate constants and window sizing. Detect storyboards when generating Info.plist defaults, fix plist imports for bundle identifiers and privacy manifests, and preserve the config when window-title customization cannot be applied.
+
 ## 1.2.0
 
 ### Minor Changes
