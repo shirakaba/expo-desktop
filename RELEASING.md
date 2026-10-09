@@ -13,12 +13,12 @@ precompilation, and website/version-metadata synchronization.
 
 SDK-versioned packages use the branch's tag:
 
-| Branch                 | npm tag  | Major changesets |
-| ---------------------- | -------- | ---------------- |
-| `main`                 | `next`   | Allowed          |
-| `sdk-55`               | `latest` | Rejected         |
-| `sdk-54`               | `sdk-54` | Rejected         |
-| Other `sdk-N` branches | `sdk-N`  | Rejected         |
+| Branch                 | npm tag  | Major changesets (default) |
+| ---------------------- | -------- | -------------------------- |
+| `main`                 | `next`   | Allowed                    |
+| `sdk-55`               | `latest` | Rejected                   |
+| `sdk-54`               | `sdk-54` | Rejected                   |
+| Other `sdk-N` branches | `sdk-N`  | Rejected                   |
 
 `.changeset/expo-desktop.json` is the release policy. Set `publish` to `null` to
 disable a branch. The workflows also have an explicit branch allowlist; update
@@ -62,8 +62,9 @@ Git tags, or GitHub releases. Tag-only runs do not build or pack anything.
    tags, the action creates GitHub releases, and existing npm versions are promoted
    to their intended tags where needed.
 
-To release without a version PR, run `pnpm -w r2` locally after committing your
-changesets. Review and commit its generated versions, changelogs, and lockfile,
+To release without a version PR, run `pnpm -w r2` locally. Changesets and source
+changes do not need to be committed first: `r1`, `r2`, and the implementation can
+all be part of one commit. Review and commit the generated versions, changelogs, and lockfile,
 then push to the release branch to publish when no pending changesets remain
 and Changesets finds unpublished versions, or to synchronize tags on existing
 versions. A later commit does not prevent this.
@@ -89,9 +90,18 @@ is no automatic rollback or removal of existing tags.
 
 Use patch changesets for normal changes to templates and Metro config: their
 minor version encodes React Native (`54.81.x`, `55.83.x`). Other packages use
-ordinary semantic versioning. CI rejects major changesets and propagated major
-bumps on SDK branches. Changesets updates dependent workspace packages, including
-private apps, but private packages are never published or tagged.
+ordinary semantic versioning. Major changesets and propagated major bumps on SDK
+branches are rejected by default. For an intentional SDK-line correction, run
+`pnpm -w r2 --allow-major` locally; this overrides only the major-bump guard for
+that invocation, not the other checks or the branch policy in CI. Consume the
+changeset locally before pushing the resulting version commit.
+
+Changesets normally patch-bumps dependent workspace packages, including private
+apps, but changes to `devDependencies` alone do not trigger a version bump. Both
+templates list Metro config as a dev dependency, so include explicit template
+patch changesets when their published Metro dependency must change. Private
+packages are never published or tagged. Changeset files accept bump types, not
+exact target versions; SDK/RN version-line transitions need explicit version edits.
 
 For backports, cherry-pick or adapt the code and its changeset. Do not cherry-pick
 release commits, generated changelogs, or whole lockfiles. Keep SDK-specific
@@ -156,11 +166,13 @@ pnpm -w r1                              # Add release intent
 pnpm -w release:check                   # Validate pending changesets
 pnpm --filter expo-desktop-release test # Release policy/integration tests
 pnpm --filter expo-desktop-release typecheck
-pnpm -w r2                              # Version a clean release branch
+pnpm -w r2                              # Version local changes (no prior commit needed)
+pnpm -w r2 --allow-major                # Permit an intentional major bump on an SDK branch
 # Review and commit the generated changes before publishing.
 pnpm -w r3 --dry-run                    # Build/pack if needed; preview tags; no npm writes
 ```
 
+Publishing (`r3`) still requires a clean working tree and no pending changesets.
 `r2` updates the lockfile offline without running install hooks or reinstalling
 the workspace. Run `pnpm install` explicitly if external dependencies change.
 Never use bare `changeset publish` for a release: it defaults to `latest` and

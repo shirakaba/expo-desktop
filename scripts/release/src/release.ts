@@ -46,7 +46,9 @@ export function validateReleasePlan(status: Status, policy: Policy): void {
       (release) => release.oldVersion.split(".")[0] !== release.newVersion.split(".")[0],
     );
     if (majors.length || propagated.length) {
-      throw new Error("Major bumps belong on main, not on an SDK release branch.");
+      throw new Error(
+        "Major bumps belong on main, not on an SDK release branch. Pass --allow-major to override.",
+      );
     }
   }
   for (const release of status.releases) {
@@ -65,7 +67,14 @@ export function validateReleasePlan(status: Status, policy: Policy): void {
 
 export async function runRelease(
   command: "check" | "mode" | "version" | "publish",
-  options: { cwd: string; dryRun?: boolean; since?: string; env?: NodeJS.ProcessEnv; run?: Runner },
+  options: {
+    cwd: string;
+    dryRun?: boolean;
+    allowMajor?: boolean;
+    since?: string;
+    env?: NodeJS.ProcessEnv;
+    run?: Runner;
+  },
 ): Promise<void> {
   const { cwd, dryRun = false } = options;
   const env = options.env ?? process.env;
@@ -114,8 +123,8 @@ export async function runRelease(
     await setMode("version");
     return;
   }
-  if (command !== "check" && command !== "mode" && git("status", "--porcelain")) {
-    throw new Error("Release commands require a clean working tree. Commit changes first.");
+  if (command === "publish" && git("status", "--porcelain")) {
+    throw new Error("Publishing requires a clean working tree. Commit changes first.");
   }
   if (command === "publish" && pending.length) {
     throw new Error("Consume all pending changesets and commit the versions before publishing.");
@@ -131,7 +140,10 @@ export async function runRelease(
         statusFile,
       );
       const status: Status = await json(statusFile);
-      validateReleasePlan(status, policy);
+      validateReleasePlan(status, {
+        ...policy,
+        allowMajor: policy.allowMajor || (command === "version" && options.allowMajor === true),
+      });
       if (command === "check" || !pending.length) return;
       // Version PRs on separate branches must not silently reuse a shared package's version.
       const publicPackages = new Set(
