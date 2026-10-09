@@ -41,6 +41,11 @@
     "react-native": "0.83.10"
   },
   "expo": {
+    "autolinking": {
+      "exclude": [
+        "react-native-windows"
+      ]
+    },
     "install": {
       "exclude": [
         "react",
