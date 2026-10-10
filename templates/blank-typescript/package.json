@@ -10,6 +10,7 @@
   },
   "main": "index.ts",
   "scripts": {
+    "postinstall": "patch-package",
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
@@ -35,6 +36,7 @@
     "@types/react": "~19.2.17",
     "expo-desktop-metro-config": "workspace:~",
     "expo-desktop-template-bare-minimum": "workspace:~",
+    "patch-package": "^8.0.1",
     "typescript": "~5.9.2"
   },
   "overrides": {

@@ -1,0 +1,53 @@
+diff --git a/node_modules/@react-native-windows/cli/lib-commonjs/commands/healthCheck/healthChecks.js b/node_modules/@react-native-windows/cli/lib-commonjs/commands/healthCheck/healthChecks.js
+--- a/node_modules/@react-native-windows/cli/lib-commonjs/commands/healthCheck/healthChecks.js
++++ b/node_modules/@react-native-windows/cli/lib-commonjs/commands/healthCheck/healthChecks.js
+@@ -37,7 +37,7 @@
+ const execa_1 = __importDefault(require("execa"));
+ const find_dotnet_tools_1 = require("@react-native-windows/find-dotnet-tools");
+ const healthCheckList_1 = require("./healthCheckList");
+-const powershell = (0, find_dotnet_tools_1.findPowerShell)();
++let powershell;
+ function getHealthChecks() {
+     // #8471: There are known cases where the dependencies script will error out.
+     // Fail gracefully if that happens in the meantime.
+@@ -83,6 +83,7 @@
+                     getDiagnostics: async () => {
+                         let needsToBeFixed = true;
+                         try {
++                            powershell ??= (0, find_dotnet_tools_1.findPowerShell)();
+                             await (0, execa_1.default)(`"${powershell}" -ExecutionPolicy Unrestricted -NoProfile "${rnwDepScriptPath}" -NoPrompt -Check ${id}`);
+                             needsToBeFixed = false;
+                         }
+@@ -92,6 +93,18 @@
+                         };
+                     },
+                     runAutomaticFix: async ({ loader, logManualInstallation }) => {
++                        try {
++                            powershell ??= (0, find_dotnet_tools_1.findPowerShell)();
++                        }
++                        catch (error) {
++                            const errorMessage = error instanceof Error ? error.message : undefined;
++                            logManualInstallation({
++                                healthcheck: `react-native-windows dependency "${id}"`,
++                                message: `Error finding PowerShell${errorMessage ? `: ${errorMessage}` : ''}`,
++                            });
++                            loader.fail();
++                            return;
++                        }
+                         const command = `"${powershell}" -ExecutionPolicy Unrestricted -NoProfile "${rnwDepScriptPath}" -Check ${id}`;
+                         try {
+                             const { exitCode } = await (0, execa_1.default)(command, { stdio: 'inherit' });
+diff --git a/node_modules/@react-native-windows/cli/lib-commonjs/utils/commandWithProgress.js b/node_modules/@react-native-windows/cli/lib-commonjs/utils/commandWithProgress.js
+--- a/node_modules/@react-native-windows/cli/lib-commonjs/utils/commandWithProgress.js
++++ b/node_modules/@react-native-windows/cli/lib-commonjs/utils/commandWithProgress.js
+@@ -42,8 +42,9 @@
+     return (0, ora_1.default)(options).start();
+ }
+ exports.newSpinner = newSpinner;
+-const powershell = (0, find_dotnet_tools_1.findPowerShell)();
++let powershell;
+ async function runPowerShellScriptFunction(taskDescription, script, funcName, verbose, errorCategory, useAppxCompatibility = false) {
++    powershell ??= (0, find_dotnet_tools_1.findPowerShell)();
+     try {
+         const printException = verbose ? '$_;' : '';
+         const importAppx = useAppxCompatibility
