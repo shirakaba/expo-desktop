@@ -1,5 +1,15 @@
 # expo-desktop-template-blank-typescript
 
+## 55.83.5
+
+### Patch Changes
+
+- 09d3912: Exclude the React Native Windows host package from Expo autolinking. Loading its
+  Windows CLI during Apple or Android autolinking can fail on missing Windows
+  tooling, preventing CocoaPods installation in freshly created apps. Windows
+  continues to use the React Native Windows CLI for autolinking.
+- expo-desktop@1.0.3
+
 ## 55.83.4
 
 ### Patch Changes
