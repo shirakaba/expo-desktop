@@ -39,7 +39,9 @@ export async function getPID(port: number): Promise<number | null> {
 /** Return the PID listening on a TCP port on Windows. */
 async function getWindowsPIDAsync(port: number): Promise<number | null> {
   try {
-    const { stdout } = await spawnAsync("netstat.exe", ["-ano", "-p", "tcp"], {
+    // `-p tcp` excludes IPv6 listeners on Windows, including Metro on ::1.
+    // Inspect both address families and filter the TCP rows below.
+    const { stdout } = await spawnAsync("netstat.exe", ["-ano"], {
       timeout,
     });
 
