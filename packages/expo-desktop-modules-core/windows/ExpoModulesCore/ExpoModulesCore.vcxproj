@@ -83,6 +83,7 @@
       <AdditionalIncludeDirectories>
         $(MSBuildThisFileDirectory);
         $(MSBuildThisFileDirectory)..\..\common\cpp;
+        $(MSBuildThisFileDirectory)..\..\common\cpp\JSI;
         $(ReactNativeDir)\ReactCommon;
         %(AdditionalIncludeDirectories)
       </AdditionalIncludeDirectories>
@@ -106,16 +107,16 @@
   </ItemDefinitionGroup>
   <PropertyGroup Label="UserMacros" />
   <ItemGroup>
-    <ClInclude Include="..\..\common\cpp\BridgelessJSCallInvoker.h" />
+    <ClInclude Include="..\..\common\cpp\JSI\BridgelessJSCallInvoker.h" />
     <ClInclude Include="..\..\common\cpp\EventEmitter.h" />
-    <ClInclude Include="..\..\common\cpp\JSIUtils.h" />
+    <ClInclude Include="..\..\common\cpp\JSI\JSIUtils.h" />
     <ClInclude Include="..\..\common\cpp\LazyObject.h" />
     <ClInclude Include="..\..\common\cpp\NativeModule.h" />
-    <ClInclude Include="..\..\common\cpp\ObjectDeallocator.h" />
+    <ClInclude Include="..\..\common\cpp\JSI\ObjectDeallocator.h" />
     <ClInclude Include="..\..\common\cpp\SharedObject.h" />
     <ClInclude Include="..\..\common\cpp\SharedRef.h" />
-    <ClInclude Include="..\..\common\cpp\TestingSyncJSCallInvoker.h" />
-    <ClInclude Include="..\..\common\cpp\TypedArray.h" />
+    <ClInclude Include="..\..\common\cpp\JSI\TestingSyncJSCallInvoker.h" />
+    <ClInclude Include="..\..\common\cpp\JSI\TypedArray.h" />
     <ClInclude Include="ExpoModulesCore.h" />
     <ClInclude Include="JavaScriptObject.h" />
     <ClInclude Include="MainRuntimeInstaller.h" />
@@ -141,7 +142,7 @@
     <ClCompile Include="..\..\common\cpp\EventEmitter.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\..\common\cpp\JSIUtils.cpp">
+    <ClCompile Include="..\..\common\cpp\JSI\JSIUtils.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\..\common\cpp\LazyObject.cpp">
@@ -150,7 +151,7 @@
     <ClCompile Include="..\..\common\cpp\NativeModule.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\..\common\cpp\ObjectDeallocator.cpp">
+    <ClCompile Include="..\..\common\cpp\JSI\ObjectDeallocator.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\..\common\cpp\SharedObject.cpp">
@@ -159,7 +160,7 @@
     <ClCompile Include="..\..\common\cpp\SharedRef.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\..\common\cpp\TypedArray.cpp">
+    <ClCompile Include="..\..\common\cpp\JSI\TypedArray.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
   </ItemGroup>
