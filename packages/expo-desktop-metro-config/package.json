@@ -32,6 +32,9 @@
     },
     "./package.json": "./package.json"
   },
+  "scripts": {
+    "test": "node --test test/index.test.js"
+  },
   "dependencies": {
     "@expo/metro-config": "catalog:react-native-81",
     "@react-native/metro-config": "catalog:react-native-81",
