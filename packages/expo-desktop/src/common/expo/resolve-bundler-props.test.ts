@@ -1,6 +1,7 @@
 import net from "node:net";
 import { afterEach, expect, test } from "vitest";
 
+import { ensurePortAvailabilityAsync } from "./port.ts";
 import { resolveBundlerPropsAsync } from "./resolve-bundler-props.ts";
 
 const originalMetroPort = process.env.RCT_METRO_PORT;
@@ -65,34 +66,40 @@ test("resolves port 0 to a concrete free port and reports it through RCT_METRO_P
   expect(process.env.RCT_METRO_PORT).toBe(String(result.port));
 });
 
-test("reuses a Metro server already listening for this project", async () => {
-  const server = net.createServer();
-  await new Promise<void>((resolve, reject) => {
-    server.once("error", reject);
-    server.listen(0, "127.0.0.1", () => resolve());
-  });
-
-  const address = server.address();
-  if (!address || typeof address === "string") {
-    server.close();
-    throw new Error("Test server did not expose a TCP port");
-  }
-
-  try {
-    await expect(
-      resolveBundlerPropsAsync(process.cwd(), {
-        bundler: true,
-        port: address.port,
-      }),
-    ).resolves.toStrictEqual({
-      shouldStartBundler: false,
-      port: address.port,
+test.each(["127.0.0.1", "::1"])(
+  "reuses a Metro server already listening on %s for this project",
+  async (host) => {
+    const server = net.createServer();
+    await new Promise<void>((resolve, reject) => {
+      server.once("error", reject);
+      server.listen(0, host, () => resolve());
     });
-    expect(process.env.RCT_METRO_PORT).toBe(String(address.port));
-  } finally {
-    await new Promise<void>((resolve) => server.close(() => resolve()));
-  }
-});
+
+    const address = server.address();
+    if (!address || typeof address === "string") {
+      server.close();
+      throw new Error("Test server did not expose a TCP port");
+    }
+
+    try {
+      await expect(
+        resolveBundlerPropsAsync(process.cwd(), {
+          bundler: true,
+          port: address.port,
+        }),
+      ).resolves.toStrictEqual({
+        shouldStartBundler: false,
+        port: address.port,
+      });
+      expect(process.env.RCT_METRO_PORT).toBe(String(address.port));
+      await expect(
+        ensurePortAvailabilityAsync(process.cwd(), { port: address.port }),
+      ).resolves.toBe(false);
+    } finally {
+      await new Promise<void>((resolve) => server.close(() => resolve()));
+    }
+  },
+);
 
 async function getFreePortAsyncForTest(): Promise<number> {
   const server = net.createServer();
