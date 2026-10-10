@@ -1,6 +1,6 @@
 {
   "name": "expo-desktop-template-bare-minimum",
-  "version": "55.83.5",
+  "version": "55.83.6",
   "description": "This bare project template includes a minimal setup for using unimodules with React Native.",
   "homepage": "https://github.com/shirakaba/expo-desktop/tree/main/templates/bare-minimum",
   "license": "0BSD",
