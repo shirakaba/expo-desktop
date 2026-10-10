@@ -443,6 +443,9 @@ importers:
         specifier: 0.83.2
         version: 0.83.2(@babel/core@7.29.0(supports-color@8.1.1))(@react-native/metro-config@0.81.6(@babel/core@7.29.0(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react-native@0.83.10(@babel/core@7.29.0(supports-color@8.1.1))(@react-native-community/cli@20.0.0(supports-color@8.1.1)(typescript@5.9.3))(@react-native/metro-config@0.81.6(@babel/core@7.29.0(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.0)(supports-color@8.1.1))(react@19.2.0)(supports-color@8.1.1)(tslib@2.8.1)(typescript@5.9.3)
     devDependencies:
+      '@react-native-windows/find-dotnet-tools':
+        specifier: 0.0.0-canary.3
+        version: 0.0.0-canary.3
       '@types/react':
         specifier: ~19.2.17
         version: 19.2.18
@@ -483,6 +486,9 @@ importers:
         specifier: 0.83.2
         version: 0.83.2(@babel/core@7.29.0(supports-color@8.1.1))(@react-native/metro-config@0.81.6(@babel/core@7.29.0(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react-native@0.83.10(@babel/core@7.29.0(supports-color@8.1.1))(@react-native-community/cli@20.0.0(supports-color@8.1.1)(typescript@5.9.3))(@react-native/metro-config@0.81.6(@babel/core@7.29.0(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.0)(supports-color@8.1.1))(react@19.2.0)(supports-color@8.1.1)(tslib@2.8.1)(typescript@5.9.3)
     devDependencies:
+      '@react-native-windows/find-dotnet-tools':
+        specifier: 0.0.0-canary.3
+        version: 0.0.0-canary.3
       '@types/react':
         specifier: ~19.2.17
         version: 19.2.18
@@ -1914,6 +1920,10 @@ packages:
     peerDependencies:
       react-native: '*'
 
+  '@react-native-windows/find-dotnet-tools@0.0.0-canary.3':
+    resolution: {integrity: sha512-4PtQ7pwfLhJBxCgYR7Y54/ZZWerz9AiJQu7/NycJAKkW5Odg8FrUawbmOccZzYavQA6kUqMrbaEF//6jzUPzxg==}
+    engines: {node: '>= 22'}
+
   '@react-native-windows/find-repo-root@0.81.1':
     resolution: {integrity: sha512-/fDmJ72MieyXVtMK9DMY1CGlMxq7c2GFQOfH91DRIKFdCiafjGbQVDfPF1TkDZxpb1OzaeqVw8vyd0KnlscQPQ==}
     engines: {node: '>= 22'}
@@ -1924,6 +1934,9 @@ packages:
 
   '@react-native-windows/fs@0.81.1':
     resolution: {integrity: sha512-G/Tdhr+AMiovoNIp7NDEyNQpW1ByIMubmCwjxpJ7wcRuhvom4HJNueFL3eF1ucdWgk0nu4juGg7CLPQNpDfFpA==}
+
+  '@react-native-windows/fs@0.81.2':
+    resolution: {integrity: sha512-SFzWRHNxr37bMb3Zpt32RoYOX2cW52C4wrjWcTLDT+jhVVwPPX5aAnfVjd/rPzUMX5etR1pl3EK48l6hYScfDQ==}
 
   '@react-native-windows/fs@0.83.1':
     resolution: {integrity: sha512-BJMH6lI5OFdG0ccdSvHRiYp5+i2RPUDmIE0g10194lGQ/clg9Z+G+yz0DPKMgcubJCZwlCpW+BT7/mWJk0LFaA==}
@@ -8051,6 +8064,10 @@ snapshots:
       source-map-support: 0.5.21
       yargs: 16.2.0
 
+  '@react-native-windows/find-dotnet-tools@0.0.0-canary.3':
+    dependencies:
+      '@react-native-windows/fs': 0.81.2
+
   '@react-native-windows/find-repo-root@0.81.1':
     dependencies:
       '@react-native-windows/fs': 0.81.1
@@ -8063,6 +8080,10 @@ snapshots:
       minimatch: 10.2.5
 
   '@react-native-windows/fs@0.81.1':
+    dependencies:
+      graceful-fs: 4.2.11
+
+  '@react-native-windows/fs@0.81.2':
     dependencies:
       graceful-fs: 4.2.11
 
