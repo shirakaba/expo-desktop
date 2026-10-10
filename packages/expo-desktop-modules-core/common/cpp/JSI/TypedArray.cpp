@@ -1,6 +1,7 @@
 // Copyright 2022-present 650 Industries. All rights reserved.
 
 #include <unordered_map>
+#include <stdexcept>
 #include "TypedArray.h"
 
 namespace expo {

@@ -4,7 +4,9 @@
 
 #pragma once
 
-#import <jsi/jsi.h>
+// Keep the SDK import portable to MSVC.
+#include <functional>
+#include <jsi/jsi.h>
 
 namespace jsi = facebook::jsi;
 

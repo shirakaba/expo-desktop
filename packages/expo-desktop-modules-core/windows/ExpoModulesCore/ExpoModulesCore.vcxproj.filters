@@ -36,13 +36,13 @@
     <ClInclude Include="pch.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\common\cpp\BridgelessJSCallInvoker.h" >
+    <ClInclude Include="..\..\common\cpp\JSI\BridgelessJSCallInvoker.h" >
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\common\cpp\EventEmitter.h" >
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\common\cpp\JSIUtils.h" >
+    <ClInclude Include="..\..\common\cpp\JSI\JSIUtils.h" >
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\common\cpp\LazyObject.h" >
@@ -51,7 +51,7 @@
     <ClInclude Include="..\..\common\cpp\NativeModule.h" >
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\common\cpp\ObjectDeallocator.h" >
+    <ClInclude Include="..\..\common\cpp\JSI\ObjectDeallocator.h" >
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\common\cpp\SharedObject.h" >
@@ -60,10 +60,10 @@
     <ClInclude Include="..\..\common\cpp\SharedRef.h" >
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\common\cpp\TestingSyncJSCallInvoker.h" >
+    <ClInclude Include="..\..\common\cpp\JSI\TestingSyncJSCallInvoker.h" >
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\common\cpp\TypedArray.h" >
+    <ClInclude Include="..\..\common\cpp\JSI\TypedArray.h" >
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -77,7 +77,7 @@
     <ClCompile Include="..\..\common\cpp\EventEmitter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\common\cpp\JSIUtils.cpp">
+    <ClCompile Include="..\..\common\cpp\JSI\JSIUtils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\common\cpp\LazyObject.cpp">
@@ -86,7 +86,7 @@
     <ClCompile Include="..\..\common\cpp\NativeModule.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\common\cpp\ObjectDeallocator.cpp">
+    <ClCompile Include="..\..\common\cpp\JSI\ObjectDeallocator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\common\cpp\SharedObject.cpp">
@@ -95,7 +95,7 @@
     <ClCompile Include="..\..\common\cpp\SharedRef.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\common\cpp\TypedArray.cpp">
+    <ClCompile Include="..\..\common\cpp\JSI\TypedArray.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
