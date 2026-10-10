@@ -32,6 +32,7 @@
     "react-native-windows": "0.83.2"
   },
   "devDependencies": {
+    "@react-native-windows/find-dotnet-tools": "0.0.0-canary.3",
     "@types/react": "~19.2.17",
     "expo-desktop-metro-config": "workspace:~",
     "typescript": "~5.9.2"
