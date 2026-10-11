@@ -1,5 +1,12 @@
 # expo-desktop
 
+## 1.0.4
+
+### Patch Changes
+
+- a25d968: Configure pnpm to use a hoisted node_modules layout when creating desktop apps, so native tooling and template patches can find transitive dependencies outside the monorepo.
+- b3dbf03: Detect IPv6 TCP listeners on Windows so subsequent runs reuse Metro bound to localhost instead of failing with EADDRINUSE.
+
 ## 1.0.3
 
 ### Patch Changes
