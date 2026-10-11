@@ -1,0 +1,13 @@
+// Deliberately has no Metro/React/Expo prelude: these are the first JS statements.
+if (globalThis.eagerOrder !== globalThis.expectedEagerOrder) throw Error('eager registration order changed');
+if (globalThis.replacementInitCount !== 1 || globalThis.replacedOriginalInitCount !== undefined) throw Error('replacement lost eager registration');
+if (globalThis.eagerAppInitCount !== 1) throw Error('app module was not eager exactly once');
+if (globalThis.eagerDllInitCount !== 1) throw Error('DLL module was not eager exactly once');
+if (globalThis.lazyInitCount !== undefined) throw Error('ordinary module was eagerly initialized');
+if (!globalThis.expo || typeof expo.EventEmitter !== 'function') throw Error('Expo globals missing before JS');
+if (!expo.modules.ExpoAsset || !expo.modules.NativeModulesProxy) throw Error('Expo modules missing before JS');
+if (!nativeModuleProxy.ExpoMainRuntimeInstaller) throw Error('installer registration name changed');
+if (!nativeModuleProxy.EagerTestAppModule || !nativeModuleProxy.EagerTestRenamedDllModule) throw Error('eager modules inaccessible');
+if (eagerAppInitCount !== 1 || eagerDllInitCount !== 1) throw Error('eager module initialized twice');
+if (!nativeModuleProxy.EagerTestLazyModule || lazyInitCount !== 1) throw Error('lazy lookup failed');
+globalThis.eagerTestBundlePassed = true;

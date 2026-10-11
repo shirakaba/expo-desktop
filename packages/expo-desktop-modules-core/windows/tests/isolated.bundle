@@ -1,0 +1,8 @@
+// This host registers only the app's package, although both native DLLs are loaded.
+if (globalThis.eagerOrder !== globalThis.expectedEagerOrder) throw Error('isolated eager registration order changed');
+if (globalThis.replacementInitCount !== 1 || globalThis.replacedOriginalInitCount !== undefined) throw Error('isolated replacement lost eager registration');
+if (globalThis.eagerAppInitCount !== 1) throw Error('isolated app module missing');
+if (globalThis.eagerDllInitCount !== undefined) throw Error('another host leaked its eager registry');
+if (globalThis.expo !== undefined) throw Error('unregistered Expo installer was instantiated');
+if (globalThis.lazyInitCount !== undefined) throw Error('isolated ordinary module was eager');
+globalThis.eagerTestBundlePassed = true;

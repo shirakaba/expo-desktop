@@ -1,0 +1,2 @@
+if (typeof nativeModuleProxy.ControlModule !== 'object') throw Error('ordinary module missing');
+nativeLoggingHook('PASS: ordinary module control bundle', 1);

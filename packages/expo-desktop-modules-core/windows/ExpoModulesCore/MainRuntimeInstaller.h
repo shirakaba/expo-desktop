@@ -10,6 +10,7 @@
 
 #include "JSValue.h"
 #include "NativeModules.h"
+#include "../EagerTurboModule.h"
 
 #include "JavaScriptObject.h"
 #include "JSIUtils.h"

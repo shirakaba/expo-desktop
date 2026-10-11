@@ -1,0 +1,3 @@
+// Control for runtime/teardown failures: no eager hook and no Expo packages.
+if (!nativeModuleProxy.EagerTestLazyModule || globalThis.lazyInitCount !== 1) throw Error('ordinary RNW module lookup failed');
+globalThis.eagerTestBundlePassed = true;
