@@ -1,5 +1,13 @@
 # expo-desktop-template-bare-minimum
 
+## 54.81.4
+
+### Patch Changes
+
+- Updated dependencies [c7cf09b]
+- Updated dependencies [cfba0ef]
+  - expo-desktop@1.0.4
+
 ## 54.81.3
 
 ### Patch Changes
