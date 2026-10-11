@@ -1,5 +1,16 @@
 # expo-desktop-template-blank-typescript
 
+## 55.83.7
+
+### Patch Changes
+
+- Updated dependencies [d5f5c84]
+- Updated dependencies [2b48191]
+- Updated dependencies [e30b66f]
+  - expo-desktop-modules-core@55.0.1
+  - expo-desktop@1.0.4
+  - expo-desktop-stubs@55.0.1
+
 ## 55.83.6
 
 ### Patch Changes

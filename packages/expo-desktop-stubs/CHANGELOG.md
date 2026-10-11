@@ -1,5 +1,9 @@
 # expo-desktop-stubs
 
+## 55.0.1
+
+No changes in this release.
+
 ## 55.0.0
 
 ### Major Changes

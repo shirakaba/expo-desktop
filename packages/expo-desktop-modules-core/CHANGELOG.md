@@ -1,5 +1,11 @@
 # expo-desktop-modules-core
 
+## 55.0.1
+
+### Patch Changes
+
+- d5f5c84: Fix SDK 55 Windows native compilation by updating the JSI helper paths and restoring MSVC-compatible headers.
+
 ## 55.0.0
 
 ### Major Changes
