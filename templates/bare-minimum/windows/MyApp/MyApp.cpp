@@ -7,13 +7,14 @@
 #include "AutolinkedNativeModules.g.h"
 
 #include "NativeModules.h"
+#include <EagerTurboModule.h>
 
 // A PackageProvider containing any turbo modules you define within this app project
 struct CompReactPackageProvider
     : winrt::implements<CompReactPackageProvider, winrt::Microsoft::ReactNative::IReactPackageProvider> {
  public: // IReactPackageProvider
   void CreatePackage(winrt::Microsoft::ReactNative::IReactPackageBuilder const &packageBuilder) noexcept {
-    AddAttributedModules(packageBuilder, true);
+    expo::windows::AddAttributedModules(packageBuilder, true);
   }
 };
 
@@ -39,6 +40,8 @@ _Use_decl_annotations_ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE, PSTR 
   RegisterAutolinkedNativeModulePackages(settings.PackageProviders());
   // Register any native modules defined within this app project
   settings.PackageProviders().Append(winrt::make<CompReactPackageProvider>());
+  // Initialize eager TurboModules before the bundle, including on full reloads.
+  expo::windows::EnableEagerTurboModules(settings);
 
     // When loading the JS bundle from a file (not Metro):
   // Set the path (on disk) where the .bundle file is located

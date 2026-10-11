@@ -79,6 +79,7 @@
       <DisableSpecificWarnings>4453;28204</DisableSpecificWarnings>
       <AdditionalIncludeDirectories>
         $(MSBuildThisFileDirectory);
+        $([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), 'node_modules\expo-desktop-modules-core\package.json'))\node_modules\expo-desktop-modules-core\windows;
         %(AdditionalIncludeDirectories)
       </AdditionalIncludeDirectories>
     </ClCompile>

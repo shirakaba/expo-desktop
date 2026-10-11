@@ -107,6 +107,7 @@
   </ItemDefinitionGroup>
   <PropertyGroup Label="UserMacros" />
   <ItemGroup>
+    <ClInclude Include="..\EagerTurboModule.h" />
     <ClInclude Include="..\..\common\cpp\JSI\BridgelessJSCallInvoker.h" />
     <ClInclude Include="..\..\common\cpp\EventEmitter.h" />
     <ClInclude Include="..\..\common\cpp\JSI\JSIUtils.h" />

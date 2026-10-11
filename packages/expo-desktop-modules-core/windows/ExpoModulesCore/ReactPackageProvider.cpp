@@ -1,5 +1,6 @@
 #include "pch.h"
 #include <NativeModules.h>
+#include "../EagerTurboModule.h"
 
 #include "ReactPackageProvider.h"
 #if __has_include("ReactPackageProvider.g.cpp")
@@ -14,7 +15,7 @@ namespace winrt::ExpoModulesCore::implementation {
 
 void ReactPackageProvider::CreatePackage(
     IReactPackageBuilder const& packageBuilder) noexcept {
-   AddAttributedModules(packageBuilder, true);
+   expo::windows::AddAttributedModules(packageBuilder, true);
 }
 
 }  // namespace winrt::ExpoModulesCore::implementation
