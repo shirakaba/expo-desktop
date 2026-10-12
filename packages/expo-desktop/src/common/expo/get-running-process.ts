@@ -21,7 +21,7 @@ export async function getPID(port: number): Promise<number | null> {
   }
 
   try {
-    const { stdout } = await spawnAsync("lsof", [`-i:${port}`, "-P", "-t", "-sTCP:LISTEN"], {
+    const { stdout } = await spawnAsync("lsof", [`-iTCP:${port}`, "-nP", "-t", "-sTCP:LISTEN"], {
       timeout,
     });
     const pid = Number(stdout.split("\n", 1)[0]!.trim());
