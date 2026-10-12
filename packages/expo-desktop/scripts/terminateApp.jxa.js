@@ -78,7 +78,13 @@ function run(argv) {
 
   updateTerminatedProcessIds(workspace);
   if (terminatedProcessIds.size < processIds.size) {
-    $.CFRunLoopRunInMode($.kCFRunLoopDefaultMode, terminationTimeoutSeconds, false);
+    if (terminationTimeoutSeconds === 0) {
+      // Zero means no timeout here; CFRunLoopRunInMode(..., 0, ...) only runs once.
+      // The observer stops this loop when every matching app has exited.
+      $.CFRunLoopRun();
+    } else {
+      $.CFRunLoopRunInMode($.kCFRunLoopDefaultMode, terminationTimeoutSeconds, false);
+    }
   }
 
   workspace.removeObserverForKeyPath(observer, "runningApplications");
