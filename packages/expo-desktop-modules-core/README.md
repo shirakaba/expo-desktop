@@ -65,6 +65,10 @@ RNW 0.83.2's bundled Hermes `0.0.0-2604.21001-94aa5e1d` has an independent ARM64
 teardown crash, including with an empty RNW host. Microsoft fixed the fiber stack
 adjustment in [Hermes commit 59b6d152](https://github.com/microsoft/hermes-windows/commit/59b6d152cee1d64f0a6c2a5add0e20c32464676c).
 Reload validation passes with Hermes `0.0.0-2608.12001-35d34796` and the unchanged
-RNW 0.83.2 DLL. This header does not update the app's Hermes dependency.
+RNW 0.83.2 DLL. The Windows app template pins that Hermes version in
+`windows/ExperimentalFeatures.props`. Existing apps should regenerate their
+Windows project or add `<HermesVersion>0.0.0-2608.12001-35d34796</HermesVersion>`
+to that file's property group, then restore NuGet dependencies and rebuild.
+The compatibility header alone does not update the app's Hermes dependency.
 
 Native regression fixtures and instructions are in `windows/tests/README.md`.
