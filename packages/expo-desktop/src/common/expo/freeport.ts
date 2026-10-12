@@ -27,10 +27,10 @@ export async function testPortAsync(port: number, hostnames?: (string | null)[])
     }
   }
 
-  // On Windows, a wildcard IPv6 bind can succeed while an existing IPv4
-  // listener still owns the same port. Consult the OS listener table after
-  // the bind probe so loopback and wildcard listeners are both detected.
-  if (process.platform === "win32" && (await getPID(port)) !== null) {
+  // A wildcard bind can succeed while an existing listener on another address
+  // still owns the same port. Confirm against the OS listener table on every
+  // platform so loopback and wildcard listeners are both detected.
+  if ((await getPID(port)) !== null) {
     return false;
   }
 
