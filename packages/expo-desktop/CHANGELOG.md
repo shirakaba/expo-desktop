@@ -1,5 +1,12 @@
 # expo-desktop
 
+## 1.0.5
+
+### Patch Changes
+
+- 814a5c7: Detect existing Metro listeners on macOS and other platforms even when a wildcard bind succeeds on the same port. Reuse the project's running server instead of attempting to start another one, and avoid DNS lookups when checking Unix TCP listeners.
+- e767f5f: Fix macOS app restarts failing with `MACOS_TERMINATE` when an existing instance is running. Wait for all existing instances to exit before launching the replacement instead of treating the default zero timeout as an immediate timeout.
+
 ## 1.0.4
 
 ### Patch Changes

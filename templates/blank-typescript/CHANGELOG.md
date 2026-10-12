@@ -1,5 +1,13 @@
 # expo-desktop-template-blank-typescript
 
+## 54.81.5
+
+### Patch Changes
+
+- Updated dependencies [814a5c7]
+- Updated dependencies [e767f5f]
+  - expo-desktop@1.0.5
+
 ## 54.81.4
 
 ### Patch Changes

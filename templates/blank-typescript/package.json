@@ -1,6 +1,6 @@
 {
   "name": "expo-desktop-template-blank-typescript",
-  "version": "54.81.4",
+  "version": "54.81.5",
   "description": "An Expo Desktop template for React Native v0.81, based on Expo SDK 54",
   "homepage": "https://github.com/shirakaba/expo-desktop/tree/main/templates/blank-typescript",
   "repository": {
