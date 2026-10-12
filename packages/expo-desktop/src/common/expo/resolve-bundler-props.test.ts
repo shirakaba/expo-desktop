@@ -31,7 +31,7 @@ test("rejects an explicitly supplied port with --no-bundler, including port 0", 
   await expect(
     resolveBundlerPropsAsync(process.cwd(), {
       bundler: false,
-      port: 0,
+      port: "0",
     }),
   ).rejects.toMatchObject({
     code: "BAD_ARGS",
@@ -58,7 +58,7 @@ test("resolves port 0 to a concrete free port and reports it through RCT_METRO_P
 
   const result = await resolveBundlerPropsAsync(process.cwd(), {
     bundler: true,
-    port: 0,
+    port: "0",
   });
 
   expect(result.shouldStartBundler).toBe(true);
@@ -85,7 +85,7 @@ test.each(["127.0.0.1", "::1"])(
       await expect(
         resolveBundlerPropsAsync(process.cwd(), {
           bundler: true,
-          port: address.port,
+          port: String(address.port),
         }),
       ).resolves.toStrictEqual({
         shouldStartBundler: false,
