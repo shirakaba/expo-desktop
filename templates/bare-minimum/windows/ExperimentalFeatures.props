@@ -21,6 +21,11 @@
     -->
     <UseExperimentalNuget>{{useNuGets}}</UseExperimentalNuget>
 
+    <!-- RNW 0.83.2's default Hermes crashes during ARM64 runtime teardown.
+         Use the published fix without rebuilding RNW:
+         https://github.com/microsoft/hermes-windows/commit/59b6d152cee1d64f0a6c2a5add0e20c32464676c -->
+    <HermesVersion>0.0.0-2608.12001-35d34796</HermesVersion>
+
     <ReactExperimentalFeaturesSet>true</ReactExperimentalFeaturesSet>
   </PropertyGroup>
 
