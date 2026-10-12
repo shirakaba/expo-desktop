@@ -1,5 +1,13 @@
 # demo
 
+## 1.0.4
+
+### Patch Changes
+
+- Updated dependencies [971907f]
+  - expo-desktop-modules-core@55.0.2
+  - expo-desktop-stubs@55.0.2
+
 ## 1.0.3
 
 ### Patch Changes

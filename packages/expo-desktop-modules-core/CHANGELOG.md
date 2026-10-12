@@ -1,5 +1,11 @@
 # expo-desktop-modules-core
 
+## 55.0.2
+
+### Patch Changes
+
+- 971907f: Support REACT_EAGER_TURBO_MODULE on React Native Windows 0.83 using the stock NuGet DLL. Collect eager modules across native packages and initialize them synchronously before the application bundle, including on reload, so Expo's existing REACT_INIT runtime installer can run without a JavaScript installModules workaround. Regenerate the Windows project with prebuild to install the startup hook.
+
 ## 55.0.1
 
 ### Patch Changes

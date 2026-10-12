@@ -1,5 +1,15 @@
 # expo-desktop-template-blank-typescript
 
+## 55.83.8
+
+### Patch Changes
+
+- 747fff7: Pin the Windows template to Hermes 0.0.0-2608.12001-35d34796 to fix ARM64 reload and runtime teardown crashes with RNW 0.83.2, retaining the precompiled RNW NuGet DLL. Existing apps should regenerate their Windows project or set HermesVersion in windows/ExperimentalFeatures.props, then restore NuGet dependencies and rebuild.
+- 971907f: Support REACT_EAGER_TURBO_MODULE on React Native Windows 0.83 using the stock NuGet DLL. Collect eager modules across native packages and initialize them synchronously before the application bundle, including on reload, so Expo's existing REACT_INIT runtime installer can run without a JavaScript installModules workaround. Regenerate the Windows project with prebuild to install the startup hook.
+- Updated dependencies [971907f]
+  - expo-desktop-modules-core@55.0.2
+  - expo-desktop-stubs@55.0.2
+
 ## 55.83.7
 
 ### Patch Changes
