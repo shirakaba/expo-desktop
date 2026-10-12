@@ -1,5 +1,11 @@
 # expo-desktop-metro-config
 
+## 55.83.3
+
+### Patch Changes
+
+- 59f9cf2: Revert the additional Windows build output exclusions and restore the previous Metro configuration.
+
 ## 55.83.2
 
 ### Patch Changes
