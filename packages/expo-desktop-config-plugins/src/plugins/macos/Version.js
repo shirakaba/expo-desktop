@@ -4,7 +4,7 @@ const withVersion = createInfoPlistPluginWithPropertyGuard(
   setVersion,
   {
     infoPlistProperty: "CFBundleShortVersionString",
-    expoConfigProperty: "version | ios.version",
+    expoConfigProperty: "version | macos.version",
     expoPropertyGetter: getVersion,
   },
   "withVersion",
@@ -15,7 +15,7 @@ const withBuildNumber = createInfoPlistPluginWithPropertyGuard(
   setBuildNumber,
   {
     infoPlistProperty: "CFBundleVersion",
-    expoConfigProperty: "ios.buildNumber",
+    expoConfigProperty: "macos.buildNumber",
   },
   "withBuildNumber",
 );
