@@ -1,5 +1,11 @@
 # expo-desktop-config-plugins
 
+## 1.3.2
+
+### Patch Changes
+
+- Check expo.macos instead of expo.ios for buildNumber and version properties in app.json
+
 ## 1.3.1
 
 ### Patch Changes

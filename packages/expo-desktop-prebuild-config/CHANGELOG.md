@@ -1,5 +1,12 @@
 # expo-desktop-prebuild-config
 
+## 1.1.3
+
+### Patch Changes
+
+- Updated dependencies
+  - expo-desktop-config-plugins@1.3.2
+
 ## 1.1.2
 
 ### Patch Changes

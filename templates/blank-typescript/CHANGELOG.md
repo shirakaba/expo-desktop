@@ -1,5 +1,11 @@
 # expo-desktop-template-blank-typescript
 
+## 54.81.6
+
+### Patch Changes
+
+- expo-desktop@1.0.6
+
 ## 54.81.5
 
 ### Patch Changes
