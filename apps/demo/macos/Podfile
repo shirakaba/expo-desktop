@@ -1,7 +1,6 @@
 require File.join(File.dirname(`node --print "require.resolve('expo/package.json')"`), "scripts/autolinking")
 require 'pathname'
 
-# Find the real "react-native-macos" path.
 react_native_macos_path = Pathname.new(
   Pod::Executable.execute_command(
     'node',
