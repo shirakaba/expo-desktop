@@ -1,11 +1,23 @@
 require File.join(File.dirname(`node --print "require.resolve('expo/package.json')"`), "scripts/autolinking")
 require 'pathname'
 
-ws_dir = Pathname.new(__dir__)
-ws_dir = ws_dir.parent until
-  File.exist?("#{ws_dir}/node_modules/react-native-macos/scripts/react_native_pods.rb") ||
-  ws_dir.expand_path.to_s == '/'
-require "#{ws_dir}/node_modules/react-native-macos/scripts/react_native_pods.rb"
+react_native_macos_path = Pathname.new(
+  Pod::Executable.execute_command(
+    'node',
+    [
+      '-p',
+      'require.resolve("react-native-macos/package.json")',
+    ],
+  ).strip.gsub('/package.json', '')
+).relative_path_from(__dir__).to_path
+
+require Pod::Executable.execute_command(
+  'node',
+  [
+    '-p',
+    "require.resolve('#{react_native_macos_path}/scripts/react_native_pods.rb')",
+  ],
+).strip
 
 prepare_react_native_project!
 
@@ -27,14 +39,17 @@ target 'demo-macOS' do
   flags = get_default_flags()
 
   use_react_native!(
-    :path => "#{config[:reactNativePath]}-macos",
+    :path => react_native_macos_path,
     :fabric_enabled => ENV['RCT_NEW_ARCH_ENABLED'] == '1',
     # An absolute path to your application root.
     :app_path => "#{Pod::Config.instance.installation_root}/.."
   )
 
   post_install do |installer|
-    react_native_post_install(installer)
+    react_native_post_install(
+      installer,
+      react_native_macos_path
+    )
 
     # react_native_post_install updates pod targets, but not the resource-bundle
     # targets that CocoaPods creates for privacy manifests. Xcode 27 no longer
