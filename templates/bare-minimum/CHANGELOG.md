@@ -1,5 +1,12 @@
 # expo-desktop-template-bare-minimum
 
+## 55.83.10
+
+### Patch Changes
+
+- Use real node module resolution to get react-native-macos path in Podfile
+- expo-desktop@1.0.6
+
 ## 55.83.9
 
 ### Patch Changes
