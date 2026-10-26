@@ -73,7 +73,8 @@
     "picomatch": "^2.3.2",
     "prompts": "^2.4.2",
     "resolve-from": "^5.0.0",
-    "semver": "^7.6.0"
+    "semver": "^7.6.0",
+    "smol-toml": "^1.9.1"
   },
   "devDependencies": {
     "@octokit/types": "^13.5.0",

@@ -1,6 +1,9 @@
 import * as PackageManager from "@expo/package-manager";
 import Debug from "debug";
 import { execSync } from "node:child_process";
+import fs from "node:fs/promises";
+import path from "node:path";
+import * as TOML from "smol-toml";
 
 import { CLI_NAME } from "./cmd.ts";
 
@@ -116,10 +119,38 @@ export async function configurePackageManager(
   packageManager: PackageManagerName,
   flags: { silent: boolean } = { silent: false },
 ) {
-  const manager = createPackageManager(packageManager, { cwd: projectRoot, ...flags });
+  const workspaceRoot = PackageManager.resolveWorkspaceRoot(projectRoot) ?? projectRoot;
+  const manager = createPackageManager(packageManager, { cwd: workspaceRoot, ...flags });
   switch (manager.name) {
+    case "npm": {
+      await manager.runAsync([
+        "config",
+        "--location",
+        "project",
+        "set",
+        "install-strategy",
+        "hoisted",
+      ]);
+      break;
+    }
+    case "bun": {
+      const bunfigPath = path.join(workspaceRoot, "bunfig.toml");
+      let contents: string;
+      try {
+        contents = await fs.readFile(bunfigPath, "utf8");
+      } catch (error) {
+        if (!(error instanceof Error) || !("code" in error) || error.code !== "ENOENT") {
+          throw error;
+        }
+        contents = "";
+      }
+      const bunfig = TOML.parse(contents);
+      bunfig.install = { ...(bunfig.install as TOML.TomlTable | undefined), linker: "hoisted" };
+      await fs.writeFile(bunfigPath, TOML.stringify(bunfig));
+      break;
+    }
     case "pnpm": {
-      await manager.runAsync(['config', '--location', 'project', 'set', 'node-linker', 'hoisted']);
+      await manager.runAsync(["config", "--location", "project", "set", "node-linker", "hoisted"]);
       break;
     }
     case "yarn": {
