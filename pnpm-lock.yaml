@@ -237,6 +237,9 @@ importers:
       semver:
         specifier: ^7.6.0
         version: 7.7.4
+      smol-toml:
+        specifier: ^1.9.1
+        version: 1.9.1
     devDependencies:
       '@octokit/types':
         specifier: ^13.5.0
@@ -5174,6 +5177,10 @@ packages:
   slugify@1.6.9:
     resolution: {integrity: sha512-vZ7rfeehZui7wQs438JXBckYLkIIdfHOXsaVEUMyS5fHo1483l1bMdo0EDSWYclY0yZKFOipDy4KHuKs6ssvdg==}
     engines: {node: '>=8.0.0'}
+
+  smol-toml@1.9.1:
+    resolution: {integrity: sha512-j7WyPdf0CJoutMzMoPLF/bVXHtKZIT9Rb4eGeEbWw8X2t5oirjPgpL+OpaENZrILYaXqYwnVH+qgUwVbl+pUJQ==}
+    engines: {node: '>= 18'}
 
   source-map-js@1.2.1:
     resolution: {integrity: sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA==}
@@ -12724,6 +12731,8 @@ snapshots:
       is-fullwidth-code-point: 5.1.0
 
   slugify@1.6.9: {}
+
+  smol-toml@1.9.1: {}
 
   source-map-js@1.2.1: {}
 
