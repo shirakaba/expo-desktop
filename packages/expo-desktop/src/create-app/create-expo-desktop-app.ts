@@ -90,7 +90,7 @@ export async function createExpoDesktopApp({
   }
 
   try {
-    await initGitRepoAsync(projectRoot);
+    await initGitRepoAsync(projectRoot, { yes: props.yes });
   } catch (error) {
     debug(`Error initializing git: %O`, error);
   }

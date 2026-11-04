@@ -27,7 +27,7 @@ async function isGitInstalledAsync(): Promise<boolean> {
   }
 }
 
-export async function initGitRepoAsync(root: string) {
+export async function initGitRepoAsync(root: string, { yes = false }: { yes?: boolean } = {}) {
   // Check if git is installed
   if (!(await isGitInstalledAsync())) {
     debug(chalk.dim("Unable to initialize Git repo. `git` not in $PATH."));
@@ -37,8 +37,8 @@ export async function initGitRepoAsync(root: string) {
   // Check if already inside a git repository
   if (await isInsideGitRepoAsync(root)) {
     // In headless/CI mode, skip by default
-    if (env.CI) {
-      debug(chalk.dim("New project is already inside of a Git repo, skipping git init (CI mode)."));
+    if (env.CI || yes) {
+      debug(chalk.dim("New project is already inside of a Git repo, skipping git init."));
       return false;
     }
 
