@@ -3,6 +3,7 @@ import chalk from "chalk";
 import Debug from "debug";
 import prompts from "prompts";
 
+import packageJSON from "../../../package.json" with { type: "json" };
 import { env } from "./env.ts";
 
 const debug = Debug("expo-desktop:create-app:git") as typeof console.log;
@@ -59,8 +60,6 @@ export async function initGitRepoAsync(root: string, { yes = false }: { yes?: bo
     // User explicitly chose not to skip, proceed with git init (creates nested repo)
     debug(chalk.dim("User chose to initialize git inside existing repo."));
   }
-
-  const packageJSON = require("../package.json");
 
   // not in git tree, so let's init
   try {
