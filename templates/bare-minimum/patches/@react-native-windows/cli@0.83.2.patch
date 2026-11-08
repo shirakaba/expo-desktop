@@ -1,6 +1,6 @@
-diff --git a/node_modules/@react-native-windows/cli/lib-commonjs/commands/healthCheck/healthChecks.js b/node_modules/@react-native-windows/cli/lib-commonjs/commands/healthCheck/healthChecks.js
---- a/node_modules/@react-native-windows/cli/lib-commonjs/commands/healthCheck/healthChecks.js
-+++ b/node_modules/@react-native-windows/cli/lib-commonjs/commands/healthCheck/healthChecks.js
+diff --git a/lib-commonjs/commands/healthCheck/healthChecks.js b/lib-commonjs/commands/healthCheck/healthChecks.js
+--- a/lib-commonjs/commands/healthCheck/healthChecks.js
++++ b/lib-commonjs/commands/healthCheck/healthChecks.js
 @@ -37,7 +37,7 @@
  const execa_1 = __importDefault(require("execa"));
  const find_dotnet_tools_1 = require("@react-native-windows/find-dotnet-tools");
@@ -37,9 +37,9 @@ diff --git a/node_modules/@react-native-windows/cli/lib-commonjs/commands/health
                          const command = `"${powershell}" -ExecutionPolicy Unrestricted -NoProfile "${rnwDepScriptPath}" -Check ${id}`;
                          try {
                              const { exitCode } = await (0, execa_1.default)(command, { stdio: 'inherit' });
-diff --git a/node_modules/@react-native-windows/cli/lib-commonjs/utils/commandWithProgress.js b/node_modules/@react-native-windows/cli/lib-commonjs/utils/commandWithProgress.js
---- a/node_modules/@react-native-windows/cli/lib-commonjs/utils/commandWithProgress.js
-+++ b/node_modules/@react-native-windows/cli/lib-commonjs/utils/commandWithProgress.js
+diff --git a/lib-commonjs/utils/commandWithProgress.js b/lib-commonjs/utils/commandWithProgress.js
+--- a/lib-commonjs/utils/commandWithProgress.js
++++ b/lib-commonjs/utils/commandWithProgress.js
 @@ -42,8 +42,9 @@
      return (0, ora_1.default)(options).start();
  }

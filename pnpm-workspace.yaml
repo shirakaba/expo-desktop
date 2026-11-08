@@ -99,6 +99,9 @@ allowBuilds:
 
 nodeLinker: hoisted
 
+patchedDependencies:
+  "@react-native-windows/cli@0.83.2": templates/blank-typescript/patches/@react-native-windows/cli@0.83.2.patch
+
 # Keep installs explicit instead of automatically reinstalling before scripts.
 # r2 only updates the lockfile; install explicitly when dependencies change.
 verifyDepsBeforeRun: warn

@@ -53,5 +53,8 @@
         "react-native"
       ]
     }
+  },
+  "patchedDependencies": {
+    "@react-native-windows/cli@0.83.2": "patches/@react-native-windows/cli@0.83.2.patch"
   }
 }
