@@ -1,5 +1,11 @@
 # expo-desktop-template-bare-minimum
 
+## 54.81.8
+
+### Patch Changes
+
+- 5cb9277: Include Device Hub support patch
+
 ## 54.81.7
 
 ### Patch Changes

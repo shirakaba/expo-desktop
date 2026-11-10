@@ -1,5 +1,11 @@
 # expo-desktop-template-blank-typescript
 
+## 54.81.8
+
+### Patch Changes
+
+- df3703d: Backport Expo CLI's upstream Device Hub detection, launch, and window activation fixes so iOS commands work with Xcode 27. Pin the matching Expo release to keep the dependency patch applied.
+
 ## 54.81.7
 
 ### Patch Changes
