@@ -3,11 +3,11 @@ import React
 import ReactAppDependencyProvider
 
 @UIApplicationMain
-public class AppDelegate: ExpoAppDelegate {
-  var window: UIWindow?
+public class AppDelegate: ExpoAppDelegate, ExpoReactNativeFactoryProvider {
+  public var window: UIWindow?
 
   var reactNativeDelegate: ExpoReactNativeFactoryDelegate?
-  var reactNativeFactory: RCTReactNativeFactory?
+  public var reactNativeFactory: RCTReactNativeFactory?
 
   public override func application(
     _ application: UIApplication,
@@ -21,14 +21,7 @@ public class AppDelegate: ExpoAppDelegate {
     reactNativeFactory = factory
     bindReactNativeFactory(factory)
 
-#if os(iOS) || os(tvOS)
-    window = UIWindow(frame: UIScreen.main.bounds)
-    factory.startReactNative(
-      withModuleName: "main",
-      in: window,
-      launchOptions: launchOptions)
-#endif
-
+    // ExpoAppSceneDelegate creates the window and starts React Native with the scene's launch options.
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 
