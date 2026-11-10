@@ -86,6 +86,7 @@ catalogs:
       version: 0.83.10
 
 patchedDependencies:
+  '@expo/cli@55.0.36': c09f89a05d2b13818f1f62e461649851069497692f28039ec11cee69df37b4fd
   '@react-native-windows/cli@0.83.2': eaccbac39827a07db47876d83c4877b9100dcc6046d84251894df88cb930340c
 
 importers:
@@ -428,7 +429,7 @@ importers:
   templates/bare-minimum:
     dependencies:
       expo:
-        specifier: ~55.0.31
+        specifier: 55.0.31
         version: 55.0.31(@babel/core@7.29.0(supports-color@8.1.1))(@expo/dom-webview@55.0.6)(react-native@0.83.10(@babel/core@7.29.0(supports-color@8.1.1))(@react-native-community/cli@20.0.0(supports-color@8.1.1)(typescript@5.9.3))(@react-native/metro-config@0.81.6(@babel/core@7.29.0(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.0)(supports-color@8.1.1))(react@19.2.0)(supports-color@8.1.1)(typescript@5.9.3)
       expo-desktop:
         specifier: workspace:^
@@ -471,7 +472,7 @@ importers:
   templates/blank-typescript:
     dependencies:
       expo:
-        specifier: ~55.0.31
+        specifier: 55.0.31
         version: 55.0.31(@babel/core@7.29.0(supports-color@8.1.1))(@expo/dom-webview@55.0.6)(react-native@0.83.10(@babel/core@7.29.0(supports-color@8.1.1))(@react-native-community/cli@20.0.0(supports-color@8.1.1)(typescript@5.9.3))(@react-native/metro-config@0.81.6(@babel/core@7.29.0(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.0)(supports-color@8.1.1))(react@19.2.0)(supports-color@8.1.1)(typescript@5.9.3)
       expo-desktop:
         specifier: workspace:^
@@ -6678,7 +6679,7 @@ snapshots:
       - utf-8-validate
     optional: true
 
-  '@expo/cli@55.0.36(09ff3a0617015e6bc14f297ed68c25c1)':
+  '@expo/cli@55.0.36(patch_hash=c09f89a05d2b13818f1f62e461649851069497692f28039ec11cee69df37b4fd)(09ff3a0617015e6bc14f297ed68c25c1)':
     dependencies:
       '@expo/code-signing-certificates': 0.0.6
       '@expo/config': 55.0.21(supports-color@8.1.1)(typescript@5.9.3)
@@ -10058,7 +10059,7 @@ snapshots:
   expo@55.0.31(@babel/core@7.29.0(supports-color@8.1.1))(@expo/dom-webview@55.0.6)(react-native@0.83.10(@babel/core@7.29.0(supports-color@8.1.1))(@react-native-community/cli@20.0.0(supports-color@8.1.1)(typescript@5.9.3))(@react-native/metro-config@0.81.6(@babel/core@7.29.0(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.0)(supports-color@8.1.1))(react@19.2.0)(supports-color@8.1.1)(typescript@5.9.3):
     dependencies:
       '@babel/runtime': 7.29.2
-      '@expo/cli': 55.0.36(09ff3a0617015e6bc14f297ed68c25c1)
+      '@expo/cli': 55.0.36(patch_hash=c09f89a05d2b13818f1f62e461649851069497692f28039ec11cee69df37b4fd)(09ff3a0617015e6bc14f297ed68c25c1)
       '@expo/config': 55.0.21(supports-color@8.1.1)(typescript@5.9.3)
       '@expo/config-plugins': 55.0.11(supports-color@8.1.1)
       '@expo/devtools': 55.0.3(react-native@0.83.10(@babel/core@7.29.0(supports-color@8.1.1))(@react-native-community/cli@20.0.0(supports-color@8.1.1)(typescript@5.9.3))(@react-native/metro-config@0.81.6(@babel/core@7.29.0(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.0)(supports-color@8.1.1))(react@19.2.0)
