@@ -273,11 +273,6 @@ const main = defineCommand({
               description:
                 "Comma separated props to pass to msbuild, eg: prop1=value1,prop2=value2",
             },
-            "direct-debugging": {
-              type: "string",
-              valueHint: "port",
-              description: "Enable direct debugging on specified port",
-            },
             "no-telemetry": {
               type: "boolean",
               description:

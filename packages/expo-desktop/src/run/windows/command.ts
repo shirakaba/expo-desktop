@@ -29,7 +29,6 @@ export async function run(args: {
   // sln?: string | undefined;
   // proj?: string | undefined;
   msbuildprops?: string | undefined;
-  "direct-debugging"?: string | undefined;
   "no-telemetry": boolean | undefined;
 }) {
   const options: Options = {
@@ -48,9 +47,6 @@ export async function run(args: {
     // ...(args.sln ? { sln: args.sln } : {}),
     // ...(args.proj ? { proj: args.proj } : {}),
     ...(args.msbuildprops ? { msbuildprops: args.msbuildprops } : {}),
-    ...(args["direct-debugging"] !== undefined
-      ? { directDebugging: args["direct-debugging"] }
-      : {}),
     telemetry: !args["no-telemetry"],
   };
 

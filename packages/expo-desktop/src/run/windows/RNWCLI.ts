@@ -186,17 +186,6 @@ export function parseArch(projectRoot: string, arch = deviceArchitecture()): Bui
   return parseBuildArch(arch);
 }
 
-export function parseDirectDebuggingPort(arg: string) {
-  const num = parseInt(arg, 10);
-  if (!Number.isInteger(num)) {
-    throw new Error(`Expected argument '--direct-debugging' to be a number`);
-  }
-  if (num < 1024 || num >= 65535) {
-    throw new Error("Direct debugging port it out of range");
-  }
-  return num;
-}
-
 /**
  * Gets the device architecture, like x86/x64/arm64.
  * @returns The device architecture.
