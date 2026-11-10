@@ -1,5 +1,13 @@
 # expo-desktop
 
+## 1.0.7
+
+### Patch Changes
+
+- ee819a0: Honor `--no-bundler` when `--configuration` is omitted for `run macos` and `run windows` by deferring the `Debug` default until option resolution.
+- 67a5977: Skip dependency and CocoaPods installation when creating an app inside a monorepo, and link to the manual integration guide. Configure only the created app, and use native dependency patches with npm 12+, pnpm, Yarn 2+, and Bun.
+- 2214c27: Remove the obsolete `--direct-debugging` flag from `run windows`. Debugger settings are controlled by the native app, and debugging uses the Metro port.
+
 ## 1.0.6
 
 ### Patch Changes
