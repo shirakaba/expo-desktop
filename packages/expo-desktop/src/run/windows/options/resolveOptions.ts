@@ -2,7 +2,7 @@ import type { Options, BuildProps } from "../WindowsBuild.types.ts";
 
 import { CommandError } from "../../../common/expo/error.ts";
 import { resolveBundlerPropsAsync } from "../../../common/expo/resolve-bundler-props.ts";
-import { parseArch, parseDirectDebuggingPort } from "../RNWCLI.ts";
+import { parseArch } from "../RNWCLI.ts";
 import { resolveWindowsProject } from "./resolveWindowsProject.ts";
 
 /** Resolve arguments for the `run windows` command. */
@@ -59,7 +59,6 @@ export async function resolveOptionsAsync(
       device: false,
       // target: undefined,
 
-      // remoteDebugging: undefined,
       ...(options.logging ? { logging: options.logging } : {}),
       // Expo starts Metro and its developer interface between RNW's build and
       // deploy phases, so RNW must never spawn its own packager process.
@@ -81,10 +80,6 @@ export async function resolveOptionsAsync(
       ...(options.msbuildprops ? { msbuildprops: options.msbuildprops } : {}),
       ...(options.buildLogDirectory ? { buildLogDirectory: options.buildLogDirectory } : {}),
       ...(options.info ? { info: options.info } : {}),
-      // TODO: check if we ought to validate this port in advance
-      ...(options.directDebugging
-        ? { directDebugging: parseDirectDebuggingPort(options.directDebugging) }
-        : {}),
       ...(options.telemetry ? { telemetry: options.telemetry } : {}),
     },
   };
