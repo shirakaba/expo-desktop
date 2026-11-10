@@ -36,8 +36,6 @@ export type Options = {
 
   /** The build architecture (ARM64, x86, x64) */
   arch?: string;
-  /** Enable direct debugging on specified port */
-  directDebugging?: string;
 
   /** Launch the app after deployment */
   launch: boolean;
@@ -71,7 +69,7 @@ export type Options = {
   | "deploy"
   // Always false
   | "deployFromLayout"
-  // Supported, but we represent it as a string at this stage
+  // Debugger settings are controlled by the native app.
   | "directDebugging"
   // Deprecated in the first place
   | "remoteDebugging"
