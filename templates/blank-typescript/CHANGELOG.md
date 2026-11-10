@@ -1,5 +1,11 @@
 # expo-desktop-template-blank-typescript
 
+## 54.81.7
+
+### Patch Changes
+
+- f19cd7c: Skip dependency and CocoaPods installation when creating an app inside a monorepo, and link to the manual integration guide. Configure only the created app, and use native dependency patches with npm 12+, pnpm, Yarn 2+, and Bun.
+
 ## 54.81.6
 
 ### Patch Changes
