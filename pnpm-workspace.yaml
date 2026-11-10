@@ -100,6 +100,7 @@ allowBuilds:
 nodeLinker: hoisted
 
 patchedDependencies:
+  "@expo/cli@55.0.36": templates/blank-typescript/patches/@expo/cli@55.0.36.patch
   "@react-native-windows/cli@0.83.2": templates/blank-typescript/patches/@react-native-windows/cli@0.83.2.patch
 
 # Keep installs explicit instead of automatically reinstalling before scripts.
