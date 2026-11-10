@@ -1,5 +1,16 @@
 # expo-desktop-template-bare-minimum
 
+## 55.83.11
+
+### Patch Changes
+
+- 0f8570b: Adopt the iOS scene lifecycle so apps built with the iOS 27 SDK can launch. Create the React Native window from the scene, preserve cold-start links, and forward scene events to AppDelegate overrides and Expo subscribers. Preserve upstream link delivery fallbacks and prevent duplicate React Native URL events.
+- 67a5977: Skip dependency and CocoaPods installation when creating an app inside a monorepo, and link to the manual integration guide. Configure only the created app, and use native dependency patches with npm 12+, pnpm, Yarn 2+, and Bun.
+- Updated dependencies [ee819a0]
+- Updated dependencies [67a5977]
+- Updated dependencies [2214c27]
+  - expo-desktop@1.0.7
+
 ## 55.83.10
 
 ### Patch Changes
