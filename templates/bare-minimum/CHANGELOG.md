@@ -1,5 +1,11 @@
 # expo-desktop-template-bare-minimum
 
+## 55.83.13
+
+### Patch Changes
+
+- f3f31be: Include Device Hub support patch
+
 ## 55.83.12
 
 ### Patch Changes
