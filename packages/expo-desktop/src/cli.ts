@@ -178,8 +178,8 @@ const main = defineCommand({
             configuration: {
               type: "string",
               valueHint: "configuration",
-              description: "Xcode configuration to use. Debug or Release.",
-              default: "Debug",
+              description: "Xcode configuration to use. Debug or Release. Default: Debug.",
+              // Default in resolveOptionsAsync so --no-bundler can distinguish an explicit Debug.
             },
             port: {
               type: "string",
@@ -231,8 +231,8 @@ const main = defineCommand({
             configuration: {
               type: "string",
               valueHint: "configuration",
-              description: "Build configuration to use. Debug or Release.",
-              default: "Debug",
+              description: "Build configuration to use. Debug or Release. Default: Debug.",
+              // Default in resolveOptionsAsync so --no-bundler can distinguish an explicit Debug.
             },
             port: {
               type: "string",
