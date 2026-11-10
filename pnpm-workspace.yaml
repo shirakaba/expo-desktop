@@ -95,6 +95,9 @@ allowBuilds:
 
 nodeLinker: hoisted
 
+patchedDependencies:
+  "@expo/cli@54.0.27": templates/blank-typescript/patches/@expo/cli@54.0.27.patch
+
 # Keep installs explicit instead of automatically reinstalling before scripts.
 # r2 only updates the lockfile; install explicitly when dependencies change.
 verifyDepsBeforeRun: warn

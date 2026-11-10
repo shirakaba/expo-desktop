@@ -20,7 +20,7 @@
     "web": "expo start --web"
   },
   "dependencies": {
-    "expo": "~54.0.35",
+    "expo": "54.0.37",
     "expo-desktop": "workspace:^",
     "expo-desktop-modules-core": "workspace:~",
     "expo-desktop-stubs": "workspace:~",
@@ -47,5 +47,8 @@
         "react-native"
       ]
     }
+  },
+  "patchedDependencies": {
+    "@expo/cli@54.0.27": "patches/@expo/cli@54.0.27.patch"
   }
 }
