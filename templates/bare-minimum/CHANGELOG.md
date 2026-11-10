@@ -1,5 +1,11 @@
 # expo-desktop-template-bare-minimum
 
+## 55.83.12
+
+### Patch Changes
+
+- 48644c9: Backport Expo CLI's upstream Device Hub detection, launch, and window activation fixes so iOS commands work with Xcode 27. Pin the matching Expo release to keep the dependency patch applied.
+
 ## 55.83.11
 
 ### Patch Changes
