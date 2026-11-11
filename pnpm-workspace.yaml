@@ -53,7 +53,9 @@ catalogs:
     "@types/react": ~19.2.0
     expo: ^55.0.17
     react: 19.2.0
-    react-native: 0.83.6
+    react-native: 0.83.10
+    react-native-macos: 0.83.0
+    react-native-windows: 0.83.2
   # Expo skipped from 0.83 (SDK 55) to 0.85 (SDK 56). The newer of the two may
   # be our least bad option for 0.84.
   # https://github.com/expo/expo/blob/sdk-56/templates/expo-template-bare-minimum/package.json
