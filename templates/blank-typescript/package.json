@@ -25,10 +25,10 @@
     "expo-desktop-modules-core": "workspace:~",
     "expo-desktop-stubs": "workspace:~",
     "expo-status-bar": "~55.0.6",
-    "react": "19.2.0",
-    "react-native": "0.83.10",
-    "react-native-macos": "0.83.0",
-    "react-native-windows": "0.83.2"
+    "react": "catalog:react-native-83",
+    "react-native": "catalog:react-native-83",
+    "react-native-macos": "catalog:react-native-83",
+    "react-native-windows": "catalog:react-native-83"
   },
   "devDependencies": {
     "@react-native-windows/find-dotnet-tools": "0.0.0-canary.3",
@@ -38,8 +38,8 @@
     "typescript": "~5.9.2"
   },
   "overrides": {
-    "react": "19.2.0",
-    "react-native": "0.83.10"
+    "react": "catalog:react-native-83",
+    "react-native": "catalog:react-native-83"
   },
   "expo": {
     "autolinking": {

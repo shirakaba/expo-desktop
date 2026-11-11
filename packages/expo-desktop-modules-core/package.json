@@ -35,12 +35,12 @@
     "codegen-windows": "react-native codegen-windows"
   },
   "devDependencies": {
-    "react-native": "catalog:react-native-81",
-    "react-native-windows": "catalog:react-native-81"
+    "react-native": "catalog:react-native-83",
+    "react-native-windows": "catalog:react-native-83"
   },
   "peerDependencies": {
-    "react-native": "~0.81.0",
-    "react-native-windows": "~0.81.0"
+    "react-native": "~0.83.0",
+    "react-native-windows": "~0.83.0"
   },
   "codegenConfig": {
     "name": "ExpoDesktopModulesCoreSpec",
