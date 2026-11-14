@@ -1,5 +1,13 @@
 # expo-desktop-template-blank-typescript
 
+## 55.83.13
+
+### Patch Changes
+
+- Updated dependencies [2df723e]
+  - expo-desktop-modules-core@55.0.3
+  - expo-desktop-stubs@55.0.3
+
 ## 55.83.12
 
 ### Patch Changes

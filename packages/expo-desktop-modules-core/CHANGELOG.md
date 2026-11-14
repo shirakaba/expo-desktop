@@ -1,5 +1,11 @@
 # expo-desktop-modules-core
 
+## 55.0.3
+
+### Patch Changes
+
+- 2df723e: Align the React Native and React Native Windows peer dependencies with SDK 55.
+
 ## 55.0.2
 
 ### Patch Changes
