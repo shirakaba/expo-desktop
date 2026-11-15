@@ -1,5 +1,11 @@
 # expo-desktop-template-blank-typescript
 
+## 55.83.14
+
+### Patch Changes
+
+- 06d0aeb: Replace catalog references in dependency overrides with explicit versions so published templates can be installed outside the monorepo.
+
 ## 55.83.13
 
 ### Patch Changes
