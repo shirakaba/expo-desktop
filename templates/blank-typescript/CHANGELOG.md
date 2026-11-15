@@ -1,5 +1,15 @@
 # expo-desktop-template-blank-typescript
 
+## 55.83.13
+
+### Patch Changes
+
+- 1e10899: Declare dependencies using catalogs.
+- Updated dependencies [1e10899]
+- Updated dependencies [1e10899]
+  - expo-desktop-stubs@55.0.3
+  - expo-desktop-modules-core@55.0.3
+
 ## 55.83.12
 
 ### Patch Changes
