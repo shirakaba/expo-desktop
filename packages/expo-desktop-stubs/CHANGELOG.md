@@ -1,5 +1,11 @@
 # expo-desktop-stubs
 
+## 55.0.3
+
+### Patch Changes
+
+- 1e10899: Declare dependencies using catalogs.
+
 ## 55.0.2
 
 No changes in this release.
