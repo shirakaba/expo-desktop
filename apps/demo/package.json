@@ -32,7 +32,7 @@
     "@typescript/native-preview": "catalog:base"
   },
   "overrides": {
-    "react": "catalog:react-native-81",
-    "react-native": "catalog:react-native-81"
+    "react": "19.1.4",
+    "react-native": "0.81.6"
   }
 }

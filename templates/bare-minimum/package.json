@@ -38,8 +38,8 @@
     "typescript": "~5.9.2"
   },
   "overrides": {
-    "react": "catalog:react-native-83",
-    "react-native": "catalog:react-native-83"
+    "react": "19.2.0",
+    "react-native": "0.83.10"
   },
   "expo": {
     "autolinking": {
